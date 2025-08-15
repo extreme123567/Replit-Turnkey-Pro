@@ -247,6 +247,69 @@ export default function PropertyManagerDashboard() {
         </Card>
       </div>
 
+      {/* Approval Queue */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Pending Approvals</span>
+            <Badge variant="secondary">
+              {/* Mock count for demo */}
+              2 items
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="space-y-4">
+            {/* Mock approval items */}
+            <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="text-amber-600" size={16} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-800">Extra Dirty Unit - Apt 205</p>
+                    <p className="text-sm text-slate-600">Requires deep cleaning approval</p>
+                    <p className="text-xs text-slate-500 mt-1">From: Office Staff • 2 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Button size="sm" variant="outline" className="text-red-600 border-red-200">
+                    Reject
+                  </Button>
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Wrench className="text-amber-600" size={16} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-800">HVAC Repair - Unit 102</p>
+                    <p className="text-sm text-slate-600">Est. Cost: $450 • Requires 2 photos</p>
+                    <p className="text-xs text-slate-500 mt-1">From: Office Staff • 4 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Button size="sm" variant="outline" className="text-red-600 border-red-200">
+                    Reject
+                  </Button>
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Properties Overview and Work Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Properties List */}

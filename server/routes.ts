@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -683,6 +684,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(permission);
     } catch (error) {
       res.status(500).json({ error: "Failed to grant permission" });
+    }
+  });
+
+  // Object Storage Routes
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Enhanced Work Order Approval Routes
+  app.get("/api/work-orders/pending-approval", async (req, res) => {
+    try {
+      const pendingOrders = await storage.getWorkOrdersByStatus("pending_approval");
+      res.json(pendingOrders);
+    } catch (error) {
+      console.error("Error fetching pending approvals:", error);
+      res.status(500).json({ error: "Failed to fetch pending approvals" });
+    }
+  });
+
+  app.put("/api/work-orders/:id/approve", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { approvedBy } = req.body;
+      
+      const workOrder = await storage.getWorkOrder(id);
+      if (!workOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+
+      await storage.updateWorkOrder(id, {
+        status: "approved",
+        approvedById: approvedBy,
+        approvedAt: new Date(),
+      });
+      
+      res.json({ message: "Work order approved successfully" });
+    } catch (error) {
+      console.error("Error approving work order:", error);
+      res.status(500).json({ error: "Failed to approve work order" });
+    }
+  });
+
+  app.put("/api/work-orders/:id/reject", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { rejectedBy, reason } = req.body;
+      
+      const workOrder = await storage.getWorkOrder(id);
+      if (!workOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+
+      await storage.updateWorkOrder(id, {
+        status: "rejected",
+        rejectionReason: reason,
+        updatedAt: new Date(),
+      });
+      
+      res.json({ message: "Work order rejected successfully" });
+    } catch (error) {
+      console.error("Error rejecting work order:", error);
+      res.status(500).json({ error: "Failed to reject work order" });
+    }
+  });
+
+  // Work Order Image Upload
+  app.post("/api/work-orders/:id/images", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { imageUrls, imageType } = req.body; // imageType: 'before' | 'after'
+      
+      const workOrder = await storage.getWorkOrder(id);
+      if (!workOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+
+      const updateData: any = {};
+      if (imageType === 'before') {
+        updateData.beforeImages = imageUrls;
+      } else if (imageType === 'after') {
+        updateData.afterImages = imageUrls;
+        // If this work order requires approval and has both before/after images, mark as pending approval
+        if (workOrder.requiresApproval && workOrder.beforeImages && imageUrls.length >= 2) {
+          updateData.status = "pending_approval";
+        }
+      }
+
+      await storage.updateWorkOrder(id, updateData);
+      res.json({ message: "Images uploaded successfully" });
+    } catch (error) {
+      console.error("Error uploading work order images:", error);
+      res.status(500).json({ error: "Failed to upload images" });
     }
   });
 

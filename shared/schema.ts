@@ -109,18 +109,25 @@ export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   propertyId: varchar("property_id").notNull(), // Reference to property
   unitNumber: text("unit_number"),
-  category: text("category").notNull(), // maintenance, emergency, inspection, tenant_request
+  category: text("category").notNull(), // maintenance, emergency, inspection, tenant_request, extra_dirty, repair
   priority: text("priority").notNull().default("medium"), // low, medium, high, emergency
-  status: text("status").notNull().default("open"), // open, assigned, in_progress, completed, cancelled
+  status: text("status").notNull().default("open"), // open, assigned, in_progress, completed, cancelled, pending_approval, approved, rejected
   title: text("title").notNull(),
   description: text("description"),
   assignedTechnicianId: varchar("assigned_technician_id").references(() => staff.id),
-  requestedBy: text("requested_by"), // tenant, property_manager, maintenance
+  requestedBy: text("requested_by"), // tenant, property_manager, maintenance, office_staff
   scheduledDate: timestamp("scheduled_date"),
   completedDate: timestamp("completed_date"),
   estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
   actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
   photos: text("photos").array(), // Array of photo URLs
+  beforeImages: text("before_images").array(), // Required before work images
+  afterImages: text("after_images").array(), // Required after work images
+  requiresApproval: boolean("requires_approval").default(false),
+  approvedById: varchar("approved_by_id").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  imageRequirement: text("image_requirement").default("none"), // none, before_only, after_only, before_and_after
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
