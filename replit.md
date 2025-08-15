@@ -7,7 +7,7 @@ ServicePro is a comprehensive property management platform designed for professi
 ## Recent Changes (August 2025)
 
 ### Role-Based Dashboard System
-- **Property Manager Dashboard**: Property oversight, work order management, occupancy tracking, revenue monitoring
+- **Property Manager Dashboard**: Property oversight, work order management, occupancy tracking, revenue monitoring, job scheduling and progress tracking with real-time status updates
 - **Office Staff Dashboard**: Lease management, approval workflows, tenant coordination, administrative tasks
 - **Technician Dashboard**: Work order execution, daily scheduling, time tracking, mobile-friendly interface
 - **Inspector Dashboard**: Property inspections, compliance tracking, report generation, quality assurance
@@ -22,9 +22,10 @@ ServicePro is a comprehensive property management platform designed for professi
 ### Role-Specific Features and Access
 
 #### Property Manager Role
-- **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking
-- **Access**: Properties, tenants, work orders, inspections, revenue reports
+- **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking, job scheduling and progress monitoring
+- **Access**: Properties, tenants, work orders, inspections, revenue reports, job scheduling interface, real-time progress tracking, approval queue for repairs and extra dirty units
 - **Restrictions**: Cannot complete work orders or inspections directly, limited staff management
+- **Enhanced Features**: Comprehensive job tracking from scheduled → in progress → completion phases, approval workflow for repair requests with image requirements, weekly schedule overview with progress indicators
 
 #### Office Staff Role  
 - **Responsibilities**: Administrative tasks, lease processing, application management, coordination

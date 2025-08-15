@@ -310,6 +310,106 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
+      {/* Job Scheduling and Progress Tracking */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Job Schedule & Progress</span>
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline" className="text-blue-600">
+                Today: 3 jobs
+              </Badge>
+              <Badge variant="outline" className="text-green-600">
+                In Progress: 2 jobs
+              </Badge>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="space-y-4">
+            {/* Job Timeline View */}
+            <div className="space-y-3">
+              {/* Scheduled Job */}
+              <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Calendar className="text-blue-600" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">HVAC Maintenance - Building A</p>
+                      <p className="text-sm text-slate-600">Unit 304 • Est. 3 hours</p>
+                      <p className="text-xs text-blue-600 mt-1">Scheduled: Today 2:00 PM</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-blue-100 text-blue-800">Scheduled</Badge>
+                    <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* In Progress Job */}
+              <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <Clock className="text-amber-600" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">Plumbing Repair - Unit 205</p>
+                      <p className="text-sm text-slate-600">Kitchen faucet replacement</p>
+                      <p className="text-xs text-amber-600 mt-1">Started: 1:30 PM • 1.5 hrs elapsed</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-amber-100 text-amber-800">In Progress</Badge>
+                    <p className="text-xs text-slate-500 mt-1">Tech: Sarah Wilson</p>
+                  </div>
+                </div>
+                <div className="mt-3 bg-white/60 rounded p-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Progress</span>
+                    <span>65%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                    <div className="bg-amber-500 h-2 rounded-full" style={{width: '65%'}}></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Near Completion Job */}
+              <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <UserCheck className="text-green-600" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">Deep Clean - Unit 102</p>
+                      <p className="text-sm text-slate-600">Extra dirty unit cleaning</p>
+                      <p className="text-xs text-green-600 mt-1">Photos uploaded • Awaiting final review</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-green-100 text-green-800">Final Review</Badge>
+                    <p className="text-xs text-slate-500 mt-1">Tech: Alex Chen</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center space-x-2">
+                  <Button size="sm" variant="outline" className="text-xs">
+                    View Photos
+                  </Button>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-xs">
+                    Mark Complete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Properties Overview and Work Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Properties List */}
@@ -356,6 +456,140 @@ export default function PropertyManagerDashboard() {
           </CardContent>
         </Card>
 
+        {/* Weekly Schedule Overview */}
+        <Card className="servicepro-card">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>This Week's Schedule</span>
+              <Button variant="ghost" size="sm" className="text-blue-600">
+                View Calendar
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <div className="space-y-3">
+              {/* Weekly Timeline */}
+              <div className="grid grid-cols-7 gap-2 text-center text-xs font-medium text-slate-600 mb-4">
+                <div>Mon</div>
+                <div>Tue</div>
+                <div className="text-blue-600 font-semibold">Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+                <div>Sun</div>
+              </div>
+              
+              <div className="grid grid-cols-7 gap-2">
+                {/* Monday */}
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-500">15</div>
+                  <div className="bg-blue-100 text-blue-700 text-xs p-1 rounded">2 jobs</div>
+                </div>
+                {/* Tuesday */}
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-500">16</div>
+                  <div className="bg-emerald-100 text-emerald-700 text-xs p-1 rounded">1 job</div>
+                </div>
+                {/* Wednesday (Today) */}
+                <div className="space-y-1">
+                  <div className="text-xs text-blue-600 font-semibold">17</div>
+                  <div className="bg-blue-200 text-blue-800 text-xs p-1 rounded font-medium">3 jobs</div>
+                </div>
+                {/* Thursday */}
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-500">18</div>
+                  <div className="bg-amber-100 text-amber-700 text-xs p-1 rounded">4 jobs</div>
+                </div>
+                {/* Friday */}
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-500">19</div>
+                  <div className="bg-green-100 text-green-700 text-xs p-1 rounded">2 jobs</div>
+                </div>
+                {/* Weekend */}
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-500">20</div>
+                  <div className="bg-slate-100 text-slate-500 text-xs p-1 rounded">0 jobs</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-500">21</div>
+                  <div className="bg-slate-100 text-slate-500 text-xs p-1 rounded">0 jobs</div>
+                </div>
+              </div>
+              
+              {/* Summary Stats */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-lg font-semibold text-slate-800">12</p>
+                    <p className="text-xs text-slate-600">This Week</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-amber-600">5</p>
+                    <p className="text-xs text-slate-600">In Progress</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-green-600">7</p>
+                    <p className="text-xs text-slate-600">Completed</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Job Status Distribution */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle>Job Status Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Scheduled Jobs */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="text-blue-600" size={24} />
+              </div>
+              <p className="text-2xl font-bold text-slate-800">8</p>
+              <p className="text-sm text-slate-600">Scheduled</p>
+              <p className="text-xs text-blue-600 mt-1">Next: 2:00 PM</p>
+            </div>
+
+            {/* In Progress Jobs */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Clock className="text-amber-600" size={24} />
+              </div>
+              <p className="text-2xl font-bold text-slate-800">5</p>
+              <p className="text-sm text-slate-600">In Progress</p>
+              <p className="text-xs text-amber-600 mt-1">Avg: 2.3 hrs</p>
+            </div>
+
+            {/* Awaiting Review */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Eye className="text-purple-600" size={24} />
+              </div>
+              <p className="text-2xl font-bold text-slate-800">3</p>
+              <p className="text-sm text-slate-600">Awaiting Review</p>
+              <p className="text-xs text-purple-600 mt-1">Photos uploaded</p>
+            </div>
+
+            {/* Completed Today */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <UserCheck className="text-green-600" size={24} />
+              </div>
+              <p className="text-2xl font-bold text-slate-800">7</p>
+              <p className="text-sm text-slate-600">Completed Today</p>
+              <p className="text-xs text-green-600 mt-1">On schedule</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Properties Overview and Recent Work Orders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Work Orders */}
         <Card className="servicepro-card">
           <CardHeader>
