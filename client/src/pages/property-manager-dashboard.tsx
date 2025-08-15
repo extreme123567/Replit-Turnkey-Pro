@@ -25,7 +25,9 @@ import {
   Send,
   Palette,
   Square,
-  Sparkles
+  Sparkles,
+  Trash2,
+  PackageX
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -534,6 +536,92 @@ export default function PropertyManagerDashboard() {
                 </div>
               </div>
 
+              {/* Unit Trash Out Job */}
+              <div className="p-4 border border-slate-200 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                      <Clock className="text-slate-600" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">Unit Trash Out - Unit 305</p>
+                      <p className="text-sm text-slate-600">Remove all debris and personal items</p>
+                      <p className="text-xs text-slate-600 mt-1">Started: 10:00 AM • 3 hrs elapsed</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-slate-100 text-slate-800">Trash Out - In Progress</Badge>
+                    <p className="text-xs text-slate-500 mt-1">Tech: Carlos Martinez</p>
+                  </div>
+                </div>
+                <div className="mt-3 bg-white/60 rounded p-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Phase: Removing large furniture</span>
+                    <span>60%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                    <div className="bg-slate-500 h-2 rounded-full" style={{width: '60%'}}></div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-600">✓ Initial Assessment</span>
+                      <span className="text-green-600">Complete</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-600">• Furniture Removal</span>
+                      <span className="text-slate-600">60%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">• 2 Photos Required</span>
+                      <span className="text-slate-400">Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Onsite Bulk Trash Job */}
+              <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Clock className="text-yellow-600" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">Onsite Bulk Trash - Building B</p>
+                      <p className="text-sm text-slate-600">Large item disposal from common areas</p>
+                      <p className="text-xs text-yellow-600 mt-1">Started: 1:00 PM • 2 hrs elapsed</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-yellow-100 text-yellow-800">Bulk Trash - In Progress</Badge>
+                    <p className="text-xs text-slate-500 mt-1">Tech: Jennifer Kim</p>
+                  </div>
+                </div>
+                <div className="mt-3 bg-white/60 rounded p-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Phase: Loading dumpster</span>
+                    <span>80%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                    <div className="bg-yellow-500 h-2 rounded-full" style={{width: '80%'}}></div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-600">✓ Item Collection</span>
+                      <span className="text-green-600">Complete</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-yellow-600">• Loading & Disposal</span>
+                      <span className="text-yellow-600">80%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">• 2 Photos to Office</span>
+                      <span className="text-slate-400">Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Inspected Job - Completed */}
               <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
                 <div className="flex items-center justify-between">
@@ -717,13 +805,48 @@ export default function PropertyManagerDashboard() {
         </Card>
       </div>
 
+      {/* Photo Requirements Dashboard */}
+      <Card className="bg-yellow-50 border-yellow-200">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <AlertTriangle className="text-yellow-600" size={20} />
+            <span>Photo Requirements - Office Review</span>
+            <Badge className="bg-yellow-100 text-yellow-800">2 pending</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="space-y-3">
+            <div className="p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-800">Unit 305 - Trash Out</p>
+                  <p className="text-sm text-yellow-700">Tech: Carlos Martinez</p>
+                  <p className="text-xs text-slate-600">Required: 2 photos before completion</p>
+                </div>
+                <Badge className="bg-yellow-200 text-yellow-800">Awaiting Photos</Badge>
+              </div>
+            </div>
+            <div className="p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-800">Building B - Bulk Trash</p>
+                  <p className="text-sm text-yellow-700">Tech: Jennifer Kim</p>
+                  <p className="text-xs text-slate-600">Required: 2 photos before completion</p>
+                </div>
+                <Badge className="bg-yellow-200 text-yellow-800">Awaiting Photos</Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Job Status Distribution */}
       <Card className="servicepro-card">
         <CardHeader>
           <CardTitle>Job Phase Overview</CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
             {/* Punch Jobs */}
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -767,6 +890,24 @@ export default function PropertyManagerDashboard() {
               </div>
               <p className="text-lg font-bold text-slate-800">1</p>
               <p className="text-xs text-slate-600">Carpet</p>
+            </div>
+
+            {/* Unit Trash Out */}
+            <div className="text-center">
+              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Trash2 className="text-slate-600" size={16} />
+              </div>
+              <p className="text-lg font-bold text-slate-800">1</p>
+              <p className="text-xs text-slate-600">Trash Out</p>
+            </div>
+
+            {/* Onsite Bulk Trash */}
+            <div className="text-center">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <PackageX className="text-yellow-600" size={16} />
+              </div>
+              <p className="text-lg font-bold text-slate-800">1</p>
+              <p className="text-xs text-slate-600">Bulk Trash</p>
             </div>
 
             {/* Inspected */}
