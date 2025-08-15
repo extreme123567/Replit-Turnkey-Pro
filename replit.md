@@ -25,7 +25,7 @@ ServicePro is a comprehensive property management platform designed for professi
 - **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking, job scheduling and progress monitoring
 - **Access**: Properties, tenants, work orders, inspections, revenue reports, job scheduling interface, real-time progress tracking, approval queue for repairs and extra dirty units
 - **Restrictions**: Cannot complete work orders or inspections directly, limited staff management
-- **Enhanced Features**: Comprehensive job tracking from scheduled → in progress → completion phases, approval workflow for repair requests with image requirements, weekly schedule overview with progress indicators
+- **Enhanced Features**: Comprehensive job tracking from scheduled → job started → repairs in progress → paint in progress → trim in progress → cleanup in progress → complete painting phases, approval workflow for repair requests with image requirements, weekly schedule overview with progress indicators, real-time phase-by-phase progress tracking
 
 #### Office Staff Role  
 - **Responsibilities**: Administrative tasks, lease processing, application management, coordination
