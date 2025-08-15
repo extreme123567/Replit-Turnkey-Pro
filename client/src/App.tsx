@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import PropertyManagerDashboard from "@/pages/property-manager-dashboard";
 import OfficeStaffDashboard from "@/pages/office-staff-dashboard";
 import TechnicianDashboard from "@/pages/technician-dashboard";
+import InspectorDashboard from "@/pages/inspector-dashboard";
 import Scheduling from "@/pages/scheduling";
 import Clients from "@/pages/clients";
 import Staff from "@/pages/staff";
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/property-manager" component={PropertyManagerDashboard} />
       <Route path="/office-staff" component={OfficeStaffDashboard} />
       <Route path="/technician" component={TechnicianDashboard} />
+      <Route path="/inspector" component={InspectorDashboard} />
       <Route path="/scheduling" component={Scheduling} />
       <Route path="/clients" component={Clients} />
       <Route path="/staff" component={Staff} />

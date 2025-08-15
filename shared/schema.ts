@@ -95,9 +95,11 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
-  role: text("role").notNull(), // admin, office_staff, technician, property_manager
-  department: text("department"), // operations, maintenance, leasing, accounting
+  role: text("role").notNull(), // admin, office_staff, technician, property_manager, inspector
+  department: text("department"), // operations, maintenance, leasing, accounting, inspection
   status: text("status").notNull().default("active"), // active, inactive
+  permissions: text("permissions").array(), // Array of permission strings
+  assignedRegions: text("assigned_regions").array(), // Geographic regions or property groups
   lastLogin: timestamp("last_login"),
   preferences: text("preferences"), // JSON string for dashboard preferences
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -172,6 +174,49 @@ export const maintenanceSchedule = pgTable("maintenance_schedule", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const inspections = pgTable("inspections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.id).notNull(),
+  inspectorId: varchar("inspector_id").notNull(), // Reference to user with inspector role
+  inspectionType: text("inspection_type").notNull(), // annual, move_in, move_out, safety, compliance
+  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, completed, failed
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  completedDate: timestamp("completed_date"),
+  findings: text("findings"), // JSON string for inspection findings
+  overallRating: text("overall_rating"), // excellent, good, fair, poor, critical
+  actionItems: text("action_items").array(), // Array of required actions
+  photos: text("photos").array(), // Array of photo URLs
+  notes: text("notes"),
+  isCompliant: boolean("is_compliant"),
+  nextInspectionDue: timestamp("next_inspection_due"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const userPermissions = pgTable("user_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  resourceType: text("resource_type").notNull(), // property, tenant, work_order, inspection, etc.
+  resourceId: varchar("resource_id"), // Specific resource ID or null for general permission
+  permission: text("permission").notNull(), // read, write, delete, approve, assign
+  grantedBy: varchar("granted_by").references(() => users.id),
+  grantedAt: timestamp("granted_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const auditLog = pgTable("audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // login, create, update, delete, approve, etc.
+  resourceType: text("resource_type").notNull(),
+  resourceId: varchar("resource_id"),
+  oldValues: text("old_values"), // JSON string
+  newValues: text("new_values"), // JSON string
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
@@ -242,6 +287,23 @@ export const insertMaintenanceScheduleSchema = createInsertSchema(maintenanceSch
   createdAt: true,
 });
 
+export const insertInspectionSchema = createInsertSchema(inspections).omit({
+  id: true,
+  completedDate: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserPermissionSchema = createInsertSchema(userPermissions).omit({
+  id: true,
+  grantedAt: true,
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
@@ -275,3 +337,12 @@ export type InsertTenant = z.infer<typeof insertTenantSchema>;
 
 export type MaintenanceSchedule = typeof maintenanceSchedule.$inferSelect;
 export type InsertMaintenanceSchedule = z.infer<typeof insertMaintenanceScheduleSchema>;
+
+export type Inspection = typeof inspections.$inferSelect;
+export type InsertInspection = z.infer<typeof insertInspectionSchema>;
+
+export type UserPermission = typeof userPermissions.$inferSelect;
+export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;

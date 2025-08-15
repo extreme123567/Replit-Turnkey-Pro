@@ -10,7 +10,8 @@ import {
   Wrench,
   Building,
   ClipboardList,
-  HardHat
+  HardHat,
+  Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const dashboards = [
   { name: "Property Manager", href: "/property-manager", icon: Building },
   { name: "Office Staff", href: "/office-staff", icon: ClipboardList },
   { name: "Technician", href: "/technician", icon: HardHat },
+  { name: "Inspector", href: "/inspector", icon: Search },
 ];
 
 const navigation = [

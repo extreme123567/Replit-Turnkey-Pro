@@ -2,7 +2,58 @@
 
 ## Overview
 
-ServicePro is a comprehensive business management platform designed for professional service companies. The application provides core functionality for managing clients, staff, scheduling, messaging, payroll, and invoicing in a unified system. Built as a full-stack web application, it features a React frontend with a Node.js/Express backend, using PostgreSQL for data persistence and a modern component-based UI built with shadcn/ui and Tailwind CSS.
+ServicePro is a comprehensive property management platform designed for professional service companies. The application provides role-based functionality for property managers, office staff, technicians, and inspectors with specialized dashboards and access controls. Built as a full-stack web application, it features a React frontend with a Node.js/Express backend, using PostgreSQL for data persistence and a modern component-based UI built with shadcn/ui and Tailwind CSS.
+
+## Recent Changes (August 2025)
+
+### Role-Based Dashboard System
+- **Property Manager Dashboard**: Property oversight, work order management, occupancy tracking, revenue monitoring
+- **Office Staff Dashboard**: Lease management, approval workflows, tenant coordination, administrative tasks
+- **Technician Dashboard**: Work order execution, daily scheduling, time tracking, mobile-friendly interface
+- **Inspector Dashboard**: Property inspections, compliance tracking, report generation, quality assurance
+- **General Dashboard**: Overview metrics accessible to all roles with appropriate data filtering
+
+### Access Control Implementation
+- Comprehensive permission system with role-based access controls
+- User permissions stored in database with expiration and audit capabilities
+- Route-level access restrictions based on user roles and permissions
+- Dedicated API endpoints for permission checking and management
+
+### Role-Specific Features and Access
+
+#### Property Manager Role
+- **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking
+- **Access**: Properties, tenants, work orders, inspections, revenue reports
+- **Restrictions**: Cannot complete work orders or inspections directly, limited staff management
+
+#### Office Staff Role  
+- **Responsibilities**: Administrative tasks, lease processing, application management, coordination
+- **Access**: Tenant management, lease processing, basic reporting, messaging, invoice processing
+- **Restrictions**: Limited property management, cannot approve high-value expenses
+
+#### Technician Role
+- **Responsibilities**: Work order execution, field operations, time tracking, equipment maintenance
+- **Access**: Assigned work orders, scheduling, messaging, mobile-optimized interface
+- **Restrictions**: Cannot create or assign work orders, limited reporting access
+
+#### Inspector Role
+- **Responsibilities**: Property inspections, compliance monitoring, quality assurance, reporting
+- **Access**: Inspection scheduling, report generation, property access, compliance tracking
+- **Restrictions**: Cannot manage properties or tenants directly, focused on inspection workflows
+
+#### Admin Role
+- **Responsibilities**: System administration, user management, full oversight
+- **Access**: All system functions, user management, system configuration, audit logs
+- **Restrictions**: None - full system access
+
+### Data Models Extended
+- **Users**: Enhanced with role-based permissions and regional assignments
+- **Inspections**: Complete inspection workflow with findings, ratings, and compliance tracking
+- **Work Orders**: Property-specific work orders with technician assignment and approval workflows
+- **Properties**: Comprehensive property management with units, occupancy, and manager assignment
+- **Tenants**: Lease management with expiration tracking and contact information
+- **User Permissions**: Granular permission system with resource-level access control
+- **Audit Log**: Complete action tracking for compliance and security monitoring
 
 ## User Preferences
 

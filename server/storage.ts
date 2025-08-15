@@ -1,4 +1,4 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule } from "@shared/schema";
+import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -93,11 +93,34 @@ export interface IStorage {
   updateMaintenanceItem(id: string, item: Partial<InsertMaintenanceSchedule>): Promise<MaintenanceSchedule | undefined>;
   deleteMaintenanceItem(id: string): Promise<boolean>;
 
+  // Inspections
+  getInspections(): Promise<Inspection[]>;
+  getInspection(id: string): Promise<Inspection | undefined>;
+  getInspectionsByInspector(inspectorId: string): Promise<Inspection[]>;
+  getInspectionsByProperty(propertyId: string): Promise<Inspection[]>;
+  getInspectionsByStatus(status: string): Promise<Inspection[]>;
+  getTodaysInspections(inspectorId: string): Promise<Inspection[]>;
+  getPendingReports(inspectorId: string): Promise<Inspection[]>;
+  createInspection(inspection: InsertInspection): Promise<Inspection>;
+  updateInspection(id: string, inspection: Partial<InsertInspection>): Promise<Inspection | undefined>;
+  deleteInspection(id: string): Promise<boolean>;
+
+  // User Permissions
+  getUserPermissions(userId: string): Promise<UserPermission[]>;
+  checkPermission(userId: string, resourceType: string, resourceId: string, permission: string): Promise<boolean>;
+  grantPermission(permission: InsertUserPermission): Promise<UserPermission>;
+  revokePermission(id: string): Promise<boolean>;
+
+  // Audit Log
+  logAction(action: InsertAuditLog): Promise<AuditLog>;
+  getAuditLog(userId?: string, resourceType?: string): Promise<AuditLog[]>;
+
   // Dashboard Analytics
   getDashboardStats(userRole: string, userId?: string): Promise<any>;
   getPropertyManagerStats(managerId: string): Promise<any>;
   getTechnicianStats(technicianId: string): Promise<any>;
   getOfficeStats(): Promise<any>;
+  getInspectorStats(inspectorId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -112,6 +135,9 @@ export class MemStorage implements IStorage {
   private properties: Map<string, Property> = new Map();
   private tenants: Map<string, Tenant> = new Map();
   private maintenanceSchedule: Map<string, MaintenanceSchedule> = new Map();
+  private inspections: Map<string, Inspection> = new Map();
+  private userPermissions: Map<string, UserPermission> = new Map();
+  private auditLogs: Map<string, AuditLog> = new Map();
   private invoiceCounter = 1;
 
   constructor() {
@@ -148,6 +174,13 @@ export class MemStorage implements IStorage {
         email: "jennifer@propmanage.com",
         role: "admin",
         department: "operations",
+        status: "active"
+      },
+      {
+        name: "Robert Kim",
+        email: "robert@propmanage.com",
+        role: "inspector",
+        department: "inspection",
         status: "active"
       }
     ];
@@ -950,6 +983,169 @@ export class MemStorage implements IStorage {
       activeStaff,
       totalProperties: properties.length,
       totalTenants: tenants.filter(t => t.status === 'active').length
+    };
+  }
+
+  // Inspections
+  async getInspections(): Promise<Inspection[]> {
+    return Array.from(this.inspections.values()).sort((a, b) => 
+      new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()
+    );
+  }
+
+  async getInspection(id: string): Promise<Inspection | undefined> {
+    return this.inspections.get(id);
+  }
+
+  async getInspectionsByInspector(inspectorId: string): Promise<Inspection[]> {
+    return Array.from(this.inspections.values()).filter(inspection => inspection.inspectorId === inspectorId);
+  }
+
+  async getInspectionsByProperty(propertyId: string): Promise<Inspection[]> {
+    return Array.from(this.inspections.values()).filter(inspection => inspection.propertyId === propertyId);
+  }
+
+  async getInspectionsByStatus(status: string): Promise<Inspection[]> {
+    return Array.from(this.inspections.values()).filter(inspection => inspection.status === status);
+  }
+
+  async getTodaysInspections(inspectorId: string): Promise<Inspection[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return Array.from(this.inspections.values()).filter(inspection => {
+      if (inspection.inspectorId !== inspectorId) return false;
+      const scheduledDate = new Date(inspection.scheduledDate);
+      return scheduledDate >= today && scheduledDate < tomorrow;
+    });
+  }
+
+  async getPendingReports(inspectorId: string): Promise<Inspection[]> {
+    return Array.from(this.inspections.values()).filter(inspection => 
+      inspection.inspectorId === inspectorId && 
+      inspection.status === 'completed' && 
+      !inspection.findings
+    );
+  }
+
+  async createInspection(insertInspection: InsertInspection): Promise<Inspection> {
+    const id = randomUUID();
+    const inspection: Inspection = {
+      ...insertInspection,
+      id,
+      completedDate: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.inspections.set(id, inspection);
+    return inspection;
+  }
+
+  async updateInspection(id: string, updates: Partial<InsertInspection>): Promise<Inspection | undefined> {
+    const inspection = this.inspections.get(id);
+    if (!inspection) return undefined;
+
+    const updatedInspection = { ...inspection, ...updates, updatedAt: new Date() };
+    
+    if (updates.status === "completed" && inspection.status !== "completed") {
+      updatedInspection.completedDate = new Date();
+    }
+
+    this.inspections.set(id, updatedInspection);
+    return updatedInspection;
+  }
+
+  async deleteInspection(id: string): Promise<boolean> {
+    return this.inspections.delete(id);
+  }
+
+  // User Permissions
+  async getUserPermissions(userId: string): Promise<UserPermission[]> {
+    return Array.from(this.userPermissions.values()).filter(permission => permission.userId === userId);
+  }
+
+  async checkPermission(userId: string, resourceType: string, resourceId: string, permission: string): Promise<boolean> {
+    const userPermissions = await this.getUserPermissions(userId);
+    return userPermissions.some(p => 
+      p.resourceType === resourceType && 
+      (p.resourceId === resourceId || p.resourceId === null) && 
+      p.permission === permission &&
+      (!p.expiresAt || new Date(p.expiresAt) > new Date())
+    );
+  }
+
+  async grantPermission(insertPermission: InsertUserPermission): Promise<UserPermission> {
+    const id = randomUUID();
+    const permission: UserPermission = {
+      ...insertPermission,
+      id,
+      grantedAt: new Date(),
+    };
+    this.userPermissions.set(id, permission);
+    return permission;
+  }
+
+  async revokePermission(id: string): Promise<boolean> {
+    return this.userPermissions.delete(id);
+  }
+
+  // Audit Log
+  async logAction(insertAuditLog: InsertAuditLog): Promise<AuditLog> {
+    const id = randomUUID();
+    const auditLog: AuditLog = {
+      ...insertAuditLog,
+      id,
+      createdAt: new Date(),
+    };
+    this.auditLogs.set(id, auditLog);
+    return auditLog;
+  }
+
+  async getAuditLog(userId?: string, resourceType?: string): Promise<AuditLog[]> {
+    let logs = Array.from(this.auditLogs.values());
+    
+    if (userId) {
+      logs = logs.filter(log => log.userId === userId);
+    }
+    
+    if (resourceType) {
+      logs = logs.filter(log => log.resourceType === resourceType);
+    }
+    
+    return logs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getInspectorStats(inspectorId: string): Promise<any> {
+    const inspections = Array.from(this.inspections.values()).filter(i => i.inspectorId === inspectorId);
+    
+    const scheduledInspections = inspections.filter(i => i.status === 'scheduled').length;
+    
+    const completedThisWeek = inspections.filter(i => {
+      if (!i.completedDate) return false;
+      const completed = new Date(i.completedDate);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return completed >= weekAgo;
+    }).length;
+
+    const pendingReports = inspections.filter(i => 
+      i.status === 'completed' && !i.findings
+    ).length;
+
+    const complianceIssues = inspections.filter(i => 
+      i.isCompliant === false || i.overallRating === 'poor' || i.overallRating === 'critical'
+    ).length;
+
+    const todaysInspections = await this.getTodaysInspections(inspectorId);
+
+    return {
+      scheduledInspections,
+      completedThisWeek,
+      pendingReports,
+      complianceIssues,
+      todaysInspections
     };
   }
 }

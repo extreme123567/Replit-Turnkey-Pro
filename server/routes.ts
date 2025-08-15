@@ -589,6 +589,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inspector Dashboard
+  app.get("/api/dashboard/inspector/:inspectorId", async (req, res) => {
+    try {
+      const stats = await storage.getInspectorStats(req.params.inspectorId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch inspector stats" });
+    }
+  });
+
+  // Inspections routes
+  app.get("/api/inspections", async (req, res) => {
+    try {
+      const inspections = await storage.getInspections();
+      res.json(inspections);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch inspections" });
+    }
+  });
+
+  app.get("/api/inspections/inspector/:inspectorId", async (req, res) => {
+    try {
+      const inspections = await storage.getInspectionsByInspector(req.params.inspectorId);
+      res.json(inspections);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch inspector inspections" });
+    }
+  });
+
+  app.get("/api/inspections/today/:inspectorId", async (req, res) => {
+    try {
+      const inspections = await storage.getTodaysInspections(req.params.inspectorId);
+      res.json(inspections);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch today's inspections" });
+    }
+  });
+
+  app.get("/api/inspections/pending-reports/:inspectorId", async (req, res) => {
+    try {
+      const reports = await storage.getPendingReports(req.params.inspectorId);
+      res.json(reports);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending reports" });
+    }
+  });
+
+  app.post("/api/inspections", async (req, res) => {
+    try {
+      const inspection = await storage.createInspection(req.body);
+      res.status(201).json(inspection);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create inspection" });
+    }
+  });
+
+  app.put("/api/inspections/:id", async (req, res) => {
+    try {
+      const inspection = await storage.updateInspection(req.params.id, req.body);
+      if (!inspection) {
+        return res.status(404).json({ error: "Inspection not found" });
+      }
+      res.json(inspection);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update inspection" });
+    }
+  });
+
+  // User Permissions routes
+  app.get("/api/users/:userId/permissions", async (req, res) => {
+    try {
+      const permissions = await storage.getUserPermissions(req.params.userId);
+      res.json(permissions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user permissions" });
+    }
+  });
+
+  app.post("/api/permissions/check", async (req, res) => {
+    try {
+      const { userId, resourceType, resourceId, permission } = req.body;
+      const hasPermission = await storage.checkPermission(userId, resourceType, resourceId, permission);
+      res.json({ hasPermission });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check permission" });
+    }
+  });
+
+  app.post("/api/permissions", async (req, res) => {
+    try {
+      const permission = await storage.grantPermission(req.body);
+      res.status(201).json(permission);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to grant permission" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
