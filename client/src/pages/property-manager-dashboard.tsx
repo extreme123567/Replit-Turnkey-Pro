@@ -332,7 +332,7 @@ export default function PropertyManagerDashboard() {
           <div className="space-y-4">
             {/* Job Timeline View */}
             <div className="space-y-3">
-              {/* Scheduled Job */}
+              {/* Scheduled Job - Punch */}
               <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
@@ -340,19 +340,19 @@ export default function PropertyManagerDashboard() {
                       <Calendar className="text-blue-600" size={16} />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-800">HVAC Maintenance - Building A</p>
-                      <p className="text-sm text-slate-600">Unit 304 • Est. 3 hours</p>
+                      <p className="font-medium text-slate-800">Punch List - Unit 304</p>
+                      <p className="text-sm text-slate-600">Touch-ups and final details • Est. 2 hours</p>
                       <p className="text-xs text-blue-600 mt-1">Scheduled: Today 2:00 PM</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge className="bg-blue-100 text-blue-800">Scheduled</Badge>
+                    <Badge className="bg-blue-100 text-blue-800">Punch - Scheduled</Badge>
                     <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
                   </div>
                 </div>
               </div>
 
-              {/* In Progress Job - Plumbing */}
+              {/* Repairs Job in Progress */}
               <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
@@ -360,13 +360,13 @@ export default function PropertyManagerDashboard() {
                       <Clock className="text-amber-600" size={16} />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-800">Plumbing Repair - Unit 205</p>
-                      <p className="text-sm text-slate-600">Kitchen faucet replacement</p>
+                      <p className="font-medium text-slate-800">Repairs - Unit 205</p>
+                      <p className="text-sm text-slate-600">Kitchen faucet and cabinet door fix</p>
                       <p className="text-xs text-amber-600 mt-1">Started: 1:30 PM • 1.5 hrs elapsed</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge className="bg-amber-100 text-amber-800">Repairs in Progress</Badge>
+                    <Badge className="bg-amber-100 text-amber-800">Repairs - In Progress</Badge>
                     <p className="text-xs text-slate-500 mt-1">Tech: Sarah Wilson</p>
                   </div>
                 </div>
@@ -381,7 +381,7 @@ export default function PropertyManagerDashboard() {
                 </div>
               </div>
 
-              {/* Painting Job in Progress */}
+              {/* Paint Job in Progress */}
               <div className="p-4 border border-purple-200 bg-purple-50 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
@@ -389,13 +389,13 @@ export default function PropertyManagerDashboard() {
                       <Clock className="text-purple-600" size={16} />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-800">Interior Painting - Unit 301</p>
+                      <p className="font-medium text-slate-800">Paint - Unit 301</p>
                       <p className="text-sm text-slate-600">Living room and bedroom walls</p>
                       <p className="text-xs text-purple-600 mt-1">Started: 9:00 AM • 5 hrs elapsed</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge className="bg-purple-100 text-purple-800">Paint in Progress</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">Paint - In Progress</Badge>
                     <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
                   </div>
                 </div>
@@ -407,7 +407,6 @@ export default function PropertyManagerDashboard() {
                   <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                     <div className="bg-purple-500 h-2 rounded-full" style={{width: '80%'}}></div>
                   </div>
-                  {/* Detailed Phase Progress */}
                   <div className="mt-2 space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-green-600">✓ Prep & Prime</span>
@@ -418,124 +417,149 @@ export default function PropertyManagerDashboard() {
                       <span className="text-purple-600">80%</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• Trim Work</span>
-                      <span className="text-slate-400">Pending</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• Cleanup</span>
+                      <span className="text-slate-400">• Touch-ups</span>
                       <span className="text-slate-400">Pending</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Trim Work in Progress */}
-              <div className="p-4 border border-indigo-200 bg-indigo-50 rounded-lg">
+              {/* Clean Job in Progress */}
+              <div className="p-4 border border-teal-200 bg-teal-50 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-indigo-600" size={16} />
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                      <Clock className="text-teal-600" size={16} />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-800">Full Renovation - Unit 402</p>
-                      <p className="text-sm text-slate-600">Bathroom and kitchen refresh</p>
-                      <p className="text-xs text-indigo-600 mt-1">Started: 8:00 AM • 6.5 hrs elapsed</p>
+                      <p className="font-medium text-slate-800">Clean - Unit 402</p>
+                      <p className="text-sm text-slate-600">Deep clean after renovation</p>
+                      <p className="text-xs text-teal-600 mt-1">Started: 8:00 AM • 6.5 hrs elapsed</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge className="bg-indigo-100 text-indigo-800">Trim in Progress</Badge>
+                    <Badge className="bg-teal-100 text-teal-800">Clean - In Progress</Badge>
                     <p className="text-xs text-slate-500 mt-1">Tech: David Lee</p>
                   </div>
                 </div>
                 <div className="mt-3 bg-white/60 rounded p-2">
                   <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Installing baseboards</span>
-                    <span>90%</span>
+                    <span>Phase: Kitchen and bathroom scrub</span>
+                    <span>75%</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-indigo-500 h-2 rounded-full" style={{width: '90%'}}></div>
+                    <div className="bg-teal-500 h-2 rounded-full" style={{width: '75%'}}></div>
                   </div>
-                  {/* Detailed Phase Progress */}
                   <div className="mt-2 space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Job Started</span>
+                      <span className="text-green-600">✓ Dusting & Vacuuming</span>
                       <span className="text-green-600">Complete</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Repairs Complete</span>
-                      <span className="text-green-600">Complete</span>
+                      <span className="text-teal-600">• Deep Scrub</span>
+                      <span className="text-teal-600">75%</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Painting Complete</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-indigo-600">• Trim Work</span>
-                      <span className="text-indigo-600">90%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• Cleanup</span>
+                      <span className="text-slate-400">• Final Polish</span>
                       <span className="text-slate-400">Pending</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Cleanup in Progress */}
-              <div className="p-4 border border-emerald-200 bg-emerald-50 rounded-lg">
+              {/* Carpet Job in Progress */}
+              <div className="p-4 border border-orange-200 bg-orange-50 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <UserCheck className="text-emerald-600" size={16} />
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Clock className="text-orange-600" size={16} />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-800">Kitchen Remodel - Unit 150</p>
-                      <p className="text-sm text-slate-600">Cabinet installation and painting</p>
-                      <p className="text-xs text-emerald-600 mt-1">Started: 7:00 AM • 8 hrs elapsed</p>
+                      <p className="font-medium text-slate-800">Carpet - Unit 150</p>
+                      <p className="text-sm text-slate-600">Bedroom and hallway installation</p>
+                      <p className="text-xs text-orange-600 mt-1">Started: 7:00 AM • 4.5 hrs elapsed</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge className="bg-emerald-100 text-emerald-800">Cleanup in Progress</Badge>
+                    <Badge className="bg-orange-100 text-orange-800">Carpet - In Progress</Badge>
                     <p className="text-xs text-slate-500 mt-1">Tech: Alex Chen</p>
                   </div>
                 </div>
                 <div className="mt-3 bg-white/60 rounded p-2">
                   <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Final cleanup and photos</span>
-                    <span>95%</span>
+                    <span>Phase: Installing hallway carpet</span>
+                    <span>70%</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-emerald-500 h-2 rounded-full" style={{width: '95%'}}></div>
+                    <div className="bg-orange-500 h-2 rounded-full" style={{width: '70%'}}></div>
                   </div>
-                  {/* Detailed Phase Progress */}
                   <div className="mt-2 space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Job Started</span>
+                      <span className="text-green-600">✓ Prep & Measure</span>
                       <span className="text-green-600">Complete</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Repairs Complete</span>
+                      <span className="text-green-600">✓ Bedroom Install</span>
                       <span className="text-green-600">Complete</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Painting Complete</span>
-                      <span className="text-green-600">Complete</span>
+                      <span className="text-orange-600">• Hallway Install</span>
+                      <span className="text-orange-600">70%</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Trim Complete</span>
-                      <span className="text-green-600">Complete</span>
+                      <span className="text-slate-400">• Final Trim</span>
+                      <span className="text-slate-400">Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inspected Job - Completed */}
+              <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <UserCheck className="text-green-600" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">Inspected - Unit 102</p>
+                      <p className="text-sm text-slate-600">Final quality inspection</p>
+                      <p className="text-xs text-green-600 mt-1">Completed: 2:30 PM • Total: 6 hrs</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-green-100 text-green-800">Inspected - Complete</Badge>
+                    <p className="text-xs text-slate-500 mt-1">Inspector: Maria Rodriguez</p>
+                  </div>
+                </div>
+                <div className="mt-3 bg-white/60 rounded p-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span>Status: Passed all quality checks</span>
+                    <span>100%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                    <div className="bg-green-500 h-2 rounded-full" style={{width: '100%'}}></div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-600">✓ Safety Check</span>
+                      <span className="text-green-600">Passed</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-emerald-600">• Cleanup</span>
-                      <span className="text-emerald-600">95%</span>
+                      <span className="text-green-600">✓ Quality Review</span>
+                      <span className="text-green-600">Passed</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-600">✓ Documentation</span>
+                      <span className="text-green-600">Complete</span>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center space-x-2">
                     <Button size="sm" variant="outline" className="text-xs">
-                      View Photos
+                      View Report
                     </Button>
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-xs">
-                      Mark Complete
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-xs">
+                      Approve Unit
                     </Button>
                   </div>
                 </div>
@@ -680,25 +704,16 @@ export default function PropertyManagerDashboard() {
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            {/* Scheduled Jobs */}
+            {/* Punch Jobs */}
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Calendar className="text-blue-600" size={16} />
               </div>
-              <p className="text-lg font-bold text-slate-800">3</p>
-              <p className="text-xs text-slate-600">Scheduled</p>
+              <p className="text-lg font-bold text-slate-800">1</p>
+              <p className="text-xs text-slate-600">Punch</p>
             </div>
 
-            {/* Job Started */}
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Clock className="text-emerald-600" size={16} />
-              </div>
-              <p className="text-lg font-bold text-slate-800">2</p>
-              <p className="text-xs text-slate-600">Job Started</p>
-            </div>
-
-            {/* Repairs in Progress */}
+            {/* Repairs */}
             <div className="text-center">
               <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Wrench className="text-amber-600" size={16} />
@@ -707,31 +722,40 @@ export default function PropertyManagerDashboard() {
               <p className="text-xs text-slate-600">Repairs</p>
             </div>
 
-            {/* Paint in Progress */}
+            {/* Paint */}
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Palette className="text-purple-600" size={16} />
               </div>
               <p className="text-lg font-bold text-slate-800">1</p>
-              <p className="text-xs text-slate-600">Painting</p>
+              <p className="text-xs text-slate-600">Paint</p>
             </div>
 
-            {/* Trim in Progress */}
-            <div className="text-center">
-              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Square className="text-indigo-600" size={16} />
-              </div>
-              <p className="text-lg font-bold text-slate-800">1</p>
-              <p className="text-xs text-slate-600">Trim Work</p>
-            </div>
-
-            {/* Cleanup in Progress */}
+            {/* Clean */}
             <div className="text-center">
               <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Sparkles className="text-teal-600" size={16} />
               </div>
               <p className="text-lg font-bold text-slate-800">1</p>
-              <p className="text-xs text-slate-600">Cleanup</p>
+              <p className="text-xs text-slate-600">Clean</p>
+            </div>
+
+            {/* Carpet */}
+            <div className="text-center">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Square className="text-orange-600" size={16} />
+              </div>
+              <p className="text-lg font-bold text-slate-800">1</p>
+              <p className="text-xs text-slate-600">Carpet</p>
+            </div>
+
+            {/* Inspected */}
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <UserCheck className="text-green-600" size={16} />
+              </div>
+              <p className="text-lg font-bold text-slate-800">1</p>
+              <p className="text-xs text-slate-600">Inspected</p>
             </div>
           </div>
 
