@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalRevenue = invoices
         .filter(invoice => invoice.status === "paid")
         .reduce((sum, invoice) => sum + parseFloat(invoice.total), 0);
-      const totalHours = staff.reduce((sum, member) => sum + parseFloat(member.hoursThisWeek), 0);
+      const totalHours = staff.reduce((sum, member) => sum + parseFloat(member.hoursThisWeek || "0"), 0);
 
       const stats = {
         activeJobs,
@@ -368,6 +368,224 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  // Property Manager Dashboard
+  app.get("/api/dashboard/property-manager/:managerId", async (req, res) => {
+    try {
+      const stats = await storage.getPropertyManagerStats(req.params.managerId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch property manager stats" });
+    }
+  });
+
+  // Office Staff Dashboard
+  app.get("/api/dashboard/office", async (req, res) => {
+    try {
+      const stats = await storage.getOfficeStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch office stats" });
+    }
+  });
+
+  // Technician Dashboard
+  app.get("/api/dashboard/technician/:technicianId", async (req, res) => {
+    try {
+      const stats = await storage.getTechnicianStats(req.params.technicianId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch technician stats" });
+    }
+  });
+
+  // Work Orders routes
+  app.get("/api/work-orders", async (req, res) => {
+    try {
+      const workOrders = await storage.getWorkOrders();
+      res.json(workOrders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch work orders" });
+    }
+  });
+
+  app.get("/api/work-orders/:id", async (req, res) => {
+    try {
+      const workOrder = await storage.getWorkOrder(req.params.id);
+      if (!workOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+      res.json(workOrder);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch work order" });
+    }
+  });
+
+  app.get("/api/work-orders/technician/:technicianId", async (req, res) => {
+    try {
+      const workOrders = await storage.getWorkOrdersByTechnician(req.params.technicianId);
+      res.json(workOrders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch technician work orders" });
+    }
+  });
+
+  app.get("/api/work-orders/manager/:managerId", async (req, res) => {
+    try {
+      // Get properties managed by this manager first
+      const properties = await storage.getPropertiesByManager(req.params.managerId);
+      const propertyIds = properties.map(p => p.id);
+      
+      // Get work orders for these properties
+      const allWorkOrders = await storage.getWorkOrders();
+      const workOrders = allWorkOrders.filter(wo => propertyIds.includes(wo.propertyId));
+      
+      res.json(workOrders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch manager work orders" });
+    }
+  });
+
+  app.get("/api/work-orders/today/:technicianId", async (req, res) => {
+    try {
+      const workOrders = await storage.getWorkOrdersByTechnician(req.params.technicianId);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const todaysOrders = workOrders.filter(wo => {
+        if (!wo.scheduledDate) return false;
+        const scheduledDate = new Date(wo.scheduledDate);
+        return scheduledDate >= today && scheduledDate < tomorrow;
+      });
+
+      res.json(todaysOrders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch today's schedule" });
+    }
+  });
+
+  app.get("/api/work-orders/pending-approval", async (req, res) => {
+    try {
+      const workOrders = await storage.getWorkOrders();
+      const pendingApproval = workOrders.filter(wo => 
+        wo.status === 'open' && wo.estimatedCost && parseFloat(wo.estimatedCost) > 500
+      );
+      res.json(pendingApproval);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending approvals" });
+    }
+  });
+
+  app.post("/api/work-orders", async (req, res) => {
+    try {
+      const workOrder = await storage.createWorkOrder(req.body);
+      res.status(201).json(workOrder);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create work order" });
+    }
+  });
+
+  app.put("/api/work-orders/:id", async (req, res) => {
+    try {
+      const workOrder = await storage.updateWorkOrder(req.params.id, req.body);
+      if (!workOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+      res.json(workOrder);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update work order" });
+    }
+  });
+
+  app.delete("/api/work-orders/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteWorkOrder(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete work order" });
+    }
+  });
+
+  // Properties routes
+  app.get("/api/properties", async (req, res) => {
+    try {
+      const properties = await storage.getProperties();
+      res.json(properties);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch properties" });
+    }
+  });
+
+  app.get("/api/properties/manager/:managerId", async (req, res) => {
+    try {
+      const properties = await storage.getPropertiesByManager(req.params.managerId);
+      res.json(properties);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch manager properties" });
+    }
+  });
+
+  app.post("/api/properties", async (req, res) => {
+    try {
+      const property = await storage.createProperty(req.body);
+      res.status(201).json(property);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create property" });
+    }
+  });
+
+  // Tenants routes
+  app.get("/api/tenants", async (req, res) => {
+    try {
+      const tenants = await storage.getTenants();
+      res.json(tenants);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tenants" });
+    }
+  });
+
+  app.get("/api/tenants/expiring-leases", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const tenants = await storage.getTenants();
+      
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() + days);
+      
+      const expiringLeases = tenants.filter(tenant => {
+        const leaseEnd = new Date(tenant.leaseEnd);
+        return tenant.status === 'active' && leaseEnd <= cutoffDate;
+      });
+      
+      res.json(expiringLeases);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch expiring leases" });
+    }
+  });
+
+  // Users routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users", async (req, res) => {
+    try {
+      const user = await storage.createUser(req.body);
+      res.status(201).json(user);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create user" });
     }
   });
 

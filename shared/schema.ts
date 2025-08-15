@@ -91,6 +91,87 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  role: text("role").notNull(), // admin, office_staff, technician, property_manager
+  department: text("department"), // operations, maintenance, leasing, accounting
+  status: text("status").notNull().default("active"), // active, inactive
+  lastLogin: timestamp("last_login"),
+  preferences: text("preferences"), // JSON string for dashboard preferences
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const workOrders = pgTable("work_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").notNull(), // Reference to property
+  unitNumber: text("unit_number"),
+  category: text("category").notNull(), // maintenance, emergency, inspection, tenant_request
+  priority: text("priority").notNull().default("medium"), // low, medium, high, emergency
+  status: text("status").notNull().default("open"), // open, assigned, in_progress, completed, cancelled
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTechnicianId: varchar("assigned_technician_id").references(() => staff.id),
+  requestedBy: text("requested_by"), // tenant, property_manager, maintenance
+  scheduledDate: timestamp("scheduled_date"),
+  completedDate: timestamp("completed_date"),
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
+  photos: text("photos").array(), // Array of photo URLs
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const properties = pgTable("properties", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
+  propertyType: text("property_type").notNull(), // single_family, multi_family, commercial
+  units: integer("units").default(1),
+  yearBuilt: integer("year_built"),
+  squareFootage: integer("square_footage"),
+  managerId: varchar("manager_id").references(() => staff.id),
+  status: text("status").notNull().default("active"), // active, inactive, under_renovation
+  monthlyRent: decimal("monthly_rent", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const tenants = pgTable("tenants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  propertyId: varchar("property_id").references(() => properties.id).notNull(),
+  unitNumber: text("unit_number"),
+  leaseStart: timestamp("lease_start").notNull(),
+  leaseEnd: timestamp("lease_end").notNull(),
+  monthlyRent: decimal("monthly_rent", { precision: 10, scale: 2 }).notNull(),
+  securityDeposit: decimal("security_deposit", { precision: 10, scale: 2 }),
+  status: text("status").notNull().default("active"), // active, inactive, past_due
+  emergencyContact: text("emergency_contact"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const maintenanceSchedule = pgTable("maintenance_schedule", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.id).notNull(),
+  taskType: text("task_type").notNull(), // hvac_service, plumbing_inspection, electrical_check, etc.
+  frequency: text("frequency").notNull(), // monthly, quarterly, biannually, annually
+  nextDueDate: timestamp("next_due_date").notNull(),
+  lastCompleted: timestamp("last_completed"),
+  assignedTechnicianId: varchar("assigned_technician_id").references(() => staff.id),
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
@@ -132,6 +213,35 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  lastLogin: true,
+  createdAt: true,
+});
+
+export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({
+  id: true,
+  completedDate: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPropertySchema = createInsertSchema(properties).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTenantSchema = createInsertSchema(tenants).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMaintenanceScheduleSchema = createInsertSchema(maintenanceSchedule).omit({
+  id: true,
+  lastCompleted: true,
+  createdAt: true,
+});
+
 // Types
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
@@ -150,3 +260,18 @@ export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type WorkOrder = typeof workOrders.$inferSelect;
+export type InsertWorkOrder = z.infer<typeof insertWorkOrderSchema>;
+
+export type Property = typeof properties.$inferSelect;
+export type InsertProperty = z.infer<typeof insertPropertySchema>;
+
+export type Tenant = typeof tenants.$inferSelect;
+export type InsertTenant = z.infer<typeof insertTenantSchema>;
+
+export type MaintenanceSchedule = typeof maintenanceSchedule.$inferSelect;
+export type InsertMaintenanceSchedule = z.infer<typeof insertMaintenanceScheduleSchema>;
