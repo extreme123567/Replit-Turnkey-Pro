@@ -250,20 +250,19 @@ export default function PropertyManagerDashboard() {
         </Card>
       </div>
 
-      {/* Approval Queue */}
+      {/* Approval Queue - Extra Dirty Units & Drywall Repairs */}
       <Card className="servicepro-card">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Pending Approvals</span>
+            <span>Approval Queue</span>
             <Badge variant="secondary">
-              {/* Mock count for demo */}
-              2 items
+              2 pending
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="space-y-4">
-            {/* Mock approval items */}
+            {/* Extra Dirty Unit Request */}
             <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
@@ -271,9 +270,10 @@ export default function PropertyManagerDashboard() {
                     <AlertTriangle className="text-amber-600" size={16} />
                   </div>
                   <div>
-                    <p className="font-medium text-slate-800">Extra Dirty Unit - Apt 205</p>
-                    <p className="text-sm text-slate-600">Requires deep cleaning approval</p>
-                    <p className="text-xs text-slate-500 mt-1">From: Office Staff • 2 hours ago</p>
+                    <p className="font-medium text-slate-800">Extra Dirty Unit - Unit 205</p>
+                    <p className="text-sm text-slate-600">Requires additional cleaning time beyond standard</p>
+                    <p className="text-xs text-amber-600">Tech: Mike Johnson → Office Staff → Property Manager</p>
+                    <p className="text-xs text-slate-500 mt-1">Submitted: 2 hours ago • Extra 4 hours needed</p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
@@ -287,25 +287,45 @@ export default function PropertyManagerDashboard() {
               </div>
             </div>
             
-            <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+            {/* Extra Drywall Repair Request */}
+            <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
-                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <Wrench className="text-amber-600" size={16} />
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <Wrench className="text-red-600" size={16} />
                   </div>
                   <div>
-                    <p className="font-medium text-slate-800">HVAC Repair - Unit 102</p>
-                    <p className="text-sm text-slate-600">Est. Cost: $450 • Requires 2 photos</p>
-                    <p className="text-xs text-slate-500 mt-1">From: Office Staff • 4 hours ago</p>
+                    <p className="font-medium text-slate-800">Extra Drywall Repair - Unit 301</p>
+                    <p className="text-sm text-slate-600">Additional drywall damage found during paint prep</p>
+                    <p className="text-xs text-red-600">Tech: Sarah Wilson → Office Staff → Property Manager</p>
+                    <p className="text-xs text-slate-500 mt-1">Submitted: 1 hour ago • Cost: $350 • Photos attached</p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
+                  <Button size="sm" variant="outline" className="text-xs">
+                    View Photos
+                  </Button>
                   <Button size="sm" variant="outline" className="text-red-600 border-red-200">
                     Reject
                   </Button>
                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
                     Approve
                   </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Recently Approved Section */}
+            <div className="pt-4 border-t border-slate-100">
+              <p className="text-xs font-medium text-slate-600 mb-3">Recently Approved</p>
+              <div className="p-3 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-slate-800">Extra Dirty Unit - Unit 203</p>
+                    <p className="text-sm text-green-600">✓ Approved - Notification sent to Office Staff & Technician</p>
+                    <p className="text-xs text-slate-500">Approved: 30 minutes ago • Tech can proceed with extended cleaning</p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800">Approved</Badge>
                 </div>
               </div>
             </div>

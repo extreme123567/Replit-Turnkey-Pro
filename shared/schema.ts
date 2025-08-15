@@ -105,6 +105,31 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const approvalRequests = pgTable("approval_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // extra_dirty_unit, extra_drywall_repair
+  workOrderId: varchar("work_order_id").references(() => workOrders.id),
+  propertyId: varchar("property_id").notNull(),
+  unitNumber: text("unit_number"),
+  requestedById: varchar("requested_by_id").references(() => users.id).notNull(), // Technician who submitted
+  processedByOfficeStaffId: varchar("processed_by_office_staff_id").references(() => users.id), // Office staff who forwarded
+  propertyManagerId: varchar("property_manager_id").references(() => users.id).notNull(), // Property manager who approves
+  title: text("title").notNull(),
+  description: text("description"),
+  reason: text("reason"), // Why extra work is needed
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  estimatedHours: decimal("estimated_hours", { precision: 5, scale: 2 }),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  photos: text("photos").array(), // Supporting photos from technician
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  approvalNotes: text("approval_notes"),
+  notificationSent: boolean("notification_sent").default(false), // Track if approval notification sent to office staff and technician
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   propertyId: varchar("property_id").notNull(), // Reference to property
@@ -311,12 +336,24 @@ export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
   createdAt: true,
 });
 
+export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).omit({
+  id: true,
+  approvedAt: true,
+  rejectedAt: true,
+  notificationSent: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
 
 export type Staff = typeof staff.$inferSelect;
 export type InsertStaff = z.infer<typeof insertStaffSchema>;
+
+export type ApprovalRequest = typeof approvalRequests.$inferSelect;
+export type InsertApprovalRequest = z.infer<typeof insertApprovalRequestSchema>;
 
 export type Job = typeof jobs.$inferSelect;
 export type InsertJob = z.infer<typeof insertJobSchema>;
