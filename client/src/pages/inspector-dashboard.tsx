@@ -407,33 +407,34 @@ export default function InspectorDashboard() {
                     <Badge className="bg-emerald-100 text-emerald-800">Ready for Inspection</Badge>
                     
                     {/* Timer Display */}
-                    {activeTimers[job.id] && (
+                    {activeTimers[`${job.id}-${job.unit}`] && (
                       <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-mono">
-                        ⏱️ {formatElapsedTime(activeTimers[job.id].elapsedSeconds)}
+                        ⏱️ {formatElapsedTime(activeTimers[`${job.id}-${job.unit}`].elapsedSeconds)}
+                        <div className="text-xs opacity-75">Inspecting {job.unit}</div>
                       </div>
                     )}
                     
                     <div className="flex space-x-2">
                       {/* Timer Controls */}
-                      {activeTimers[job.id] ? (
+                      {activeTimers[`${job.id}-${job.unit}`] ? (
                         <Button 
                           size="sm"
-                          onClick={() => stopTimer(job.id)}
+                          onClick={() => stopTimer(`${job.id}-${job.unit}`)}
                           className="bg-red-600 hover:bg-red-700"
-                          data-testid={`button-stop-timer-${job.id}`}
+                          data-testid={`button-stop-timer-${job.id}-${job.unit}`}
                         >
                           <Square className="mr-1" size={12} />
-                          Stop
+                          Stop Unit
                         </Button>
                       ) : (
                         <Button 
                           size="sm"
-                          onClick={() => startTimer(job.id)}
+                          onClick={() => startTimer(`${job.id}-${job.unit}`)}
                           className="bg-green-600 hover:bg-green-700"
-                          data-testid={`button-start-timer-${job.id}`}
+                          data-testid={`button-start-timer-${job.id}-${job.unit}`}
                         >
                           <Play className="mr-1" size={12} />
-                          Start
+                          Start Unit
                         </Button>
                       )}
                       
