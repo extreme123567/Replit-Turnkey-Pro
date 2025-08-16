@@ -1434,10 +1434,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderId: updatedCallback.technicianId,
         recipientId: updatedCallback.originalInspectorId,
         conversationId: `callback-completed-${updatedCallback.jobId}-${Date.now()}`,
-        message: `Callback work completed for Job ${updatedCallback.jobId}.\n\nResolution: ${resolutionNotes}\n\nTime spent: ${timeSpent} minutes\n\nPhotos uploaded: ${processedPhotos.length}`,
+        message: `Callback work completed for Job ${updatedCallback.jobId}.\n\nResolution: ${resolutionNotes}\n\nTime spent: ${timeSpent} minutes\n\nPhotos uploaded: ${processedPhotos.length}\n\nPlease review photos to verify completion - no site visit required.`,
         metadata: JSON.stringify({
-          subject: `Callback Completed - Job ${updatedCallback.jobId}`,
-          type: "callback_completed",
+          subject: `Photo Verification Required - Job ${updatedCallback.jobId}`,
+          type: "callback_photo_verification",
           jobId: updatedCallback.jobId,
           callbackId: callbackId,
           resolutionPhotos: processedPhotos,
@@ -1453,10 +1453,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderId: updatedCallback.technicianId,
         recipientId: null, // Send to all office staff
         conversationId: `callback-completed-office-${updatedCallback.jobId}-${Date.now()}`,
-        message: `Callback work completed by technician for Job ${updatedCallback.jobId}.\n\nOriginal Issue: ${updatedCallback.callbackReason}\n\nResolution: ${resolutionNotes}\n\nTime spent: ${timeSpent} minutes\n\nReady for re-inspection.`,
+        message: `Callback work completed by technician for Job ${updatedCallback.jobId}.\n\nOriginal Issue: ${updatedCallback.callbackReason}\n\nResolution: ${resolutionNotes}\n\nTime spent: ${timeSpent} minutes\n\nPhotos uploaded for verification - inspector will review remotely.`,
         metadata: JSON.stringify({
-          subject: `Callback Work Completed - Job ${updatedCallback.jobId}`,
-          type: "callback_completed_office",
+          subject: `Callback Photos Ready for Review - Job ${updatedCallback.jobId}`,
+          type: "callback_photo_review",
           jobId: updatedCallback.jobId,
           callbackId: callbackId,
           resolutionPhotos: processedPhotos,
@@ -1501,6 +1501,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching all callbacks:", error);
       res.status(500).json({ error: "Failed to fetch callbacks" });
+    }
+  });
+
+  // Inspector photo verification - approve callback work based on photos
+  app.put("/api/callbacks/:callbackId/verify", async (req, res) => {
+    try {
+      const { callbackId } = req.params;
+      const { inspectorId, verified, verificationNotes } = req.body;
+
+      // Update callback resolution as verified
+      const updatedCallback = await storage.updateCallbackResolution(callbackId, {
+        status: verified ? "verified" : "needs_revision", 
+        verifiedBy: inspectorId,
+        verifiedAt: new Date()
+      });
+
+      if (!updatedCallback) {
+        return res.status(404).json({ error: "Callback resolution not found" });
+      }
+
+      if (verified) {
+        // Notify office staff that callback is fully resolved
+        const completionNotification = {
+          senderId: inspectorId,
+          recipientId: null, // Send to all office staff
+          conversationId: `callback-verified-${updatedCallback.jobId}-${Date.now()}`,
+          message: `Callback work verified and approved for Job ${updatedCallback.jobId}.\n\nOriginal Issue: ${updatedCallback.callbackReason}\n\nResolution: ${updatedCallback.resolutionNotes}\n\nInspector Notes: ${verificationNotes}\n\nJob is now fully complete.`,
+          metadata: JSON.stringify({
+            subject: `Callback Verified - Job ${updatedCallback.jobId} Complete`,
+            type: "callback_verified",
+            jobId: updatedCallback.jobId,
+            callbackId: callbackId,
+            priority: "low"
+          })
+        };
+
+        await storage.createMessage(completionNotification);
+
+        // Notify technician of successful verification
+        const technicianNotification = {
+          senderId: inspectorId,
+          recipientId: updatedCallback.technicianId,
+          conversationId: `callback-approved-tech-${updatedCallback.jobId}-${Date.now()}`,
+          message: `Great work! Your callback resolution for Job ${updatedCallback.jobId} has been verified and approved.\n\nInspector Notes: ${verificationNotes}\n\nThank you for the quality work.`,
+          metadata: JSON.stringify({
+            subject: `Callback Work Approved - Job ${updatedCallback.jobId}`,
+            type: "callback_approved",
+            jobId: updatedCallback.jobId,
+            callbackId: callbackId,
+            priority: "low"
+          })
+        };
+
+        await storage.createMessage(technicianNotification);
+
+        console.log(`Callback verification complete for job ${updatedCallback.jobId}`);
+      } else {
+        // If not verified, notify technician of needed revisions
+        const revisionNotification = {
+          senderId: inspectorId,
+          recipientId: updatedCallback.technicianId,
+          conversationId: `callback-revision-${updatedCallback.jobId}-${Date.now()}`,
+          message: `Additional work needed for Job ${updatedCallback.jobId} callback.\n\nInspector Notes: ${verificationNotes}\n\nPlease address the issues and upload new photos.`,
+          metadata: JSON.stringify({
+            subject: `Callback Needs Revision - Job ${updatedCallback.jobId}`,
+            type: "callback_revision_needed",
+            jobId: updatedCallback.jobId,
+            callbackId: callbackId,
+            priority: "high"
+          })
+        };
+
+        await storage.createMessage(revisionNotification);
+      }
+
+      res.json({
+        message: verified ? "Callback work verified and approved" : "Callback needs revision",
+        callbackId: callbackId,
+        verified: verified
+      });
+    } catch (error) {
+      console.error("Error verifying callback:", error);
+      res.status(500).json({ error: "Failed to verify callback" });
     }
   });
 

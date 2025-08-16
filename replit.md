@@ -6,11 +6,24 @@ ServicePro is a comprehensive property management platform designed for professi
 
 ## Recent Changes (August 2025)
 
+### Photo-Based Callback Resolution System (Latest)
+- **Efficient Callback Workflow**: When inspections fail, technicians receive callback notifications and can fix issues without requiring inspector return visits
+- **Photo Upload System**: Technicians upload before/after photos of completed callback work with detailed resolution notes
+- **Remote Verification**: Inspectors review photos remotely and approve/reject work without physical site visits
+- **Automated Notifications**: Complete messaging workflow - technician completes work → photos uploaded → inspector and office automatically notified
+- **Time Tracking**: Full accountability with time tracking for callback resolution work
+- **Status Management**: Complete audit trail from callback creation to photo verification to final approval
+
+### Geofencing and Location Verification
+- **100-Meter Radius Verification**: Inspectors must be within 100 meters of property before starting unit timers
+- **Unit-Specific Timers**: Individual timer tracking for each unit inspection with start/stop functionality
+- **Location-Based Controls**: Timer controls only activate when inspector is physically on-site
+
 ### Role-Based Dashboard System
 - **Property Manager Dashboard**: Property oversight, work order management, occupancy tracking, revenue monitoring, job scheduling and progress tracking with real-time status updates
 - **Office Staff Dashboard**: Lease management, approval workflows, tenant coordination, administrative tasks
-- **Technician Dashboard**: Work order execution, daily scheduling, time tracking, mobile-friendly interface
-- **Inspector Dashboard**: Property inspections, compliance tracking, report generation, quality assurance
+- **Technician Dashboard**: Work order execution, daily scheduling, time tracking, mobile-friendly interface, callback resolution with photo uploads
+- **Inspector Dashboard**: Property inspections, compliance tracking, report generation, quality assurance, remote photo verification for callbacks, geofenced timer system
 - **General Dashboard**: Overview metrics accessible to all roles with appropriate data filtering
 
 ### Access Control Implementation
@@ -33,14 +46,16 @@ ServicePro is a comprehensive property management platform designed for professi
 - **Restrictions**: Limited property management, cannot approve high-value expenses
 
 #### Technician Role
-- **Responsibilities**: Work order execution, field operations, time tracking, equipment maintenance
-- **Access**: Assigned work orders, scheduling, messaging, mobile-optimized interface
+- **Responsibilities**: Work order execution, field operations, time tracking, equipment maintenance, callback resolution work
+- **Access**: Assigned work orders, scheduling, messaging, mobile-optimized interface, callback notifications, photo upload system for callback completion
 - **Restrictions**: Cannot create or assign work orders, limited reporting access
+- **Enhanced Features**: Complete callback resolution workflow with photo documentation, automatic notification system when callback work is completed
 
 #### Inspector Role
-- **Responsibilities**: Property inspections, compliance monitoring, quality assurance, reporting
-- **Access**: Inspection scheduling, report generation, property access, compliance tracking
+- **Responsibilities**: Property inspections, compliance monitoring, quality assurance, reporting, remote callback verification
+- **Access**: Inspection scheduling, report generation, property access, compliance tracking, geofenced timer system, photo-based callback approval
 - **Restrictions**: Cannot manage properties or tenants directly, focused on inspection workflows
+- **Enhanced Features**: Unit-specific timer tracking with geofencing verification, remote photo verification for callback work eliminating need for return site visits
 
 #### Admin Role
 - **Responsibilities**: System administration, user management, full oversight
