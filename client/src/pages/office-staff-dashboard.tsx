@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,6 +133,9 @@ function RequestQuoteButton() {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Request Quote from Office</DialogTitle>
+          <DialogDescription>
+            Submit a detailed quote request for approval and pricing.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -336,6 +339,9 @@ function MessageStaffButton() {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Send Message to Staff</DialogTitle>
+          <DialogDescription>
+            Send a message to staff members or the entire team.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -476,6 +482,9 @@ function ScheduleJobButton() {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Schedule New Job</DialogTitle>
+          <DialogDescription>
+            Create a new job assignment for your team.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
