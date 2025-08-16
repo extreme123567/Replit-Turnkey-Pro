@@ -1,4 +1,4 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest } from "@shared/schema";
+import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -122,6 +122,15 @@ export interface IStorage {
   logAction(action: InsertAuditLog): Promise<AuditLog>;
   getAuditLog(userId?: string, resourceType?: string): Promise<AuditLog[]>;
 
+  // Callback Resolutions
+  getCallbackResolutions(): Promise<CallbackResolution[]>;
+  getCallbackResolution(id: string): Promise<CallbackResolution | undefined>;
+  getCallbacksByTechnician(technicianId: string): Promise<CallbackResolution[]>;
+  getCallbacksByJob(jobId: string): Promise<CallbackResolution[]>;
+  createCallbackResolution(resolution: InsertCallbackResolution): Promise<CallbackResolution>;
+  updateCallbackResolution(id: string, resolution: Partial<InsertCallbackResolution>): Promise<CallbackResolution | undefined>;
+  deleteCallbackResolution(id: string): Promise<boolean>;
+
   // Dashboard Analytics
   getDashboardStats(userRole: string, userId?: string): Promise<any>;
   getPropertyManagerStats(managerId: string): Promise<any>;
@@ -143,6 +152,7 @@ export class MemStorage implements IStorage {
   private tenants: Map<string, Tenant> = new Map();
   private maintenanceSchedule: Map<string, MaintenanceSchedule> = new Map();
   private inspections: Map<string, Inspection> = new Map();
+  private callbackResolutions: Map<string, CallbackResolution> = new Map();
   private userPermissions: Map<string, UserPermission> = new Map();
   private auditLogs: Map<string, AuditLog> = new Map();
   private invoiceCounter = 1;
@@ -1154,6 +1164,52 @@ export class MemStorage implements IStorage {
       complianceIssues,
       todaysInspections
     };
+  }
+
+  // Callback Resolutions
+  async getCallbackResolutions(): Promise<CallbackResolution[]> {
+    return Array.from(this.callbackResolutions.values());
+  }
+
+  async getCallbackResolution(id: string): Promise<CallbackResolution | undefined> {
+    return this.callbackResolutions.get(id);
+  }
+
+  async getCallbacksByTechnician(technicianId: string): Promise<CallbackResolution[]> {
+    return Array.from(this.callbackResolutions.values()).filter(cb => cb.technicianId === technicianId);
+  }
+
+  async getCallbacksByJob(jobId: string): Promise<CallbackResolution[]> {
+    return Array.from(this.callbackResolutions.values()).filter(cb => cb.jobId === jobId);
+  }
+
+  async createCallbackResolution(resolution: InsertCallbackResolution): Promise<CallbackResolution> {
+    const id = Date.now().toString();
+    const newResolution: CallbackResolution = {
+      ...resolution,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.callbackResolutions.set(id, newResolution);
+    return newResolution;
+  }
+
+  async updateCallbackResolution(id: string, resolution: Partial<InsertCallbackResolution>): Promise<CallbackResolution | undefined> {
+    const existing = this.callbackResolutions.get(id);
+    if (!existing) return undefined;
+    
+    const updated: CallbackResolution = {
+      ...existing,
+      ...resolution,
+      updatedAt: new Date(),
+    };
+    this.callbackResolutions.set(id, updated);
+    return updated;
+  }
+
+  async deleteCallbackResolution(id: string): Promise<boolean> {
+    return this.callbackResolutions.delete(id);
   }
 }
 

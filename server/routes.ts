@@ -1346,6 +1346,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Callback Resolution API Routes
+
+  // Get callbacks assigned to a technician
+  app.get("/api/callbacks/technician/:technicianId", async (req, res) => {
+    try {
+      const { technicianId } = req.params;
+      const callbacks = await storage.getCallbacksByTechnician(technicianId);
+      res.json(callbacks);
+    } catch (error) {
+      console.error("Error fetching technician callbacks:", error);
+      res.status(500).json({ error: "Failed to fetch callbacks" });
+    }
+  });
+
+  // Create a new callback resolution (when technician starts working on callback)
+  app.post("/api/callbacks/resolve", async (req, res) => {
+    try {
+      const {
+        jobId,
+        originalInspectorId,
+        technicianId,
+        callbackReason,
+        resolutionNotes
+      } = req.body;
+
+      const callbackResolution = await storage.createCallbackResolution({
+        jobId,
+        originalInspectorId,
+        technicianId,
+        callbackReason,
+        resolutionNotes,
+        status: "in_progress",
+        beforePhotos: [],
+        afterPhotos: []
+      });
+
+      res.status(201).json(callbackResolution);
+    } catch (error) {
+      console.error("Error creating callback resolution:", error);
+      res.status(500).json({ error: "Failed to create callback resolution" });
+    }
+  });
+
+  // Complete callback resolution with photos
+  app.put("/api/callbacks/:callbackId/complete", async (req, res) => {
+    try {
+      const { callbackId } = req.params;
+      const { resolutionNotes, afterPhotos, timeSpent } = req.body;
+
+      // Process uploaded photos
+      const objectStorageService = new ObjectStorageService();
+      const processedPhotos = [];
+      
+      if (afterPhotos && afterPhotos.length > 0) {
+        for (const photoUrl of afterPhotos) {
+          try {
+            const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+              photoUrl,
+              {
+                owner: "technician-1", // In real app, get from authenticated user
+                visibility: "private",
+              }
+            );
+            processedPhotos.push(objectPath);
+          } catch (error) {
+            console.error("Error processing callback photo:", error);
+          }
+        }
+      }
+
+      // Update callback resolution to completed
+      const updatedCallback = await storage.updateCallbackResolution(callbackId, {
+        resolutionNotes,
+        afterPhotos: processedPhotos,
+        timeSpent,
+        status: "completed",
+        completedAt: new Date()
+      });
+
+      if (!updatedCallback) {
+        return res.status(404).json({ error: "Callback resolution not found" });
+      }
+
+      // Send notifications to inspector and office staff
+      const inspectorNotification = {
+        senderId: updatedCallback.technicianId,
+        recipientId: updatedCallback.originalInspectorId,
+        conversationId: `callback-completed-${updatedCallback.jobId}-${Date.now()}`,
+        message: `Callback work completed for Job ${updatedCallback.jobId}.\n\nResolution: ${resolutionNotes}\n\nTime spent: ${timeSpent} minutes\n\nPhotos uploaded: ${processedPhotos.length}`,
+        metadata: JSON.stringify({
+          subject: `Callback Completed - Job ${updatedCallback.jobId}`,
+          type: "callback_completed",
+          jobId: updatedCallback.jobId,
+          callbackId: callbackId,
+          resolutionPhotos: processedPhotos,
+          timeSpent: timeSpent,
+          priority: "normal"
+        })
+      };
+
+      await storage.createMessage(inspectorNotification);
+
+      // Notify office staff
+      const officeNotification = {
+        senderId: updatedCallback.technicianId,
+        recipientId: null, // Send to all office staff
+        conversationId: `callback-completed-office-${updatedCallback.jobId}-${Date.now()}`,
+        message: `Callback work completed by technician for Job ${updatedCallback.jobId}.\n\nOriginal Issue: ${updatedCallback.callbackReason}\n\nResolution: ${resolutionNotes}\n\nTime spent: ${timeSpent} minutes\n\nReady for re-inspection.`,
+        metadata: JSON.stringify({
+          subject: `Callback Work Completed - Job ${updatedCallback.jobId}`,
+          type: "callback_completed_office",
+          jobId: updatedCallback.jobId,
+          callbackId: callbackId,
+          resolutionPhotos: processedPhotos,
+          technicianId: updatedCallback.technicianId,
+          priority: "normal"
+        })
+      };
+
+      await storage.createMessage(officeNotification);
+
+      console.log(`Callback completion notifications sent for job ${updatedCallback.jobId}`);
+
+      res.json({
+        message: "Callback resolution completed successfully",
+        callbackId: callbackId,
+        photosUploaded: processedPhotos.length,
+        timeSpent: timeSpent
+      });
+    } catch (error) {
+      console.error("Error completing callback resolution:", error);
+      res.status(500).json({ error: "Failed to complete callback resolution" });
+    }
+  });
+
+  // Get callbacks for a specific job
+  app.get("/api/callbacks/job/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const callbacks = await storage.getCallbacksByJob(jobId);
+      res.json(callbacks);
+    } catch (error) {
+      console.error("Error fetching job callbacks:", error);
+      res.status(500).json({ error: "Failed to fetch job callbacks" });
+    }
+  });
+
+  // Get all callback resolutions
+  app.get("/api/callbacks", async (req, res) => {
+    try {
+      const callbacks = await storage.getCallbackResolutions();
+      res.json(callbacks);
+    } catch (error) {
+      console.error("Error fetching all callbacks:", error);
+      res.status(500).json({ error: "Failed to fetch callbacks" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

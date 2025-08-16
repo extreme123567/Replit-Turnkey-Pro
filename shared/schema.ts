@@ -280,6 +280,25 @@ export const quoteRequests = pgTable("quote_requests", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const callbackResolutions = pgTable("callback_resolutions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull(), // Original job that failed inspection
+  originalInspectorId: varchar("original_inspector_id").notNull(),
+  technicianId: varchar("technician_id").notNull(), // Who fixed the issues
+  callbackReason: text("callback_reason").notNull(), // Original inspection failure reason
+  resolutionNotes: text("resolution_notes").notNull(), // What was fixed
+  beforePhotos: text("before_photos").array(), // Photos of issues before fix
+  afterPhotos: text("after_photos").array(), // Photos showing completed fixes
+  status: varchar("status").notNull().default("in_progress"), // in_progress, completed, verified
+  completedAt: timestamp("completed_at"),
+  verifiedBy: varchar("verified_by"), // Inspector who re-verified
+  verifiedAt: timestamp("verified_at"),
+  timeSpent: integer("time_spent"), // Minutes spent on callback work
+  metadata: text("metadata"), // JSON for additional data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
@@ -384,6 +403,14 @@ export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).
   updatedAt: true,
 });
 
+export const insertCallbackResolutionSchema = createInsertSchema(callbackResolutions).omit({
+  id: true,
+  completedAt: true,
+  verifiedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
@@ -432,3 +459,6 @@ export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 export type QuoteRequest = typeof quoteRequests.$inferSelect;
 export type InsertQuoteRequest = z.infer<typeof insertQuoteRequestSchema>;
+
+export type CallbackResolution = typeof callbackResolutions.$inferSelect;
+export type InsertCallbackResolution = z.infer<typeof insertCallbackResolutionSchema>;
