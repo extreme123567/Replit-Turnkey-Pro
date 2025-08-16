@@ -183,6 +183,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   app.patch("/api/jobs/:id", async (req, res) => {
     try {
       const updates = insertJobSchema.partial().parse(req.body);
@@ -960,15 +962,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job Scheduling API
   app.post("/api/jobs/schedule", async (req, res) => {
     try {
-      // Handle both single job scheduling (Office Staff) and multi-job scheduling (Property Manager)
+      // Handle multiple scheduling formats:
+      // 1. Office Staff multi-job checkbox scheduling (new)
+      // 2. Single job scheduling (Office Staff)
+      // 3. Multi-job scheduling (Property Manager)
       const { 
+        // Office Staff multi-job checkbox fields (new)
+        property, unitNumber, bedroomSize, jobTypes, location, scheduledDate, notes, assignedTechnician, priority, scheduledBy,
         // Single job fields (Office Staff)
-        type, unitNumber, propertyAddress, scheduledDate, notes, assignedTechnician, priority, scheduledBy,
+        type, propertyAddress,
         // Multi-job fields (Property Manager)
         propertyId, moveInDate, completionDate, selectedJobs
       } = req.body;
 
-      // Office Staff single job scheduling
+      console.log("Received schedule request:", req.body);
+
+      // Office Staff multi-job checkbox scheduling (new format)
+      if (property && unitNumber && bedroomSize && jobTypes && Array.isArray(jobTypes) && jobTypes.length > 0 && location && scheduledDate) {
+        const scheduledJobs = [];
+        for (const jobType of jobTypes) {
+          // Determine photo requirements for trash jobs
+          const photosRequired = (jobType === 'bulk-trash' || jobType === 'unit_trash_out') ? 2 : 0;
+          const photosToOffice = photosRequired > 0;
+          
+          const workOrder = await storage.createWorkOrder({
+            propertyId: property,
+            unitNumber,
+            category: "maintenance",
+            jobType,
+            priority: priority || "medium",
+            title: `${getJobTypeName(jobType)} - ${property} Unit ${unitNumber}`,
+            description: `${getJobTypeName(jobType)} work for ${bedroomSize} unit ${unitNumber} at ${property}. Location: ${location}${notes ? `. Notes: ${notes}` : ''}`,
+            scheduledDate: new Date(scheduledDate),
+            assignedTo: assignedTechnician || null,
+            requestedBy: scheduledBy || "office-staff",
+            photosRequired,
+            photosToOffice,
+            photosSubmitted: [],
+          });
+          
+          scheduledJobs.push(workOrder);
+        }
+        
+        res.json({ 
+          success: true, 
+          jobsScheduled: scheduledJobs.length,
+          jobs: scheduledJobs 
+        });
+        return;
+      }
+
+      // Office Staff single job scheduling (legacy format)
       if (type && unitNumber && propertyAddress && scheduledDate) {
         const workOrder = await storage.createWorkOrder({
           propertyId: propertyId || "default-property",
@@ -994,7 +1038,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Property Manager multi-job scheduling
+      // Property Manager multi-job scheduling (legacy format)
       if (selectedJobs && moveInDate && unitNumber) {
         const scheduledJobs = [];
         for (let i = 0; i < selectedJobs.length; i++) {
