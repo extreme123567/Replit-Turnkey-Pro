@@ -397,6 +397,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get payout rates for paint and clean jobs
+  app.get("/api/payroll/rates", async (req, res) => {
+    try {
+      const rates = await storage.getPayoutRates();
+      res.json(rates);
+    } catch (error) {
+      console.error("Error fetching payout rates:", error);
+      res.status(500).json({ error: "Failed to fetch payout rates" });
+    }
+  });
+
+  // Create payout for completed paint/clean job
+  app.post("/api/payroll/create-payout", async (req, res) => {
+    try {
+      const { jobId, staffId, jobType, unitCount = 1 } = req.body;
+      
+      if (!jobId || !staffId || !jobType) {
+        return res.status(400).json({ error: "Missing required fields: jobId, staffId, jobType" });
+      }
+      
+      if (!['paint', 'clean'].includes(jobType)) {
+        return res.status(400).json({ error: "jobType must be 'paint' or 'clean'" });
+      }
+      
+      const payout = await storage.createJobPayout(jobId, staffId, jobType, unitCount);
+      res.status(201).json(payout);
+    } catch (error) {
+      console.error("Error creating job payout:", error);
+      res.status(500).json({ error: "Failed to create job payout" });
+    }
+  });
+
   // Property Manager Dashboard
   app.get("/api/dashboard/property-manager/:managerId", async (req, res) => {
     try {

@@ -138,6 +138,8 @@ export interface IStorage {
   updatePayrollEntry(id: string, payroll: Partial<InsertStaffPayroll>): Promise<StaffPayroll | undefined>;
   deductPayForCallback(jobId: string, callbackId: string): Promise<boolean>;
   restorePayAfterCallback(callbackId: string): Promise<boolean>;
+  createJobPayout(jobId: string, staffId: string, jobType: 'paint' | 'clean', unitCount?: number): Promise<StaffPayroll>;
+  getPayoutRates(): Promise<{ paint: number; clean: number }>;
 
   // Job Management
   getJobsByProperty(propertyId: string): Promise<Job[]>;
@@ -1501,6 +1503,36 @@ export class MemStorage implements IStorage {
     return true;
   }
 
+  // Payout calculation for paint and clean jobs
+  async createJobPayout(jobId: string, staffId: string, jobType: 'paint' | 'clean', unitCount: number = 1): Promise<StaffPayroll> {
+    const paintRate = 85.00; // $85 per unit painted
+    const cleanRate = 75.00; // $75 per unit cleaned
+    
+    const baseAmount = jobType === 'paint' ? paintRate * unitCount : cleanRate * unitCount;
+    
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+    
+    const payrollEntry: InsertStaffPayroll = {
+      staffId,
+      jobId,
+      jobType,
+      basePayAmount: baseAmount.toFixed(2),
+      currentPayAmount: baseAmount.toFixed(2),
+      payStatus: 'earned',
+      payPeriod: currentMonth,
+      notes: `${jobType} job payout - ${unitCount} unit(s) at $${jobType === 'paint' ? paintRate : cleanRate} per unit`
+    };
+
+    return this.createPayrollEntry(payrollEntry);
+  }
+
+  async getPayoutRates(): Promise<{ paint: number; clean: number }> {
+    return {
+      paint: 85.00,
+      clean: 75.00
+    };
+  }
+
   // Job Management Implementation
   async getJobsByProperty(propertyId: string): Promise<Job[]> {
     return Array.from(this.jobs.values()).filter(job => 
@@ -1711,7 +1743,7 @@ export class MemStorage implements IStorage {
       .reduce((sum, job) => sum + parseFloat(job.amount), 0);
     
     const totalPayouts = Array.from(this.staffPayroll.values())
-      .filter(entry => entry.payStatus === 'earned')
+      .filter(entry => entry.payStatus === 'earned' || entry.payStatus === 'restored')
       .reduce((sum, entry) => sum + parseFloat(entry.currentPayAmount), 0);
     
     const netProfit = completedJobsRevenue - totalPayouts;

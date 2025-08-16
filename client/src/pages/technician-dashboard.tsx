@@ -23,6 +23,80 @@ import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Complete Job with Payout Component
+const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jobType: 'paint' | 'clean' }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [unitCount, setUnitCount] = useState(1);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const completeJobWithPayout = useMutation({
+    mutationFn: async (data: any) => {
+      // Create the payout first
+      await apiRequest("/api/payroll/create-payout", "POST", {
+        jobId: `demo-${jobType}-job-${Date.now()}`,
+        staffId: technicianId,
+        jobType: data.jobType,
+        unitCount: data.unitCount
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: `${jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job Completed`,
+        description: `Payout of $${jobType === 'paint' ? 85 * unitCount : 75 * unitCount} has been added to your account.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll/staff", technicianId] });
+      setUnitCount(1);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to complete ${jobType} job. Please try again.`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCompleteJob = () => {
+    setIsLoading(true);
+    completeJobWithPayout.mutate({ jobType, unitCount });
+    setTimeout(() => setIsLoading(false), 1000);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center space-x-2">
+        <input
+          type="number"
+          min="1"
+          max="10"
+          value={unitCount}
+          onChange={(e) => setUnitCount(parseInt(e.target.value) || 1)}
+          className="w-16 px-2 py-1 text-sm border rounded"
+          placeholder="1"
+        />
+        <span className="text-sm text-slate-600">units</span>
+      </div>
+      <Button 
+        variant="outline" 
+        className={`h-20 flex-col space-y-2 w-full ${jobType === 'paint' ? 'border-blue-200 hover:bg-blue-50' : 'border-green-200 hover:bg-green-50'}`}
+        onClick={handleCompleteJob}
+        disabled={isLoading || completeJobWithPayout.isPending}
+        data-testid={`button-complete-${jobType}-job`}
+      >
+        <div className={`w-8 h-8 ${jobType === 'paint' ? 'bg-blue-500' : 'bg-green-500'} rounded-full`}></div>
+        <span className="text-sm font-medium">
+          Complete {jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job
+        </span>
+        <span className="text-xs text-slate-500">
+          ${jobType === 'paint' ? 85 * unitCount : 75 * unitCount}
+        </span>
+      </Button>
+    </div>
+  );
+};
+
 interface TechnicianStats {
   assignedOrders: number;
   completedToday: number;
@@ -286,6 +360,64 @@ export default function TechnicianDashboard() {
         </Card>
       </div>
 
+      {/* Payout Rates for Paint and Clean Jobs */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="text-emerald-600" size={16} />
+            </div>
+            <span>Payout Rates</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Paint Job Rate */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
+                  <span className="font-medium text-blue-800">Paint Jobs</span>
+                </div>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  Per Unit
+                </Badge>
+              </div>
+              <p className="text-2xl font-bold text-blue-800">$85.00</p>
+              <p className="text-sm text-blue-600">Fixed rate per unit painted</p>
+            </div>
+
+            {/* Clean Job Rate */}
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-green-500 rounded-full"></div>
+                  <span className="font-medium text-green-800">Clean Jobs</span>
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Per Unit
+                </Badge>
+              </div>
+              <p className="text-2xl font-bold text-green-800">$75.00</p>
+              <p className="text-sm text-green-600">Fixed rate per unit cleaned</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="flex items-start space-x-2">
+              <AlertTriangle className="text-amber-600 mt-0.5" size={16} />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Payment Schedule</p>
+                <p className="text-sm text-amber-700">
+                  Paint and clean job payments are processed weekly every Friday. 
+                  Deductions may apply for failed inspections or callback work.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Payroll Summary */}
       {payrollData?.entries?.length > 0 && (
         <Card className="servicepro-card">
@@ -299,6 +431,11 @@ export default function TechnicianDashboard() {
                   <div>
                     <p className="font-medium">{entry.jobType} job</p>
                     <p className="text-sm text-slate-600">Job #{entry.jobId}</p>
+                    {(entry.jobType === 'paint' || entry.jobType === 'clean') && (
+                      <p className="text-xs text-blue-600">
+                        Fixed rate: ${entry.jobType === 'paint' ? '85.00' : '75.00'} per unit
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className={`font-medium ${entry.payStatus === 'deducted' ? 'text-red-600' : 'text-emerald-600'}`}>
@@ -434,24 +571,10 @@ export default function TechnicianDashboard() {
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-start-work-order"
-            >
-              <Timer className="text-emerald-600" size={20} />
-              <span className="text-sm font-medium">Start Work Order</span>
-            </Button>
+            <CompleteJobButton technicianId={technicianId} jobType="paint" />
+            <CompleteJobButton technicianId={technicianId} jobType="clean" />
             <ExtraDirtyButton technicianId={technicianId} />
             <RepairPhotoButton painterId={technicianId} />
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-request-parts"
-            >
-              <Settings className="text-amber-600" size={20} />
-              <span className="text-sm font-medium">Request Parts</span>
-            </Button>
           </div>
         </CardContent>
       </Card>
