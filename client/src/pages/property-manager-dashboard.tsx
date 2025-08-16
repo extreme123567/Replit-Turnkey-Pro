@@ -28,7 +28,9 @@ import {
   Sparkles,
   Trash2,
   PackageX,
-  CheckCircle
+  CheckCircle,
+  Camera,
+  Upload
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
