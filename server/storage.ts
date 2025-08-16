@@ -1697,6 +1697,52 @@ export class MemStorage implements IStorage {
     this.repairPhotoRequests.set(id, updated);
     return updated;
   }
+
+  // Financial Periods Implementation
+  async getGeneralDashboardStats() {
+    // Calculate real-time job counts
+    const scheduledJobs = Array.from(this.jobs.values()).filter(job => job.status === 'scheduled').length;
+    const activeJobs = Array.from(this.jobs.values()).filter(job => job.status === 'in_progress').length;
+    const completedJobs = Array.from(this.jobs.values()).filter(job => job.status === 'completed').length;
+    
+    // Calculate real-time financials
+    const completedJobsRevenue = Array.from(this.jobs.values())
+      .filter(job => job.status === 'completed')
+      .reduce((sum, job) => sum + parseFloat(job.amount), 0);
+    
+    const totalPayouts = Array.from(this.staffPayroll.values())
+      .filter(entry => entry.payStatus === 'earned')
+      .reduce((sum, entry) => sum + parseFloat(entry.currentPayAmount), 0);
+    
+    const netProfit = completedJobsRevenue - totalPayouts;
+    const profitMargin = completedJobsRevenue > 0 ? (netProfit / completedJobsRevenue) * 100 : 0;
+    
+    // Create bi-weekly period dates
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 13); // 14 days total
+    endDate.setHours(23, 59, 59, 999);
+    
+    const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    return {
+      scheduledJobs,
+      activeJobs,
+      completedAndInspected: completedJobs,
+      revenueBilled: completedJobsRevenue.toFixed(2),
+      totalPayout: totalPayouts.toFixed(2),
+      netProfit: netProfit.toFixed(2),
+      profitMargin: parseFloat(profitMargin.toFixed(1)),
+      currentPeriod: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        daysRemaining,
+      },
+    };
+  }
 }
 
 export const storage = new MemStorage();

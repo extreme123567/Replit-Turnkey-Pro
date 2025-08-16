@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/app-layout";
 import Dashboard from "@/pages/dashboard";
+import GeneralDashboard from "@/pages/general-dashboard";
 import PropertyManagerDashboard from "@/pages/property-manager-dashboard";
 import OfficeStaffDashboard from "@/pages/office-staff-dashboard";
 import TechnicianDashboard from "@/pages/technician-dashboard";
@@ -22,6 +23,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/general" component={GeneralDashboard} />
       <Route path="/property-manager" component={PropertyManagerDashboard} />
       <Route path="/office-staff" component={OfficeStaffDashboard} />
       <Route path="/technician" component={TechnicianDashboard} />

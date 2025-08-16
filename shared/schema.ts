@@ -560,3 +560,29 @@ export type InsertExtraDirtyRequest = z.infer<typeof insertExtraDirtyRequestSche
 
 export type RepairPhotoRequest = typeof repairPhotoRequests.$inferSelect;
 export type InsertRepairPhotoRequest = z.infer<typeof insertRepairPhotoRequestSchema>;
+
+// Bi-weekly financial periods table
+export const financialPeriods = pgTable("financial_periods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  status: varchar("status").notNull().default("active"), // active, completed
+  totalRevenueBilled: decimal("total_revenue_billed", { precision: 12, scale: 2 }).default("0.00"),
+  totalPayout: decimal("total_payout", { precision: 12, scale: 2 }).default("0.00"),
+  netProfit: decimal("net_profit", { precision: 12, scale: 2 }).default("0.00"),
+  profitMargin: decimal("profit_margin", { precision: 5, scale: 2 }).default("0.00"),
+  jobsScheduled: integer("jobs_scheduled").default(0),
+  jobsActive: integer("jobs_active").default(0),
+  jobsCompleted: integer("jobs_completed").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertFinancialPeriodSchema = createInsertSchema(financialPeriods).omit({
+  id: true,
+  completedAt: true,
+  createdAt: true,
+});
+
+export type FinancialPeriod = typeof financialPeriods.$inferSelect;
+export type InsertFinancialPeriod = z.infer<typeof insertFinancialPeriodSchema>;

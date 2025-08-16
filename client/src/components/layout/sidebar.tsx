@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const dashboards = [
-  { name: "General Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "General Dashboard", href: "/general", icon: LayoutDashboard },
   { name: "Property Manager", href: "/property-manager", icon: Building },
   { name: "Office Staff", href: "/office-staff", icon: ClipboardList },
   { name: "Technician", href: "/technician", icon: HardHat },
