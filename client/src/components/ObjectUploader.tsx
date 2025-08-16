@@ -64,7 +64,6 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
-        allowedFileTypes: ['image/*'], // Only allow images for work orders
       },
       autoProceed: false,
     })
@@ -73,7 +72,6 @@ export function ObjectUploader({
         getUploadParameters: onGetUploadParameters,
       })
       .on("complete", (result) => {
-        setShowModal(false);
         onComplete?.(result);
       })
   );
@@ -89,7 +87,6 @@ export function ObjectUploader({
         open={showModal}
         onRequestClose={() => setShowModal(false)}
         proudlyDisplayPoweredByUppy={false}
-        note="Upload required images for work order completion"
       />
     </div>
   );

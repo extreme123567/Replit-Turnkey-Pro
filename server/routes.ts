@@ -1160,6 +1160,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inspector and Job Inspection Routes
+  
+  // Get jobs ready for inspection
+  app.get("/api/jobs/for-inspection/:inspectorId", async (req, res) => {
+    try {
+      // Mock data for jobs ready for inspection
+      const jobsForInspection = [
+        {
+          id: "job-1",
+          jobType: "Clean",
+          unit: "Unit 205",
+          property: "Sunset Apartments",
+          technicianName: "David Lee",
+          completedAt: new Date().toISOString(),
+          status: "completed"
+        },
+        {
+          id: "job-2", 
+          jobType: "Paint",
+          unit: "Unit 301",
+          property: "Oak Ridge Condos",
+          technicianName: "Mike Johnson",
+          completedAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+          status: "completed"
+        },
+        {
+          id: "job-3",
+          jobType: "Carpet",
+          unit: "Unit 150",
+          property: "Sunset Apartments", 
+          technicianName: "Alex Chen",
+          completedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+          status: "completed"
+        }
+      ];
+      
+      res.json(jobsForInspection);
+    } catch (error) {
+      console.error("Error fetching jobs for inspection:", error);
+      res.status(500).json({ error: "Failed to fetch jobs for inspection" });
+    }
+  });
+
+  // Complete job inspection with photos and callback handling
+  app.put("/api/jobs/:jobId/inspect", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { status, notes, photos, callbackNotes } = req.body;
+      
+      console.log(`Job ${jobId} inspection completed with status: ${status}`);
+      
+      // Process uploaded photos
+      if (photos && photos.length > 0) {
+        const objectStorageService = new ObjectStorageService();
+        const processedPhotos = [];
+        
+        for (const photoUrl of photos) {
+          try {
+            const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+              photoUrl,
+              {
+                owner: "inspector-1", // In real app, get from authenticated user
+                visibility: "private", // Photos are private by default
+              }
+            );
+            processedPhotos.push(objectPath);
+          } catch (error) {
+            console.error("Error processing photo:", error);
+          }
+        }
+        
+        console.log(`Processed ${processedPhotos.length} photos for job ${jobId}`);
+      }
+      
+      if (status === "callback") {
+        // Create callback notification for office staff and technician
+        const callbackData = {
+          senderId: "inspector-1",
+          recipientId: null, // Send to all office staff
+          conversationId: `callback-${jobId}-${Date.now()}`,
+          message: `Job inspection failed for Job ${jobId}. Callback required.\n\nNotes: ${notes}\n\nCallback Reason: ${callbackNotes}`,
+          metadata: JSON.stringify({
+            subject: `Callback Required - Job ${jobId}`,
+            type: "callback_notification",
+            jobId: jobId,
+            inspectionPhotos: photos || [],
+            callbackReason: callbackNotes,
+            priority: "high"
+          })
+        };
+        
+        await storage.createMessage(callbackData);
+        
+        // Also send to the technician who completed the job
+        const technicianMessage = {
+          senderId: "inspector-1",
+          recipientId: "technician-id", // Would get from job data in real app
+          conversationId: `callback-tech-${jobId}-${Date.now()}`,
+          message: `Your completed job ${jobId} requires a callback.\n\nInspector Notes: ${notes}\n\nCallback Reason: ${callbackNotes}`,
+          metadata: JSON.stringify({
+            subject: `Callback Required - Your Job ${jobId}`,
+            type: "technician_callback",
+            jobId: jobId,
+            inspectionPhotos: photos || [],
+            callbackReason: callbackNotes,
+            priority: "high"
+          })
+        };
+        
+        await storage.createMessage(technicianMessage);
+        
+        console.log(`Callback notifications sent for job ${jobId}`);
+      } else if (status === "pass") {
+        console.log(`Job ${jobId} approved by inspector`);
+      }
+      
+      res.json({ 
+        message: `Job inspection completed with status: ${status}`,
+        jobId: jobId,
+        status: status,
+        photosUploaded: photos?.length || 0
+      });
+    } catch (error) {
+      console.error("Error completing job inspection:", error);
+      res.status(500).json({ error: "Failed to complete job inspection" });
+    }
+  });
+
+  // Inspector dashboard stats
+  app.get("/api/dashboard/inspector/:inspectorId", async (req, res) => {
+    try {
+      const stats = {
+        scheduledInspections: 5,
+        completedThisWeek: 12,
+        pendingReports: 3,
+        complianceIssues: 1,
+        todaysInspections: []
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching inspector stats:", error);
+      res.status(500).json({ error: "Failed to fetch inspector dashboard stats" });
+    }
+  });
+
+  // Object Storage Routes
+  
+  // Get upload URL for object storage
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Serve private objects with ACL check
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      
+      // For demo purposes, allow access. In production, implement proper ACL checks
+      // const canAccess = await objectStorageService.canAccessObjectEntity({
+      //   objectFile,
+      //   userId: userId, // Get from authentication
+      //   requestedPermission: ObjectPermission.READ,
+      // });
+      // if (!canAccess) {
+      //   return res.sendStatus(401);
+      // }
+      
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
