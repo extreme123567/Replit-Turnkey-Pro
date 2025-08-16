@@ -27,7 +27,8 @@ import {
   Square,
   Sparkles,
   Trash2,
-  PackageX
+  PackageX,
+  CheckCircle
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -374,22 +375,22 @@ export default function PropertyManagerDashboard() {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Job Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="servicepro-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Total Properties</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-total-properties">
-                  {stats?.totalProperties || 0}
+                <p className="text-slate-600 text-sm font-medium">Scheduled Jobs</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1" data-testid="stat-scheduled-jobs">
+                  {workOrders?.filter(order => order.status === 'scheduled')?.length || 3}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Building className="text-blue-600" size={20} />
+                <Calendar className="text-blue-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">{stats?.totalUnits || 0} total units</p>
+            <p className="text-sm text-slate-600 mt-2">Ready to start</p>
           </CardContent>
         </Card>
 
@@ -397,54 +398,33 @@ export default function PropertyManagerDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Occupancy Rate</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-occupancy-rate">
-                  {stats?.occupancyRate || '0.0'}%
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Users className="text-emerald-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">
-              {stats?.occupiedUnits || 0} of {stats?.totalUnits || 0} units occupied
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="servicepro-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-monthly-revenue">
-                  ${stats?.monthlyRent || '0.00'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="text-purple-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Active leases</p>
-          </CardContent>
-        </Card>
-
-        <Card className="servicepro-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Open Work Orders</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-open-work-orders">
-                  {stats?.openWorkOrders || 0}
+                <p className="text-slate-600 text-sm font-medium">In Progress</p>
+                <p className="text-2xl font-bold text-amber-600 mt-1" data-testid="stat-in-progress-jobs">
+                  {workOrders?.filter(order => order.status === 'in_progress')?.length || 4}
                 </p>
               </div>
               <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Wrench className="text-amber-600" size={20} />
+                <Clock className="text-amber-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">
-              {stats?.emergencyWorkOrders || 0} emergency priority
-            </p>
+            <p className="text-sm text-slate-600 mt-2">Currently active</p>
+          </CardContent>
+        </Card>
+
+        <Card className="servicepro-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Completed Today</p>
+                <p className="text-2xl font-bold text-green-600 mt-1" data-testid="stat-completed-jobs">
+                  {workOrders?.filter(order => order.status === 'completed')?.length || 6}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="text-green-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mt-2">Finished jobs</p>
           </CardContent>
         </Card>
       </div>
@@ -532,343 +512,174 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Job Scheduling and Progress Tracking */}
+      {/* Job Filtering and Progress Tracking */}
       <Card className="servicepro-card">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Job Schedule & Progress</span>
+            <span>Job Status & Progress</span>
             <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-blue-600">
-                Today: 3 jobs
-              </Badge>
-              <Badge variant="outline" className="text-green-600">
-                In Progress: 2 jobs
-              </Badge>
+              <Button
+                variant={jobFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setJobFilter("all")}
+                data-testid="filter-all-jobs"
+              >
+                All Jobs
+              </Button>
+              <Button
+                variant={jobFilter === "scheduled" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setJobFilter("scheduled")}
+                data-testid="filter-scheduled-jobs"
+              >
+                Scheduled
+              </Button>
+              <Button
+                variant={jobFilter === "in_progress" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setJobFilter("in_progress")}
+                data-testid="filter-in-progress-jobs"
+              >
+                In Progress
+              </Button>
+              <Button
+                variant={jobFilter === "completed" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setJobFilter("completed")}
+                data-testid="filter-completed-jobs"
+              >
+                Completed
+              </Button>
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="space-y-4">
-            {/* Job Timeline View */}
+            {/* Job Status Display */}
             <div className="space-y-3">
-              {/* Scheduled Job - Punch */}
-              <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Calendar className="text-blue-600" size={16} />
+              {/* Show jobs based on filter */}
+              {(jobFilter === "all" || jobFilter === "scheduled") && (
+                <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Calendar className="text-blue-600" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Punch List - Unit 304</p>
+                        <p className="text-sm text-slate-600">Touch-ups and final details • Est. 2 hours</p>
+                        <p className="text-xs text-blue-600 mt-1">Scheduled: Today 2:00 PM</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Punch List - Unit 304</p>
-                      <p className="text-sm text-slate-600">Touch-ups and final details • Est. 2 hours</p>
-                      <p className="text-xs text-blue-600 mt-1">Scheduled: Today 2:00 PM</p>
+                    <div className="text-right">
+                      <Badge className="bg-blue-100 text-blue-800">Scheduled</Badge>
+                      <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-blue-100 text-blue-800">Punch - Scheduled</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Repairs Job in Progress */}
-              <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-amber-600" size={16} />
+              {(jobFilter === "all" || jobFilter === "in_progress") && (
+                <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <Clock className="text-amber-600" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Repairs - Unit 205</p>
+                        <p className="text-sm text-slate-600">Kitchen faucet and cabinet door fix</p>
+                        <p className="text-xs text-amber-600 mt-1">Started: 1:30 PM • 1.5 hrs elapsed</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Repairs - Unit 205</p>
-                      <p className="text-sm text-slate-600">Kitchen faucet and cabinet door fix</p>
-                      <p className="text-xs text-amber-600 mt-1">Started: 1:30 PM • 1.5 hrs elapsed</p>
+                    <div className="text-right">
+                      <Badge className="bg-amber-100 text-amber-800">In Progress</Badge>
+                      <p className="text-xs text-slate-500 mt-1">Tech: Sarah Wilson</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge className="bg-amber-100 text-amber-800">Repairs - In Progress</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: Sarah Wilson</p>
+                  <div className="mt-3 bg-white/60 rounded p-2">
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <span>Phase: Installing new faucet</span>
+                      <span>65%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                      <div className="bg-amber-500 h-2 rounded-full" style={{width: '65%'}}></div>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Installing new faucet</span>
-                    <span>65%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-amber-500 h-2 rounded-full" style={{width: '65%'}}></div>
-                  </div>
-                </div>
-              </div>
+              )}
 
-              {/* Paint Job in Progress */}
-              <div className="p-4 border border-purple-200 bg-purple-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-purple-600" size={16} />
+              {(jobFilter === "all" || jobFilter === "in_progress") && (
+                <div className="p-4 border border-purple-200 bg-purple-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Clock className="text-purple-600" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Paint - Unit 301</p>
+                        <p className="text-sm text-slate-600">Living room and bedroom walls</p>
+                        <p className="text-xs text-purple-600 mt-1">Started: 9:00 AM • 5 hrs elapsed</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Paint - Unit 301</p>
-                      <p className="text-sm text-slate-600">Living room and bedroom walls</p>
-                      <p className="text-xs text-purple-600 mt-1">Started: 9:00 AM • 5 hrs elapsed</p>
+                    <div className="text-right">
+                      <Badge className="bg-purple-100 text-purple-800">In Progress</Badge>
+                      <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge className="bg-purple-100 text-purple-800">Paint - In Progress</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Second coat application</span>
-                    <span>80%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-purple-500 h-2 rounded-full" style={{width: '80%'}}></div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Prep & Prime</span>
-                      <span className="text-green-600">Complete</span>
+                  <div className="mt-3 bg-white/60 rounded p-2">
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <span>Phase: Second coat application</span>
+                      <span>80%</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-purple-600">• Paint Walls</span>
-                      <span className="text-purple-600">80%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• Touch-ups</span>
-                      <span className="text-slate-400">Pending</span>
+                    <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
+                      <div className="bg-purple-500 h-2 rounded-full" style={{width: '80%'}}></div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Clean Job in Progress */}
-              <div className="p-4 border border-teal-200 bg-teal-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-teal-600" size={16} />
+              {(jobFilter === "all" || jobFilter === "completed") && (
+                <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="text-green-600" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Clean - Unit 402</p>
+                        <p className="text-sm text-slate-600">Deep clean after renovation</p>
+                        <p className="text-xs text-green-600 mt-1">Completed: Today 2:30 PM • 6.5 hrs total</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Clean - Unit 402</p>
-                      <p className="text-sm text-slate-600">Deep clean after renovation</p>
-                      <p className="text-xs text-teal-600 mt-1">Started: 8:00 AM • 6.5 hrs elapsed</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-teal-100 text-teal-800">Clean - In Progress</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: David Lee</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Kitchen and bathroom scrub</span>
-                    <span>75%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-teal-500 h-2 rounded-full" style={{width: '75%'}}></div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Dusting & Vacuuming</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-teal-600">• Deep Scrub</span>
-                      <span className="text-teal-600">75%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• Final Polish</span>
-                      <span className="text-slate-400">Pending</span>
+                    <div className="text-right">
+                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                      <p className="text-xs text-slate-500 mt-1">Tech: David Lee</p>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Carpet Job in Progress */}
-              <div className="p-4 border border-orange-200 bg-orange-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-orange-600" size={16} />
+              {(jobFilter === "all" || jobFilter === "completed") && (
+                <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="text-green-600" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Carpet - Unit 150</p>
+                        <p className="text-sm text-slate-600">Bedroom and hallway installation</p>
+                        <p className="text-xs text-green-600 mt-1">Completed: Yesterday 4:30 PM • 6 hrs total</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Carpet - Unit 150</p>
-                      <p className="text-sm text-slate-600">Bedroom and hallway installation</p>
-                      <p className="text-xs text-orange-600 mt-1">Started: 7:00 AM • 4.5 hrs elapsed</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-orange-100 text-orange-800">Carpet - In Progress</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: Alex Chen</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Installing hallway carpet</span>
-                    <span>70%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-orange-500 h-2 rounded-full" style={{width: '70%'}}></div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Prep & Measure</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Bedroom Install</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-orange-600">• Hallway Install</span>
-                      <span className="text-orange-600">70%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• Final Trim</span>
-                      <span className="text-slate-400">Pending</span>
+                    <div className="text-right">
+                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                      <p className="text-xs text-slate-500 mt-1">Tech: Alex Chen</p>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Unit Trash Out Job */}
-              <div className="p-4 border border-slate-200 bg-slate-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-slate-600" size={16} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Unit Trash Out - Unit 305</p>
-                      <p className="text-sm text-slate-600">Remove all debris and personal items</p>
-                      <p className="text-xs text-slate-600 mt-1">Started: 10:00 AM • 3 hrs elapsed</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-slate-100 text-slate-800">Trash Out - In Progress</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: Carlos Martinez</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Removing large furniture</span>
-                    <span>60%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-slate-500 h-2 rounded-full" style={{width: '60%'}}></div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Initial Assessment</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-600">• Furniture Removal</span>
-                      <span className="text-slate-600">60%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• 2 Photos Required</span>
-                      <span className="text-slate-400">Pending</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Onsite Bulk Trash Job */}
-              <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <Clock className="text-yellow-600" size={16} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Onsite Bulk Trash - Building B</p>
-                      <p className="text-sm text-slate-600">Large item disposal from common areas</p>
-                      <p className="text-xs text-yellow-600 mt-1">Started: 1:00 PM • 2 hrs elapsed</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-yellow-100 text-yellow-800">Bulk Trash - In Progress</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Tech: Jennifer Kim</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Phase: Loading dumpster</span>
-                    <span>80%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{width: '80%'}}></div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Item Collection</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-yellow-600">• Loading & Disposal</span>
-                      <span className="text-yellow-600">80%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">• 2 Photos to Office</span>
-                      <span className="text-slate-400">Pending</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Inspected Job - Completed */}
-              <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <UserCheck className="text-green-600" size={16} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-800">Inspected - Unit 102</p>
-                      <p className="text-sm text-slate-600">Final quality inspection</p>
-                      <p className="text-xs text-green-600 mt-1">Completed: 2:30 PM • Total: 6 hrs</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-green-100 text-green-800">Inspected - Complete</Badge>
-                    <p className="text-xs text-slate-500 mt-1">Inspector: Maria Rodriguez</p>
-                  </div>
-                </div>
-                <div className="mt-3 bg-white/60 rounded p-2">
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <span>Status: Passed all quality checks</span>
-                    <span>100%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                    <div className="bg-green-500 h-2 rounded-full" style={{width: '100%'}}></div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Safety Check</span>
-                      <span className="text-green-600">Passed</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Quality Review</span>
-                      <span className="text-green-600">Passed</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-600">✓ Documentation</span>
-                      <span className="text-green-600">Complete</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center space-x-2">
-                    <Button size="sm" variant="outline" className="text-xs">
-                      View Report
-                    </Button>
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-xs">
-                      Approve Unit
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </CardContent>
