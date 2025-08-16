@@ -945,10 +945,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   function getJobTypeName(jobType: string): string {
     const jobTypeNames: Record<string, string> = {
       punch: "Punch List",
-      repairs: "Repairs",
+      repairs: "Repairs", 
       paint: "Paint",
-      clean: "Clean", 
+      clean: "Clean",
       carpet: "Carpet",
+      "bulk-trash": "Bulk Trash",
       unit_trash_out: "Unit Trash Out",
       onsite_bulk_trash: "Onsite Bulk Trash",
       inspected: "Final Inspection"
@@ -959,41 +960,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job Scheduling API
   app.post("/api/jobs/schedule", async (req, res) => {
     try {
-      const { unitNumber, propertyId, moveInDate, completionDate, selectedJobs, priority, notes } = req.body;
-      
-      // Create multiple work orders for the selected jobs
-      const scheduledJobs = [];
-      for (let i = 0; i < selectedJobs.length; i++) {
-        const jobType = selectedJobs[i];
-        const scheduledDate = new Date(moveInDate);
-        scheduledDate.setDate(scheduledDate.getDate() + i); // Stagger jobs by day
-        
-        // Determine photo requirements for trash jobs
-        const photosRequired = (jobType === 'unit_trash_out' || jobType === 'onsite_bulk_trash') ? 2 : 0;
-        const photosToOffice = photosRequired > 0;
-        
+      // Handle both single job scheduling (Office Staff) and multi-job scheduling (Property Manager)
+      const { 
+        // Single job fields (Office Staff)
+        type, unitNumber, propertyAddress, scheduledDate, notes, assignedTechnician, priority, scheduledBy,
+        // Multi-job fields (Property Manager)
+        propertyId, moveInDate, completionDate, selectedJobs
+      } = req.body;
+
+      // Office Staff single job scheduling
+      if (type && unitNumber && propertyAddress && scheduledDate) {
         const workOrder = await storage.createWorkOrder({
-          propertyId,
+          propertyId: propertyId || "default-property",
           unitNumber,
           category: "maintenance",
-          jobType,
-          priority,
-          title: `${getJobTypeName(jobType)} - Unit ${unitNumber}`,
-          description: `${getJobTypeName(jobType)} for unit ${unitNumber}. ${notes || ''}`,
-          scheduledDate,
-          photosRequired,
-          photosToOffice,
+          jobType: type,
+          priority: priority || "medium",
+          title: `${getJobTypeName(type)} - Unit ${unitNumber}`,
+          description: `${getJobTypeName(type)} for unit ${unitNumber} at ${propertyAddress}. ${notes || ''}`,
+          scheduledDate: new Date(scheduledDate),
+          assignedTo: assignedTechnician || null,
+          requestedBy: scheduledBy || "office-staff",
+          photosRequired: (type === 'bulk-trash' || type === 'unit_trash_out') ? 2 : 0,
+          photosToOffice: (type === 'bulk-trash' || type === 'unit_trash_out'),
           photosSubmitted: [],
         });
         
-        scheduledJobs.push(workOrder);
+        res.json({ 
+          success: true, 
+          jobsScheduled: 1,
+          jobs: [workOrder] 
+        });
+        return;
       }
-      
-      res.json({ 
-        success: true, 
-        jobsScheduled: scheduledJobs.length,
-        jobs: scheduledJobs 
-      });
+
+      // Property Manager multi-job scheduling
+      if (selectedJobs && moveInDate && unitNumber) {
+        const scheduledJobs = [];
+        for (let i = 0; i < selectedJobs.length; i++) {
+          const jobType = selectedJobs[i];
+          const scheduledJobDate = new Date(moveInDate);
+          scheduledJobDate.setDate(scheduledJobDate.getDate() + i); // Stagger jobs by day
+          
+          // Determine photo requirements for trash jobs
+          const photosRequired = (jobType === 'unit_trash_out' || jobType === 'onsite_bulk_trash') ? 2 : 0;
+          const photosToOffice = photosRequired > 0;
+          
+          const workOrder = await storage.createWorkOrder({
+            propertyId: propertyId || "default-property",
+            unitNumber,
+            category: "maintenance",
+            jobType,
+            priority: priority || "medium",
+            title: `${getJobTypeName(jobType)} - Unit ${unitNumber}`,
+            description: `${getJobTypeName(jobType)} for unit ${unitNumber}. ${notes || ''}`,
+            scheduledDate: scheduledJobDate,
+            photosRequired,
+            photosToOffice,
+            photosSubmitted: [],
+          });
+          
+          scheduledJobs.push(workOrder);
+        }
+        
+        res.json({ 
+          success: true, 
+          jobsScheduled: scheduledJobs.length,
+          jobs: scheduledJobs 
+        });
+        return;
+      }
+
+      // Invalid request
+      res.status(400).json({ error: "Invalid job scheduling request. Missing required fields." });
     } catch (error) {
       console.error("Error scheduling jobs:", error);
       res.status(500).json({ error: "Failed to schedule jobs" });

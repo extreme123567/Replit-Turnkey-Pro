@@ -48,6 +48,206 @@ interface OfficeStats {
   totalTenants: number;
 }
 
+// Schedule Job Button Component
+function ScheduleJobButton() {
+  const [open, setOpen] = useState(false);
+  const [jobType, setJobType] = useState("");
+  const [unitNumber, setUnitNumber] = useState("");
+  const [propertyAddress, setPropertyAddress] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [assignedTechnician, setAssignedTechnician] = useState("");
+  const [priority, setPriority] = useState("medium");
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const scheduleJobMutation = useMutation({
+    mutationFn: async (jobData: any) => {
+      return apiRequest("/api/jobs/schedule", {
+        method: "POST",
+        body: JSON.stringify(jobData),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Scheduled",
+        description: "New job has been successfully scheduled.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/office"] });
+      setOpen(false);
+      // Reset form
+      setJobType("");
+      setUnitNumber("");
+      setPropertyAddress("");
+      setScheduledDate("");
+      setNotes("");
+      setAssignedTechnician("");
+      setPriority("medium");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to schedule job. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleScheduleJob = () => {
+    if (!jobType || !unitNumber || !propertyAddress || !scheduledDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    scheduleJobMutation.mutate({
+      type: jobType,
+      unitNumber,
+      propertyAddress,
+      scheduledDate,
+      notes,
+      assignedTechnician: assignedTechnician || null,
+      priority,
+      status: "scheduled",
+      scheduledBy: "office-staff"
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button data-testid="button-schedule-new-job">
+          <Plus size={16} className="mr-2" />
+          Schedule New Job
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Schedule New Job</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="jobType">Job Type *</Label>
+            <Select value={jobType} onValueChange={setJobType}>
+              <SelectTrigger data-testid="select-job-type">
+                <SelectValue placeholder="Select job type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="punch">Punch</SelectItem>
+                <SelectItem value="paint">Paint</SelectItem>
+                <SelectItem value="clean">Clean</SelectItem>
+                <SelectItem value="carpet">Carpet</SelectItem>
+                <SelectItem value="repairs">Repairs</SelectItem>
+                <SelectItem value="bulk-trash">Bulk Trash</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="unitNumber">Unit Number *</Label>
+            <Input
+              id="unitNumber"
+              value={unitNumber}
+              onChange={(e) => setUnitNumber(e.target.value)}
+              placeholder="e.g., 101A"
+              data-testid="input-unit-number"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="propertyAddress">Property Address *</Label>
+            <Input
+              id="propertyAddress"
+              value={propertyAddress}
+              onChange={(e) => setPropertyAddress(e.target.value)}
+              placeholder="e.g., 123 Main St"
+              data-testid="input-property-address"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="scheduledDate">Scheduled Date *</Label>
+            <Input
+              id="scheduledDate"
+              type="date"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              data-testid="input-scheduled-date"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="assignedTechnician">Assigned Technician</Label>
+            <Select value={assignedTechnician} onValueChange={setAssignedTechnician}>
+              <SelectTrigger data-testid="select-technician">
+                <SelectValue placeholder="Select technician (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="tech-1">John Smith</SelectItem>
+                <SelectItem value="tech-2">Mike Johnson</SelectItem>
+                <SelectItem value="tech-3">Sarah Wilson</SelectItem>
+                <SelectItem value="tech-4">David Brown</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger data-testid="select-priority">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Additional notes or special instructions..."
+              data-testid="textarea-notes"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex space-x-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="flex-1"
+              data-testid="button-cancel-job"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleScheduleJob}
+              disabled={scheduleJobMutation.isPending}
+              className="flex-1"
+              data-testid="button-confirm-schedule-job"
+            >
+              {scheduleJobMutation.isPending ? "Scheduling..." : "Schedule Job"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function OfficeStaffDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<OfficeStats>({
     queryKey: ["/api/dashboard/office"],
@@ -232,6 +432,12 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
+          {/* Schedule New Job Button */}
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Office Staff Dashboard</h2>
+            <ScheduleJobButton />
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Pending Job Approvals */}
             <Card>
