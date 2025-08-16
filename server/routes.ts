@@ -411,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create payout for completed paint/clean job
   app.post("/api/payroll/create-payout", async (req, res) => {
     try {
-      const { jobId, staffId, jobType, unitCount = 1 } = req.body;
+      const { jobId, staffId, jobType, unitCount = 1, unitType = 'studio' } = req.body;
       
       if (!jobId || !staffId || !jobType) {
         return res.status(400).json({ error: "Missing required fields: jobId, staffId, jobType" });
@@ -420,8 +420,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!['paint', 'clean'].includes(jobType)) {
         return res.status(400).json({ error: "jobType must be 'paint' or 'clean'" });
       }
+
+      if (jobType === 'clean' && !['studio', '1br', '2br', '3br'].includes(unitType)) {
+        return res.status(400).json({ error: "unitType must be 'studio', '1br', '2br', or '3br' for clean jobs" });
+      }
       
-      const payout = await storage.createJobPayout(jobId, staffId, jobType, unitCount);
+      const payout = await storage.createJobPayout(jobId, staffId, jobType, unitCount, unitType);
       res.status(201).json(payout);
     } catch (error) {
       console.error("Error creating job payout:", error);

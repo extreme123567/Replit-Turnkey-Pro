@@ -6,7 +6,17 @@ ServicePro is a comprehensive property management platform designed for professi
 
 ## Recent Changes (August 2025)
 
-### General Dashboard with Bi-Weekly Financial Reset (Latest)
+### Automated Payout System for Technicians (Latest)
+- **Paint Job Payouts**: Fixed rate of $85 per unit completed with automatic payout calculation
+- **Cleaning Job Payouts**: Size-based pricing structure:
+  - Studio & 1-Bedroom: $80 per unit
+  - 2-Bedroom: $95 per unit  
+  - 3-Bedroom: $105 per unit
+- **Quick Action Completion**: Technicians can complete jobs directly from dashboard with unit count input and apartment size selection
+- **Real-Time Payout Tracking**: Instant payout confirmation with automatic integration to payroll system and general dashboard
+- **Unit Count Support**: Multi-unit job completion with automatic rate multiplication
+
+### General Dashboard with Bi-Weekly Financial Reset
 - **Comprehensive Metrics Tracking**: Real-time monitoring of scheduled jobs, active jobs, jobs completed & inspected, revenue billed, and total payout
 - **Bi-Weekly Reset Cycles**: Automatic financial period management that resets every 2 weeks with countdown timer showing days remaining
 - **Profit Analysis**: Real-time net profit calculation with color-coded profitability indicators (green ≥30%, yellow ≥15%, red <15%)

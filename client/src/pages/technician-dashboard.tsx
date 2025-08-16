@@ -27,8 +27,26 @@ import { useToast } from "@/hooks/use-toast";
 const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jobType: 'paint' | 'clean' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [unitCount, setUnitCount] = useState(1);
+  const [unitType, setUnitType] = useState<'studio' | '1br' | '2br' | '3br'>('studio');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Pricing structure
+  const paintRate = 85;
+  const cleanRates = {
+    studio: 80,
+    '1br': 80,
+    '2br': 95,
+    '3br': 105
+  };
+
+  const calculatePayout = () => {
+    if (jobType === 'paint') {
+      return paintRate * unitCount;
+    } else {
+      return cleanRates[unitType] * unitCount;
+    }
+  };
   
   const completeJobWithPayout = useMutation({
     mutationFn: async (data: any) => {
@@ -37,17 +55,19 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
         jobId: `demo-${jobType}-job-${Date.now()}`,
         staffId: technicianId,
         jobType: data.jobType,
-        unitCount: data.unitCount
+        unitCount: data.unitCount,
+        unitType: data.unitType
       });
       return data;
     },
     onSuccess: () => {
       toast({
         title: `${jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job Completed`,
-        description: `Payout of $${jobType === 'paint' ? 85 * unitCount : 75 * unitCount} has been added to your account.`,
+        description: `Payout of $${calculatePayout()} has been added to your account.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/payroll/staff", technicianId] });
       setUnitCount(1);
+      setUnitType('studio');
     },
     onError: (error) => {
       toast({
@@ -60,7 +80,7 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
 
   const handleCompleteJob = () => {
     setIsLoading(true);
-    completeJobWithPayout.mutate({ jobType, unitCount });
+    completeJobWithPayout.mutate({ jobType, unitCount, unitType });
     setTimeout(() => setIsLoading(false), 1000);
   };
 
@@ -78,6 +98,20 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
         />
         <span className="text-sm text-slate-600">units</span>
       </div>
+      
+      {jobType === 'clean' && (
+        <select
+          value={unitType}
+          onChange={(e) => setUnitType(e.target.value as 'studio' | '1br' | '2br' | '3br')}
+          className="w-full px-2 py-1 text-sm border rounded"
+        >
+          <option value="studio">Studio ($80)</option>
+          <option value="1br">1 Bedroom ($80)</option>
+          <option value="2br">2 Bedroom ($95)</option>
+          <option value="3br">3 Bedroom ($105)</option>
+        </select>
+      )}
+      
       <Button 
         variant="outline" 
         className={`h-20 flex-col space-y-2 w-full ${jobType === 'paint' ? 'border-blue-200 hover:bg-blue-50' : 'border-green-200 hover:bg-green-50'}`}
@@ -90,7 +124,7 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
           Complete {jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job
         </span>
         <span className="text-xs text-slate-500">
-          ${jobType === 'paint' ? 85 * unitCount : 75 * unitCount}
+          ${calculatePayout()}
         </span>
       </Button>
     </div>
