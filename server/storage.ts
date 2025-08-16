@@ -139,6 +139,13 @@ export interface IStorage {
   deductPayForCallback(jobId: string, callbackId: string): Promise<boolean>;
   restorePayAfterCallback(callbackId: string): Promise<boolean>;
 
+  // Job Management
+  getJobsByProperty(propertyId: string): Promise<Job[]>;
+  getJobsAwaitingApproval(): Promise<Job[]>;
+  approveJob(jobId: string, approvedBy: string): Promise<Job | undefined>;
+  rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<Job | undefined>;
+  getJobCompletionStats(): Promise<{ scheduled: number; completed: number; pending: number; }>;
+
   // Dashboard Analytics
   getDashboardStats(userRole: string, userId?: string): Promise<any>;
   getPropertyManagerStats(managerId: string): Promise<any>;
@@ -377,6 +384,69 @@ export class MemStorage implements IStorage {
         this.staffPayroll.set(id, fullPayroll);
       });
     }
+
+    // Initialize demo jobs awaiting approval for office staff workflow
+    const sampleJobsAwaitingApproval: InsertJob[] = [
+      {
+        title: "Paint Unit 102B - Living Room & Bedroom",
+        type: "paint",
+        description: "Paint walls in living room and bedroom, prime and two coats",
+        priority: "medium",
+        status: "awaiting_approval",
+        estimatedHours: 6,
+        budget: "120.00",
+        assignedTo: "tech-1",
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "HVAC Repair Unit 205A - AC Not Cooling",
+        type: "repairs", 
+        description: "AC unit not cooling properly, check refrigerant and filters",
+        priority: "high",
+        status: "awaiting_approval",
+        estimatedHours: 3,
+        budget: "95.00",
+        assignedTo: "tech-1",
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "Deep Clean Unit 303C - Move-in Ready",
+        type: "clean",
+        description: "Deep clean entire unit for new tenant move-in",
+        priority: "medium",
+        status: "awaiting_approval", 
+        estimatedHours: 4,
+        budget: "85.00",
+        assignedTo: "tech-1",
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "Carpet Installation Unit 404D - Bedrooms",
+        type: "carpet",
+        description: "Install new carpet in all three bedrooms",
+        priority: "low",
+        status: "awaiting_approval",
+        estimatedHours: 8,
+        budget: "150.00",
+        assignedTo: "tech-1", 
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      }
+    ];
+
+    sampleJobsAwaitingApproval.forEach(job => {
+      const id = randomUUID();
+      const fullJob: Job = {
+        ...job,
+        id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.jobs.set(id, fullJob);
+    });
   }
 
   // Clients
@@ -1361,6 +1431,81 @@ export class MemStorage implements IStorage {
     }
     
     return true;
+  }
+
+  // Job Management Implementation
+  async getJobsByProperty(propertyId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values()).filter(job => 
+      // Match jobs to properties through work orders or direct property reference
+      Array.from(this.workOrders.values()).some(wo => 
+        wo.propertyId === propertyId && wo.title.includes(job.title)
+      )
+    );
+  }
+
+  async getJobsAwaitingApproval(): Promise<Job[]> {
+    return Array.from(this.jobs.values()).filter(job => job.status === "awaiting_approval");
+  }
+
+  async approveJob(jobId: string, approvedBy: string): Promise<Job | undefined> {
+    const job = this.jobs.get(jobId);
+    if (!job) return undefined;
+
+    const updatedJob: Job = {
+      ...job,
+      status: "approved",
+      updatedAt: new Date()
+    };
+
+    this.jobs.set(jobId, updatedJob);
+
+    // Log the approval action
+    await this.logAction({
+      userId: approvedBy,
+      action: "approve_job",
+      resourceType: "job",
+      resourceId: jobId,
+      details: `Job "${job.title}" approved by office staff`
+    });
+
+    return updatedJob;
+  }
+
+  async rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<Job | undefined> {
+    const job = this.jobs.get(jobId);
+    if (!job) return undefined;
+
+    const updatedJob: Job = {
+      ...job,
+      status: "rejected",
+      updatedAt: new Date()
+    };
+
+    this.jobs.set(jobId, updatedJob);
+
+    // Log the rejection action
+    await this.logAction({
+      userId: rejectedBy,
+      action: "reject_job",
+      resourceType: "job",
+      resourceId: jobId,
+      details: `Job "${job.title}" rejected by office staff. Reason: ${reason}`
+    });
+
+    return updatedJob;
+  }
+
+  async getJobCompletionStats(): Promise<{ scheduled: number; completed: number; pending: number; }> {
+    const jobs = Array.from(this.jobs.values());
+    
+    const scheduled = jobs.filter(job => 
+      ["approved", "assigned", "in_progress"].includes(job.status || "")
+    ).length;
+    
+    const completed = jobs.filter(job => job.status === "completed").length;
+    const pending = jobs.filter(job => job.status === "awaiting_approval").length;
+
+    return { scheduled, completed, pending };
   }
 }
 

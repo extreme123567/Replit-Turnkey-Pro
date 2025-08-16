@@ -1687,6 +1687,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Job Management API Routes for Office Staff
+
+  // Get jobs awaiting approval
+  app.get("/api/jobs/awaiting-approval", async (req, res) => {
+    try {
+      const jobs = await storage.getJobsAwaitingApproval();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching jobs awaiting approval:", error);
+      res.status(500).json({ error: "Failed to fetch jobs awaiting approval" });
+    }
+  });
+
+  // Get job completion statistics
+  app.get("/api/jobs/completion-stats", async (req, res) => {
+    try {
+      const stats = await storage.getJobCompletionStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching job completion stats:", error);
+      res.status(500).json({ error: "Failed to fetch job completion stats" });
+    }
+  });
+
+  // Get jobs for a specific property
+  app.get("/api/jobs/property/:propertyId", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const jobs = await storage.getJobsByProperty(propertyId);
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching jobs for property:", error);
+      res.status(500).json({ error: "Failed to fetch property jobs" });
+    }
+  });
+
+  // Approve a job
+  app.put("/api/jobs/:jobId/approve", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { approvedBy } = req.body;
+
+      const updatedJob = await storage.approveJob(jobId, approvedBy || "office-staff-1");
+
+      if (!updatedJob) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      // Create payroll entry when job is approved
+      await storage.createPayrollEntry({
+        staffId: updatedJob.assignedTo || "tech-1",
+        jobId: jobId,
+        jobType: updatedJob.type || "general",
+        basePayAmount: updatedJob.budget || "75.00",
+        currentPayAmount: updatedJob.budget || "75.00",
+        payStatus: "earned",
+        payPeriod: new Date().toISOString().slice(0, 7),
+        notes: `Payment for approved ${updatedJob.type || "general"} job: ${updatedJob.title}`
+      });
+
+      console.log(`Job ${jobId} approved and payroll entry created`);
+
+      res.json({
+        message: "Job approved successfully",
+        job: updatedJob
+      });
+    } catch (error) {
+      console.error("Error approving job:", error);
+      res.status(500).json({ error: "Failed to approve job" });
+    }
+  });
+
+  // Reject a job
+  app.put("/api/jobs/:jobId/reject", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { rejectedBy, reason } = req.body;
+
+      const updatedJob = await storage.rejectJob(
+        jobId, 
+        rejectedBy || "office-staff-1", 
+        reason || "No reason provided"
+      );
+
+      if (!updatedJob) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      console.log(`Job ${jobId} rejected: ${reason}`);
+
+      res.json({
+        message: "Job rejected successfully",
+        job: updatedJob
+      });
+    } catch (error) {
+      console.error("Error rejecting job:", error);
+      res.status(500).json({ error: "Failed to reject job" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

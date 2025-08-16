@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +14,15 @@ import {
   Building,
   TrendingUp,
   Phone,
-  Mail
+  Mail,
+  Wrench,
+  X,
+  Check
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface OfficeStats {
   pendingApproval: number;
@@ -56,15 +62,24 @@ export default function OfficeStaffDashboard() {
   });
 
   const { data: pendingApprovals, isLoading: approvalsLoading } = useQuery({
-    queryKey: ["/api/work-orders/pending-approval"],
+    queryKey: ["/api/jobs/awaiting-approval"],
     queryFn: async () => {
-      const response = await fetch('/api/work-orders/pending-approval');
+      const response = await fetch('/api/jobs/awaiting-approval');
       if (!response.ok) throw new Error('Failed to fetch pending approvals');
       return response.json();
     },
   });
 
-  const isLoading = statsLoading || ordersLoading || leasesLoading || approvalsLoading;
+  const { data: jobStats, isLoading: jobStatsLoading } = useQuery({
+    queryKey: ["/api/jobs/completion-stats"],
+    queryFn: async () => {
+      const response = await fetch('/api/jobs/completion-stats');
+      if (!response.ok) throw new Error('Failed to fetch job completion stats');
+      return response.json();
+    },
+  });
+
+  const isLoading = statsLoading || ordersLoading || leasesLoading || approvalsLoading || jobStatsLoading;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -159,16 +174,16 @@ export default function OfficeStaffDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Lease Expirations</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-lease-expirations">
-                  {stats?.leaseExpirations || 0}
+                <p className="text-slate-600 text-sm font-medium">Jobs Scheduled</p>
+                <p className="text-2xl font-bold text-blue-800 mt-1" data-testid="stat-jobs-scheduled">
+                  {jobStats?.scheduled || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="text-purple-600" size={20} />
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Calendar className="text-blue-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">Next 30 days</p>
+            <p className="text-sm text-slate-600 mt-2">Jobs approved and assigned</p>
           </CardContent>
         </Card>
 
@@ -176,16 +191,16 @@ export default function OfficeStaffDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Active Staff</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-active-staff">
-                  {stats?.activeStaff || 0}
+                <p className="text-slate-600 text-sm font-medium">Jobs Completed</p>
+                <p className="text-2xl font-bold text-emerald-800 mt-1" data-testid="stat-jobs-completed">
+                  {jobStats?.completed || 0}
                 </p>
               </div>
               <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Users className="text-emerald-600" size={20} />
+                <CheckCircle className="text-emerald-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">Team members online</p>
+            <p className="text-sm text-slate-600 mt-2">Jobs finished this period</p>
           </CardContent>
         </Card>
       </div>
@@ -207,36 +222,12 @@ export default function OfficeStaffDashboard() {
               {pendingApprovals?.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   <CheckCircle className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                  <p>No pending approvals</p>
-                  <p className="text-sm">All work orders are up to date</p>
+                  <p>No pending job approvals</p>
+                  <p className="text-sm">All jobs are approved or completed</p>
                 </div>
               ) : (
-                pendingApprovals?.slice(0, 5).map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <FileText className="text-amber-600 text-sm" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">{order.title}</p>
-                        <p className="text-sm text-slate-600">#{order.id.slice(0, 8)}</p>
-                        <p className="text-sm text-slate-600">Est: ${order.estimatedCost || '0.00'}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <Badge className={getPriorityColor(order.priority)}>
-                        {order.priority}
-                      </Badge>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-200">
-                          Approve
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-red-600 border-red-200">
-                          Reject
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                pendingApprovals?.slice(0, 5).map((job: any) => (
+                  <JobApprovalCard key={job.id} job={job} />
                 ))
               )}
             </div>
@@ -383,6 +374,119 @@ export default function OfficeStaffDashboard() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Job Approval Card Component
+interface JobApprovalCardProps {
+  job: any;
+}
+
+function JobApprovalCard({ job }: JobApprovalCardProps) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const approveMutation = useMutation({
+    mutationFn: (jobId: string) => apiRequest(`/api/jobs/${jobId}/approve`, {
+      method: "PUT",
+      body: JSON.stringify({ approvedBy: "office-staff-1" }),
+      headers: { "Content-Type": "application/json" }
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/completion-stats"] });
+      toast({
+        title: "Job Approved",
+        description: "The job has been approved and assigned to technician",
+        variant: "default"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Approval Failed",
+        description: "Unable to approve job. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => apiRequest(`/api/jobs/${jobId}/reject`, {
+      method: "PUT",
+      body: JSON.stringify({ rejectedBy: "office-staff-1", reason }),
+      headers: { "Content-Type": "application/json" }
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs/completion-stats"] });
+      toast({
+        title: "Job Rejected",
+        description: "The job has been rejected and will not be scheduled",
+        variant: "default"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Rejection Failed",
+        description: "Unable to reject job. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const getJobTypeColor = (type: string) => {
+    switch (type) {
+      case 'paint': return 'bg-purple-100 text-purple-800';
+      case 'repairs': return 'bg-orange-100 text-orange-800';
+      case 'clean': return 'bg-blue-100 text-blue-800';
+      case 'carpet': return 'bg-green-100 text-green-800';
+      case 'punch': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+      <div className="flex items-center space-x-4">
+        <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+          <Wrench className="text-amber-600" size={16} />
+        </div>
+        <div>
+          <p className="font-medium text-slate-800">{job.title}</p>
+          <p className="text-sm text-slate-600">#{job.id.slice(0, 8)}</p>
+          <div className="flex items-center space-x-2 mt-1">
+            <Badge variant="outline" className={getJobTypeColor(job.type)}>
+              {job.type}
+            </Badge>
+            <span className="text-sm text-slate-600">Est: ${job.budget || '75.00'}</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+          onClick={() => approveMutation.mutate(job.id)}
+          disabled={approveMutation.isPending}
+          data-testid={`button-approve-${job.id}`}
+        >
+          <Check size={14} className="mr-1" />
+          {approveMutation.isPending ? "..." : "Approve"}
+        </Button>
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="text-red-600 border-red-200 hover:bg-red-50"
+          onClick={() => rejectMutation.mutate({ jobId: job.id, reason: "Budget constraints" })}
+          disabled={rejectMutation.isPending}
+          data-testid={`button-reject-${job.id}`}
+        >
+          <X size={14} className="mr-1" />
+          {rejectMutation.isPending ? "..." : "Reject"}
+        </Button>
+      </div>
     </div>
   );
 }
