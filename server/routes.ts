@@ -760,7 +760,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateWorkOrder(id, {
         status: "rejected",
         rejectionReason: reason,
-        updatedAt: new Date(),
       });
       
       res.json({ message: "Work order rejected successfully" });
@@ -797,6 +796,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error uploading work order images:", error);
       res.status(500).json({ error: "Failed to upload images" });
+    }
+  });
+
+  // Helper function to get job type display name
+  function getJobTypeName(jobType: string): string {
+    const jobTypeNames: Record<string, string> = {
+      punch: "Punch List",
+      repairs: "Repairs",
+      paint: "Paint",
+      clean: "Clean", 
+      carpet: "Carpet",
+      unit_trash_out: "Unit Trash Out",
+      onsite_bulk_trash: "Onsite Bulk Trash",
+      inspected: "Final Inspection"
+    };
+    return jobTypeNames[jobType] || jobType;
+  }
+
+  // Job Scheduling API
+  app.post("/api/jobs/schedule", async (req, res) => {
+    try {
+      const { unitNumber, propertyId, moveInDate, completionDate, selectedJobs, priority, notes } = req.body;
+      
+      // Create multiple work orders for the selected jobs
+      const scheduledJobs = [];
+      for (let i = 0; i < selectedJobs.length; i++) {
+        const jobType = selectedJobs[i];
+        const scheduledDate = new Date(moveInDate);
+        scheduledDate.setDate(scheduledDate.getDate() + i); // Stagger jobs by day
+        
+        // Determine photo requirements for trash jobs
+        const photosRequired = (jobType === 'unit_trash_out' || jobType === 'onsite_bulk_trash') ? 2 : 0;
+        const photosToOffice = photosRequired > 0;
+        
+        const workOrder = await storage.createWorkOrder({
+          propertyId,
+          unitNumber,
+          category: "maintenance",
+          jobType,
+          priority,
+          title: `${getJobTypeName(jobType)} - Unit ${unitNumber}`,
+          description: `${getJobTypeName(jobType)} for unit ${unitNumber}. ${notes || ''}`,
+          scheduledDate,
+          photosRequired,
+          photosToOffice,
+          photosSubmitted: [],
+        });
+        
+        scheduledJobs.push(workOrder);
+      }
+      
+      res.json({ 
+        success: true, 
+        jobsScheduled: scheduledJobs.length,
+        jobs: scheduledJobs 
+      });
+    } catch (error) {
+      console.error("Error scheduling jobs:", error);
+      res.status(500).json({ error: "Failed to schedule jobs" });
+    }
+  });
+
+  // Get scheduled jobs for a property
+  app.get("/api/jobs/scheduled/:propertyId", async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const allWorkOrders = await storage.getWorkOrders();
+      const scheduledJobs = allWorkOrders.filter(wo => wo.propertyId === propertyId);
+      res.json(scheduledJobs);
+    } catch (error) {
+      console.error("Error fetching scheduled jobs:", error);
+      res.status(500).json({ error: "Failed to fetch scheduled jobs" });
     }
   });
 
