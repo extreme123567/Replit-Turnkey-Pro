@@ -48,6 +48,353 @@ interface OfficeStats {
   totalTenants: number;
 }
 
+// Request Quote Button Component
+function RequestQuoteButton() {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [property, setProperty] = useState("");
+  const [unitNumber, setUnitNumber] = useState("");
+  const [category, setCategory] = useState("maintenance");
+  const [priority, setPriority] = useState("medium");
+  const [estimatedBudget, setEstimatedBudget] = useState("");
+  const [preferredStartDate, setPreferredStartDate] = useState("");
+  const [preferredEndDate, setPreferredEndDate] = useState("");
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const submitQuoteMutation = useMutation({
+    mutationFn: async (quoteData: any) => {
+      return apiRequest("/api/quote-requests", {
+        method: "POST",
+        body: JSON.stringify(quoteData),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Quote Request Submitted",
+        description: "Your quote request has been sent to the office.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests"] });
+      setOpen(false);
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setProperty("");
+      setUnitNumber("");
+      setCategory("maintenance");
+      setPriority("medium");
+      setEstimatedBudget("");
+      setPreferredStartDate("");
+      setPreferredEndDate("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit quote request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitQuote = () => {
+    if (!title || !description || !property) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    submitQuoteMutation.mutate({
+      title,
+      description,
+      property,
+      unitNumber,
+      category,
+      priority,
+      estimatedBudget,
+      preferredStartDate,
+      preferredEndDate,
+      requestedBy: "office-staff"
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" data-testid="button-request-quote">
+          <DollarSign className="mr-2 h-4 w-4" />
+          Request Quote
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Request Quote from Office</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="quote-title">Service Title *</Label>
+            <Input
+              id="quote-title"
+              placeholder="e.g., Kitchen renovation - Unit 205"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              data-testid="input-quote-title"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="quote-description">Detailed Description *</Label>
+            <Textarea
+              id="quote-description"
+              placeholder="Describe the work needed in detail..."
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              data-testid="textarea-quote-description"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="property">Property *</Label>
+              <Select value={property} onValueChange={setProperty}>
+                <SelectTrigger data-testid="select-quote-property">
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="maple-gardens">Maple Gardens</SelectItem>
+                  <SelectItem value="oak-village">Oak Village</SelectItem>
+                  <SelectItem value="pine-heights">Pine Heights</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="unit-number">Unit Number</Label>
+              <Input
+                id="unit-number"
+                placeholder="e.g., 205"
+                value={unitNumber}
+                onChange={(e) => setUnitNumber(e.target.value)}
+                data-testid="input-quote-unit-number"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger data-testid="select-quote-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="repair">Repair</SelectItem>
+                  <SelectItem value="renovation">Renovation</SelectItem>
+                  <SelectItem value="emergency">Emergency</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger data-testid="select-quote-priority">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="estimated-budget">Estimated Budget</Label>
+            <Input
+              id="estimated-budget"
+              placeholder="e.g., $1,500"
+              value={estimatedBudget}
+              onChange={(e) => setEstimatedBudget(e.target.value)}
+              data-testid="input-estimated-budget"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="preferred-start-date">Preferred Start Date</Label>
+              <Input
+                id="preferred-start-date"
+                type="date"
+                value={preferredStartDate}
+                onChange={(e) => setPreferredStartDate(e.target.value)}
+                data-testid="input-preferred-start-date"
+              />
+            </div>
+            <div>
+              <Label htmlFor="preferred-end-date">Preferred End Date</Label>
+              <Input
+                id="preferred-end-date"
+                type="date"
+                value={preferredEndDate}
+                onChange={(e) => setPreferredEndDate(e.target.value)}
+                data-testid="input-preferred-end-date"
+              />
+            </div>
+          </div>
+
+          <div className="flex space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitQuote}
+              disabled={submitQuoteMutation.isPending}
+              className="flex-1"
+              data-testid="button-submit-quote"
+            >
+              {submitQuoteMutation.isPending ? "Submitting..." : "Submit Quote Request"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Message Staff Button Component
+function MessageStaffButton() {
+  const [open, setOpen] = useState(false);
+  const [recipient, setRecipient] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData: any) => {
+      return apiRequest("/api/messages", {
+        method: "POST",
+        body: JSON.stringify(messageData),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      setOpen(false);
+      // Reset form
+      setRecipient("");
+      setSubject("");
+      setMessage("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendMessage = () => {
+    if (!recipient || !subject || !message) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sendMessageMutation.mutate({
+      recipient,
+      subject,
+      message,
+      senderId: "office-staff-1",
+      conversationId: `office-${Date.now()}`
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" data-testid="button-message-staff">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Message Staff
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Send Message to Staff</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="recipient">Recipient *</Label>
+            <Select value={recipient} onValueChange={setRecipient}>
+              <SelectTrigger data-testid="select-recipient">
+                <SelectValue placeholder="Select staff member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="office-manager">Office Manager</SelectItem>
+                <SelectItem value="admin-assistant">Administrative Assistant</SelectItem>
+                <SelectItem value="property-manager">Property Manager</SelectItem>
+                <SelectItem value="all-staff">All Staff</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="subject">Subject *</Label>
+            <Input
+              id="subject"
+              placeholder="e.g., Urgent: Tenant complaint - Unit 205"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              data-testid="input-message-subject"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="message">Message *</Label>
+            <Textarea
+              id="message"
+              placeholder="Type your message here..."
+              rows={4}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              data-testid="textarea-message-content"
+            />
+          </div>
+
+          <div className="flex space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={sendMessageMutation.isPending}
+              className="flex-1"
+              data-testid="button-send-message"
+            >
+              {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Schedule Job Button Component
 function ScheduleJobButton() {
   const [open, setOpen] = useState(false);
@@ -432,10 +779,68 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Schedule New Job Button */}
+          {/* Action Buttons */}
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Office Staff Dashboard</h2>
-            <ScheduleJobButton />
+            <div className="flex items-center space-x-3">
+              <RequestQuoteButton />
+              <MessageStaffButton />
+              <ScheduleJobButton />
+            </div>
+          </div>
+
+          {/* Job Status Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-600 text-sm font-medium">Scheduled Jobs</p>
+                    <p className="text-2xl font-bold text-blue-700 mt-1" data-testid="stat-scheduled-jobs">
+                      3
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
+                    <Calendar className="text-blue-600" size={20} />
+                  </div>
+                </div>
+                <p className="text-sm text-blue-600 mt-2">Ready to start</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-amber-600 text-sm font-medium">In Progress</p>
+                    <p className="text-2xl font-bold text-amber-700 mt-1" data-testid="stat-in-progress-jobs">
+                      4
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center">
+                    <Clock className="text-amber-600" size={20} />
+                  </div>
+                </div>
+                <p className="text-sm text-amber-600 mt-2">Currently active</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-600 text-sm font-medium">Completed Today</p>
+                    <p className="text-2xl font-bold text-green-700 mt-1" data-testid="stat-completed-jobs">
+                      6
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="text-green-600" size={20} />
+                  </div>
+                </div>
+                <p className="text-sm text-green-600 mt-2">Tasks finished</p>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
