@@ -2,26 +2,36 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  FileText, 
+  AlertTriangle, 
   Clock, 
   CheckCircle, 
-  AlertTriangle,
+  Users, 
   Calendar,
-  Users,
+  FileText,
   DollarSign,
-  Plus,
   Building,
-  TrendingUp,
-  Phone,
-  Mail,
-  Wrench,
-  X,
-  Check,
-  Trash2,
-  Upload,
+  MessageSquare,
+  Send,
+  UserCheck,
+  Plus,
   Eye,
-  ChevronRight
+  Phone,
+  TrendingUp,
+  Calculator,
+  CreditCard,
+  Wallet,
+  ArrowRight,
+  Settings,
+  Check,
+  X,
+  Wrench
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -47,29 +57,20 @@ export default function OfficeStaffDashboard() {
     },
   });
 
-  const { data: recentWorkOrders, isLoading: ordersLoading } = useQuery({
-    queryKey: ["/api/work-orders/recent"],
+  const { data: financialSummary, isLoading: financialLoading } = useQuery({
+    queryKey: ["/api/financial/summary"],
     queryFn: async () => {
-      const response = await fetch('/api/work-orders?limit=10');
-      if (!response.ok) throw new Error('Failed to fetch work orders');
+      const response = await fetch('/api/financial/summary');
+      if (!response.ok) throw new Error('Failed to fetch financial summary');
       return response.json();
     },
   });
 
-  const { data: upcomingLeaseExpirations, isLoading: leasesLoading } = useQuery({
-    queryKey: ["/api/tenants/expiring-leases"],
+  const { data: scheduledCallbacks, isLoading: callbacksLoading } = useQuery({
+    queryKey: ["/api/callbacks/scheduled"],
     queryFn: async () => {
-      const response = await fetch('/api/tenants/expiring-leases?days=30');
-      if (!response.ok) throw new Error('Failed to fetch lease expirations');
-      return response.json();
-    },
-  });
-
-  const { data: pendingApprovals, isLoading: approvalsLoading } = useQuery({
-    queryKey: ["/api/jobs/awaiting-approval"],
-    queryFn: async () => {
-      const response = await fetch('/api/jobs/awaiting-approval');
-      if (!response.ok) throw new Error('Failed to fetch pending approvals');
+      const response = await fetch('/api/callbacks/scheduled');
+      if (!response.ok) throw new Error('Failed to fetch callbacks');
       return response.json();
     },
   });
@@ -83,36 +84,22 @@ export default function OfficeStaffDashboard() {
     },
   });
 
-  const { data: financialSummary, isLoading: financialLoading } = useQuery({
-    queryKey: ["/api/financial/summary"],
-    queryFn: async () => {
-      const response = await fetch('/api/financial/summary');
-      if (!response.ok) throw new Error('Failed to fetch financial summary');
-      return response.json();
-    },
+  // Modal states
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("dashboard");
+
+  // Form states
+  const [messageForm, setMessageForm] = useState({
+    recipient: '',
+    subject: '',
+    message: '',
+    recipientType: 'technician' // 'technician' or 'property_manager'
   });
 
-  const isLoading = statsLoading || ordersLoading || leasesLoading || approvalsLoading || jobStatsLoading || financialLoading;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'emergency': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-amber-100 text-amber-800';
-      case 'low': return 'bg-slate-100 text-slate-800';
-      default: return 'bg-slate-100 text-slate-800';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800';
-      case 'assigned': return 'bg-purple-100 text-purple-800';
-      case 'in_progress': return 'bg-amber-100 text-amber-800';
-      case 'completed': return 'bg-emerald-100 text-emerald-800';
-      default: return 'bg-slate-100 text-slate-800';
-    }
-  };
+  const isLoading = statsLoading || financialLoading || callbacksLoading || jobStatsLoading;
 
   if (isLoading) {
     return (
@@ -134,62 +121,120 @@ export default function OfficeStaffDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800">Office Staff Dashboard</h2>
-          <p className="text-slate-600">Coordinate operations and manage administrative tasks</p>
+          <h1 className="text-3xl font-bold text-slate-800">Office Staff Dashboard</h1>
+          <p className="text-slate-600">Administrative oversight and coordination</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button className="servicepro-btn-primary" data-testid="button-new-tenant">
+        <div className="flex space-x-3">
+          <Dialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-send-message">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Send Message
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Send Message</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="recipient-type">Recipient Type</Label>
+                    <Select value={messageForm.recipientType} onValueChange={(value) => setMessageForm({...messageForm, recipientType: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="technician">Technician</SelectItem>
+                        <SelectItem value="property_manager">Property Manager</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="recipient">Recipient</Label>
+                    <Select value={messageForm.recipient} onValueChange={(value) => setMessageForm({...messageForm, recipient: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select recipient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {messageForm.recipientType === 'technician' ? (
+                          <>
+                            <SelectItem value="mike-johnson">Mike Johnson</SelectItem>
+                            <SelectItem value="sarah-chen">Sarah Chen</SelectItem>
+                            <SelectItem value="tom-wilson">Tom Wilson</SelectItem>
+                          </>
+                        ) : (
+                          <>
+                            <SelectItem value="pm-smith">John Smith - Maple Heights</SelectItem>
+                            <SelectItem value="pm-jones">Lisa Jones - Oak Grove</SelectItem>
+                            <SelectItem value="pm-brown">Mike Brown - Cedar Park</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    placeholder="Message subject"
+                    value={messageForm.subject}
+                    onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Your message..."
+                    rows={4}
+                    value={messageForm.message}
+                    onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsMessageModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="servicepro-btn-primary">
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Message
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button className="servicepro-btn-primary" data-testid="button-create-work-order">
             <Plus className="mr-2 h-4 w-4" />
-            New Tenant
+            Create Work Order
           </Button>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="servicepro-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Pending Approvals</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-pending-approvals">
-                  {stats?.pendingApproval || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Clock className="text-amber-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Require attention</p>
-          </CardContent>
-        </Card>
+      {/* Navigation Tabs */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="accounts">Accounts</TabsTrigger>
+          <TabsTrigger value="payroll">Payroll</TabsTrigger>
+          <TabsTrigger value="management">Management</TabsTrigger>
+        </TabsList>
 
-        <Card className="servicepro-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">High Priority Orders</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-high-priority">
-                  {stats?.highPriorityOrders || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="text-red-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Need immediate action</p>
-          </CardContent>
-        </Card>
-
-        <Card className="servicepro-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Jobs Scheduled</p>
-                <p className="text-2xl font-bold text-blue-800 mt-1" data-testid="stat-jobs-scheduled">
-                  {jobStats?.scheduled || 0}
+        {/* Dashboard Tab Content */}
+        <TabsContent value="dashboard" className="space-y-6 mt-6">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="servicepro-card">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-600 text-sm font-medium">Jobs Scheduled</p>
+                    <p className="text-2xl font-bold text-blue-800 mt-1" data-testid="stat-jobs-scheduled">
+                      {jobStats?.scheduled || 12}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
