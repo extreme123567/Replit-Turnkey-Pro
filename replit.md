@@ -6,7 +6,16 @@ ServicePro is a comprehensive property management platform designed for professi
 
 ## Recent Changes (August 2025)
 
-### Automated Payout System for Technicians (Latest)
+### Enhanced Property Manager Dashboard with Comprehensive Management Features (Latest)
+- **Photo Documentation System**: Complete photo management for before, progress, and completion photos with visual status tracking
+- **Communication Center**: Direct messaging to office staff with message history, quote requests, and technician updates
+- **Quote Request System**: Detailed quote requests with project descriptions, budgets, timelines, and category selection
+- **Schedule Management**: Visual weekly schedule overview with job tracking, editing capabilities, and calendar integration
+- **Real-Time Job Status Tracking**: Comprehensive tracking of pending, in-progress, and completed jobs with filtering options
+- **Enhanced Work Coordination**: Direct communication with technicians, photo verification, and progress monitoring
+- **Visual Dashboard Controls**: Property managers can schedule work, manage photos, request quotes, send messages, view schedules, make changes, and track all job phases
+
+### Automated Payout System for Technicians
 - **Paint Job Payouts**: Size-based pricing structure:
   - Studio & 1-Bedroom: $175 per unit
   - 2-Bedroom: $200 per unit
@@ -55,10 +64,10 @@ ServicePro is a comprehensive property management platform designed for professi
 ### Role-Specific Features and Access
 
 #### Property Manager Role
-- **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking, job scheduling and progress monitoring
-- **Access**: Properties, tenants, work orders, inspections, revenue reports, job scheduling interface, real-time progress tracking, approval queue for repairs and extra dirty units
+- **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking, job scheduling and progress monitoring, photo documentation, communication coordination
+- **Access**: Properties, tenants, work orders, inspections, revenue reports, job scheduling interface, real-time progress tracking, approval queue for repairs and extra dirty units, photo management system, communication center, quote request system
 - **Restrictions**: Cannot complete work orders or inspections directly, limited staff management
-- **Enhanced Features**: Comprehensive job tracking with eight specific job types (punch, repairs, paint, clean, carpet, inspected, unit trash out, onsite bulk trash), real-time elapsed time tracking for each job, detailed phase-by-phase progress indicators with percentages, focused approval workflow for extra dirty units and extra drywall repairs with technician → office staff → property manager workflow, photo requirements tracking for trash jobs (2 photos required to office), comprehensive job scheduling system for unit preparation with multi-job booking, move-in dates, and completion targets, weekly schedule overview with progress tracking
+- **Enhanced Features**: Comprehensive job tracking with eight specific job types (punch, repairs, paint, clean, carpet, inspected, unit trash out, onsite bulk trash), real-time elapsed time tracking for each job, detailed phase-by-phase progress indicators with percentages, focused approval workflow for extra dirty units and extra drywall repairs with technician → office staff → property manager workflow, photo requirements tracking for trash jobs (2 photos required to office), comprehensive job scheduling system for unit preparation with multi-job booking, move-in dates, and completion targets, weekly schedule overview with progress tracking, complete photo documentation workflow (before/progress/completion photos), direct messaging to office staff with message history and status tracking, quote request system with detailed project specifications and budget management, visual weekly calendar with drag-and-drop schedule editing capabilities
 
 #### Office Staff Role  
 - **Responsibilities**: Administrative tasks, lease processing, application management, coordination

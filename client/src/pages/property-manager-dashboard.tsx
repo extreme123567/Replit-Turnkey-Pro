@@ -383,7 +383,7 @@ export default function PropertyManagerDashboard() {
               <div>
                 <p className="text-slate-600 text-sm font-medium">Scheduled Jobs</p>
                 <p className="text-2xl font-bold text-blue-600 mt-1" data-testid="stat-scheduled-jobs">
-                  {workOrders?.filter(order => order.status === 'scheduled')?.length || 3}
+                  {workOrders?.filter((order: any) => order.status === 'scheduled')?.length || 3}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -400,7 +400,7 @@ export default function PropertyManagerDashboard() {
               <div>
                 <p className="text-slate-600 text-sm font-medium">In Progress</p>
                 <p className="text-2xl font-bold text-amber-600 mt-1" data-testid="stat-in-progress-jobs">
-                  {workOrders?.filter(order => order.status === 'in_progress')?.length || 4}
+                  {workOrders?.filter((order: any) => order.status === 'in_progress')?.length || 4}
                 </p>
               </div>
               <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -417,7 +417,7 @@ export default function PropertyManagerDashboard() {
               <div>
                 <p className="text-slate-600 text-sm font-medium">Completed Today</p>
                 <p className="text-2xl font-bold text-green-600 mt-1" data-testid="stat-completed-jobs">
-                  {workOrders?.filter(order => order.status === 'completed')?.length || 6}
+                  {workOrders?.filter((order: any) => order.status === 'completed')?.length || 6}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -1039,6 +1039,283 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
+      {/* Enhanced Photo Management & Communication Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Photo Management */}
+        <Card className="servicepro-card">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Photo Documentation</span>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" data-testid="button-upload-photos">
+                  <Camera className="mr-2 h-4 w-4" />
+                  Upload Photos
+                </Button>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <div className="space-y-4">
+              {/* Recent Photo Activity */}
+              <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Camera className="text-blue-600" size={14} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-800 text-sm">Before Photos Uploaded</p>
+                    <p className="text-xs text-slate-600">Unit 102B damage assessment - 4 photos</p>
+                    <p className="text-xs text-blue-600 mt-1">Uploaded: 2 hours ago</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7">
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Camera className="text-amber-600" size={14} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-800 text-sm">Progress Photos Needed</p>
+                    <p className="text-xs text-slate-600">Unit 205 painting - First coat completion</p>
+                    <p className="text-xs text-amber-600 mt-1">Waiting for technician upload</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7">
+                    <Upload className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="text-green-600" size={14} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-800 text-sm">Final Photos Complete</p>
+                    <p className="text-xs text-slate-600">Unit 301 carpet installation - 6 photos</p>
+                    <p className="text-xs text-green-600 mt-1">Ready for inspection</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7">
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="text-center py-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Photo Gallery
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Communication Center */}
+        <Card className="servicepro-card">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Communication Center</span>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" data-testid="button-new-message">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  New Message
+                </Button>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <div className="space-y-4">
+              {/* Recent Messages */}
+              <div className="p-4 border border-slate-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="text-blue-600" size={14} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-slate-800 text-sm">Message to Office Manager</p>
+                      <p className="text-xs text-slate-500">10 min ago</p>
+                    </div>
+                    <p className="text-xs text-slate-600">RE: Emergency repair approval for Unit 205</p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge variant="outline" className="text-xs">Urgent</Badge>
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700">Approved</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border border-slate-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <DollarSign className="text-purple-600" size={14} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-slate-800 text-sm">Quote Request Submitted</p>
+                      <p className="text-xs text-slate-500">1 hour ago</p>
+                    </div>
+                    <p className="text-xs text-slate-600">Kitchen renovation - Unit 302 • $2,500 budget</p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700">Pending Review</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border border-slate-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Wrench className="text-amber-600" size={14} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-slate-800 text-sm">Technician Update</p>
+                      <p className="text-xs text-slate-500">2 hours ago</p>
+                    </div>
+                    <p className="text-xs text-slate-600">Mike Johnson: Paint job 80% complete - Unit 301</p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Progress Update</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="pt-2 border-t border-slate-200">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="ghost" size="sm" className="justify-start">
+                    <MessageSquare className="mr-2 h-3 w-3" />
+                    Message Tech
+                  </Button>
+                  <Button variant="ghost" size="sm" className="justify-start">
+                    <DollarSign className="mr-2 h-3 w-3" />
+                    Request Quote
+                  </Button>
+                  <Button variant="ghost" size="sm" className="justify-start">
+                    <AlertTriangle className="mr-2 h-3 w-3" />
+                    Report Issue
+                  </Button>
+                  <Button variant="ghost" size="sm" className="justify-start">
+                    <Eye className="mr-2 h-3 w-3" />
+                    View All Messages
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Weekly Schedule Overview with Management Controls */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Weekly Schedule Overview</span>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm">
+                <Calendar className="mr-2 h-4 w-4" />
+                Edit Schedule
+              </Button>
+              <Button variant="outline" size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Job
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="grid grid-cols-7 gap-4">
+            {/* Monday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Monday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-blue-50 rounded text-xs">
+                  <p className="font-medium text-blue-800">Paint - 102B</p>
+                  <p className="text-blue-600">9:00 AM</p>
+                </div>
+                <div className="p-2 bg-green-50 rounded text-xs">
+                  <p className="font-medium text-green-800">Clean - 205</p>
+                  <p className="text-green-600">2:00 PM</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tuesday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Tuesday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-purple-50 rounded text-xs">
+                  <p className="font-medium text-purple-800">Repairs - 301</p>
+                  <p className="text-purple-600">10:00 AM</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Wednesday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Wednesday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-amber-50 rounded text-xs">
+                  <p className="font-medium text-amber-800">Inspect - 102B</p>
+                  <p className="text-amber-600">11:00 AM</p>
+                </div>
+                <div className="p-2 bg-blue-50 rounded text-xs">
+                  <p className="font-medium text-blue-800">Paint - 402</p>
+                  <p className="text-blue-600">1:00 PM</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Thursday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Thursday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-green-50 rounded text-xs">
+                  <p className="font-medium text-green-800">Clean - 301</p>
+                  <p className="text-green-600">9:00 AM</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Friday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Friday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-slate-100 rounded text-xs border-2 border-dashed border-slate-300">
+                  <p className="text-slate-500 text-center">Available</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Saturday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Saturday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-red-50 rounded text-xs">
+                  <p className="font-medium text-red-800">Emergency</p>
+                  <p className="text-red-600">On Call</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sunday */}
+            <div className="p-3 border border-slate-200 rounded-lg">
+              <p className="font-medium text-slate-800 text-sm mb-2">Sunday</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-slate-100 rounded text-xs border-2 border-dashed border-slate-300">
+                  <p className="text-slate-500 text-center">Rest Day</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
     </div>
   );
