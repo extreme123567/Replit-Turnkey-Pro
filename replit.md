@@ -6,7 +6,14 @@ ServicePro is a comprehensive property management platform designed for professi
 
 ## Recent Changes (August 2025)
 
-### Photo-Based Callback Resolution System (Latest)
+### General Dashboard with Bi-Weekly Financial Reset (Latest)
+- **Comprehensive Metrics Tracking**: Real-time monitoring of scheduled jobs, active jobs, jobs completed & inspected, revenue billed, and total payout
+- **Bi-Weekly Reset Cycles**: Automatic financial period management that resets every 2 weeks with countdown timer showing days remaining
+- **Profit Analysis**: Real-time net profit calculation with color-coded profitability indicators (green ≥30%, yellow ≥15%, red <15%)
+- **Financial Accountability**: Live tracking of revenue vs. payout with per-day averages and margin calculations
+- **Period Management**: Automated creation of new financial periods with complete audit trail of business performance
+
+### Photo-Based Callback Resolution System
 - **Efficient Callback Workflow**: When inspections fail, technicians receive callback notifications and can fix issues without requiring inspector return visits
 - **Photo Upload System**: Technicians upload before/after photos of completed callback work with detailed resolution notes
 - **Remote Verification**: Inspectors review photos remotely and approve/reject work without physical site visits
