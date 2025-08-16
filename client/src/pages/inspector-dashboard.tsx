@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,9 @@ import {
   TrendingUp,
   PhoneCall,
   Upload,
-  X
+  X,
+  Play,
+  Square
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -52,6 +54,57 @@ export default function InspectorDashboard() {
   const [inspectionNotes, setInspectionNotes] = useState("");
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [callbackNotes, setCallbackNotes] = useState("");
+  const [activeTimers, setActiveTimers] = useState<{[jobId: string]: {startTime: Date, elapsedSeconds: number}}>({});
+  const [timerIntervals, setTimerIntervals] = useState<{[jobId: string]: NodeJS.Timeout}>({});
+
+  // Timer functions
+  const startTimer = (jobId: string) => {
+    const startTime = new Date();
+    setActiveTimers(prev => ({
+      ...prev,
+      [jobId]: { startTime, elapsedSeconds: 0 }
+    }));
+
+    const interval = setInterval(() => {
+      setActiveTimers(prev => ({
+        ...prev,
+        [jobId]: {
+          ...prev[jobId],
+          elapsedSeconds: Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
+        }
+      }));
+    }, 1000);
+
+    setTimerIntervals(prev => ({
+      ...prev,
+      [jobId]: interval
+    }));
+  };
+
+  const stopTimer = (jobId: string) => {
+    if (timerIntervals[jobId]) {
+      clearInterval(timerIntervals[jobId]);
+      setTimerIntervals(prev => {
+        const newIntervals = { ...prev };
+        delete newIntervals[jobId];
+        return newIntervals;
+      });
+    }
+  };
+
+  const formatElapsedTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(timerIntervals).forEach(interval => clearInterval(interval));
+    };
+  }, [timerIntervals]);
 
   const { data: stats, isLoading: statsLoading } = useQuery<InspectorStats>({
     queryKey: ["/api/dashboard/inspector", inspectorId],
@@ -352,7 +405,38 @@ export default function InspectorDashboard() {
                   </div>
                   <div className="text-right space-y-2">
                     <Badge className="bg-emerald-100 text-emerald-800">Ready for Inspection</Badge>
+                    
+                    {/* Timer Display */}
+                    {activeTimers[job.id] && (
+                      <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-mono">
+                        ⏱️ {formatElapsedTime(activeTimers[job.id].elapsedSeconds)}
+                      </div>
+                    )}
+                    
                     <div className="flex space-x-2">
+                      {/* Timer Controls */}
+                      {activeTimers[job.id] ? (
+                        <Button 
+                          size="sm"
+                          onClick={() => stopTimer(job.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                          data-testid={`button-stop-timer-${job.id}`}
+                        >
+                          <Square className="mr-1" size={12} />
+                          Stop
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm"
+                          onClick={() => startTimer(job.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                          data-testid={`button-start-timer-${job.id}`}
+                        >
+                          <Play className="mr-1" size={12} />
+                          Start
+                        </Button>
+                      )}
+                      
                       <Button 
                         size="sm" 
                         onClick={() => openInspectionDialog(job)}
