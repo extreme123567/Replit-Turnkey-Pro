@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -75,6 +75,9 @@ export const invoices = pgTable("invoices", {
   dueDate: timestamp("due_date").notNull(),
   paidDate: timestamp("paid_date"),
   notes: text("notes"),
+  quickbooksId: varchar("quickbooks_id"), // QuickBooks invoice ID
+  quickbooksDocNumber: varchar("quickbooks_doc_number"), // QuickBooks document number
+  quickbooksSyncedAt: timestamp("quickbooks_synced_at"), // Last sync timestamp
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -253,6 +256,30 @@ export const auditLog = pgTable("audit_log", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const quoteRequests = pgTable("quote_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.id),
+  unitNumber: varchar("unit_number"),
+  requesterId: varchar("requester_id").references(() => users.id).notNull(),
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  priority: varchar("priority").notNull().default("medium"), // low, medium, high, emergency
+  category: varchar("category").notNull(), // maintenance, repair, renovation, cleaning, etc.
+  estimatedBudget: varchar("estimated_budget"),
+  preferredStartDate: timestamp("preferred_start_date"),
+  preferredEndDate: timestamp("preferred_end_date"),
+  status: varchar("status").notNull().default("pending"), // pending, in_review, quoted, approved, rejected, completed
+  quoteAmount: varchar("quote_amount"),
+  quotedBy: varchar("quoted_by").references(() => users.id),
+  quotedAt: timestamp("quoted_at"),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  notes: text("notes"),
+  attachments: jsonb("attachments").default([]), // array of file URLs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
@@ -340,6 +367,14 @@ export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
   createdAt: true,
 });
 
+export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
+  id: true,
+  quotedAt: true,
+  approvedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).omit({
   id: true,
   approvedAt: true,
@@ -394,3 +429,6 @@ export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
 
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+
+export type QuoteRequest = typeof quoteRequests.$inferSelect;
+export type InsertQuoteRequest = z.infer<typeof insertQuoteRequestSchema>;

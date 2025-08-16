@@ -1,22 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Plus, Eye, Download, Send, Bell, AlertTriangle, CheckCircle, FileText } from "lucide-react";
+import { Search, Plus, Eye, Download, Send, Bell, AlertTriangle, CheckCircle, FileText, ExternalLink, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InvoiceForm } from "@/components/forms/invoice-form";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Invoice, Client, Job } from "@shared/schema";
 
 export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  // Check for QuickBooks connection callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('qb_connected') === 'true') {
+      toast({
+        title: "QuickBooks Connected",
+        description: "Successfully connected to QuickBooks Online",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
 
   const { data: invoices, isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
@@ -28,6 +43,12 @@ export default function Invoices() {
 
   const { data: jobs, isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ["/api/jobs"],
+  });
+
+  // QuickBooks connection status
+  const { data: qbStatus, isLoading: qbStatusLoading, refetch: refetchQbStatus } = useQuery({
+    queryKey: ["/api/quickbooks/status"],
+    refetchInterval: 30000, // Check every 30 seconds
   });
 
   const isLoading = invoicesLoading || clientsLoading || jobsLoading;
@@ -44,6 +65,44 @@ export default function Invoices() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+    },
+  });
+
+  // QuickBooks authentication mutation
+  const qbAuthMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/quickbooks/auth", "GET");
+    },
+    onSuccess: (data: any) => {
+      window.location.href = data.authUrl;
+    },
+    onError: () => {
+      toast({
+        title: "Authentication Error",
+        description: "Failed to start QuickBooks authentication",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Invoice sync to QuickBooks mutation
+  const syncToQbMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      return await apiRequest(`/api/invoices/${invoiceId}/sync-to-quickbooks`, "POST");
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Invoice Synced",
+        description: `Invoice successfully synced to QuickBooks (Doc #${data.docNumber})`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync Failed",
+        description: error.details || "Failed to sync invoice to QuickBooks",
+        variant: "destructive",
+      });
     },
   });
 
@@ -154,21 +213,81 @@ export default function Invoices() {
           <h3 className="text-lg font-bold text-slate-800">Invoice Management</h3>
           <p className="text-slate-600">Create and manage invoices</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="servicepro-btn-primary" data-testid="button-create-invoice">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Invoice
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Create New Invoice</DialogTitle>
-            </DialogHeader>
-            <InvoiceForm onSuccess={() => setIsCreateDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-3">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="servicepro-btn-primary" data-testid="button-create-invoice">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Invoice
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Create New Invoice</DialogTitle>
+              </DialogHeader>
+              <InvoiceForm onSuccess={() => setIsCreateDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      {/* QuickBooks Integration Status */}
+      <Card className="border-l-4 border-l-blue-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FileText className="text-blue-600" size={20} />
+              </div>
+              <div>
+                <CardTitle className="text-lg text-slate-800">QuickBooks Integration</CardTitle>
+                <p className="text-sm text-slate-600">Sync invoices directly to QuickBooks Online</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {!qbStatusLoading && (
+                <Badge className={qbStatus?.connected ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                  {qbStatus?.connected ? "Connected" : "Not Connected"}
+                </Badge>
+              )}
+              {qbStatus?.connected ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchQbStatus()}
+                  disabled={qbStatusLoading}
+                  data-testid="button-refresh-qb-status"
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${qbStatusLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => qbAuthMutation.mutate()}
+                  disabled={qbAuthMutation.isPending}
+                  data-testid="button-connect-quickbooks"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  {qbAuthMutation.isPending ? "Connecting..." : "Connect QuickBooks"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {qbStatus?.connected ? (
+            <div className="flex items-center gap-4 text-sm text-slate-600">
+              <span>Company ID: {qbStatus.companyId}</span>
+              <span>•</span>
+              <span>Connection expires: {new Date(qbStatus.expiresAt).toLocaleDateString()}</span>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-600">
+              Connect your QuickBooks Online account to automatically sync invoices and streamline your accounting workflow.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -288,6 +407,7 @@ export default function Invoices() {
                     <TableHead>Date</TableHead>
                     <TableHead>Due Date</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>QuickBooks</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -313,6 +433,30 @@ export default function Invoices() {
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(isOverdue(invoice) && invoice.status !== 'paid' ? 'overdue' : invoice.status)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {qbStatus?.connected ? (
+                            invoice.quickbooksId ? (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Synced (#{invoice.quickbooksDocNumber})
+                              </Badge>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => syncToQbMutation.mutate(invoice.id)}
+                                disabled={syncToQbMutation.isPending}
+                                data-testid={`button-sync-qb-${invoice.id}`}
+                                className="text-xs"
+                              >
+                                {syncToQbMutation.isPending ? "Syncing..." : "Sync to QB"}
+                              </Button>
+                            )
+                          ) : (
+                            <span className="text-xs text-slate-400">QB Not Connected</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">

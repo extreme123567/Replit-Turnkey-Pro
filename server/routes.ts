@@ -1,8 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { QuickBooksService, type QuickBooksTokens, type CreateInvoiceRequest } from "./quickbooksService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema } from "@shared/schema";
+import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema, insertQuoteRequestSchema } from "@shared/schema";
+
+// Initialize QuickBooks service
+const qbConfig = {
+  clientId: process.env.QUICKBOOKS_CLIENT_ID || '',
+  clientSecret: process.env.QUICKBOOKS_CLIENT_SECRET || '',
+  environment: (process.env.QUICKBOOKS_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production',
+  redirectUri: process.env.QUICKBOOKS_REDIRECT_URI || 'http://localhost:5000/api/quickbooks/callback',
+};
+
+const quickBooksService = new QuickBooksService(qbConfig);
+
+// Store QB tokens in memory (in production, use database)
+let qbTokens: QuickBooksTokens | null = null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Client routes
@@ -799,6 +813,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quote Request routes
+  app.get("/api/quote-requests", async (req, res) => {
+    try {
+      const quoteRequests = await storage.getQuoteRequests();
+      res.json(quoteRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quote requests" });
+    }
+  });
+
+  app.get("/api/quote-requests/:id", async (req, res) => {
+    try {
+      const quoteRequest = await storage.getQuoteRequest(req.params.id);
+      if (!quoteRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      res.json(quoteRequest);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quote request" });
+    }
+  });
+
+  app.post("/api/quote-requests", async (req, res) => {
+    try {
+      const validatedData = insertQuoteRequestSchema.parse(req.body);
+      const quoteRequest = await storage.createQuoteRequest(validatedData);
+      res.status(201).json(quoteRequest);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid quote request data" });
+    }
+  });
+
+  app.patch("/api/quote-requests/:id", async (req, res) => {
+    try {
+      const updates = insertQuoteRequestSchema.partial().parse(req.body);
+      const quoteRequest = await storage.updateQuoteRequest(req.params.id, updates);
+      if (!quoteRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      res.json(quoteRequest);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid quote request data" });
+    }
+  });
+
+  app.get("/api/quote-requests/requester/:requesterId", async (req, res) => {
+    try {
+      const quoteRequests = await storage.getQuoteRequestsByRequester(req.params.requesterId);
+      res.json(quoteRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quote requests for requester" });
+    }
+  });
+
+  // Enhanced messaging for property managers
+  app.post("/api/messages/property-manager", async (req, res) => {
+    try {
+      const { recipient, subject, message, senderId } = req.body;
+      
+      // Create a structured message for property manager communication
+      const messageData = {
+        senderId: senderId,
+        recipientId: recipient === 'all-office-staff' ? null : recipient,
+        conversationId: `pm-office-${Date.now()}`,
+        message: message,
+        metadata: JSON.stringify({
+          subject: subject,
+          senderType: 'property_manager',
+          recipientType: recipient === 'all-office-staff' ? 'all_office_staff' : 'office_staff',
+          priority: 'normal'
+        })
+      };
+
+      const createdMessage = await storage.createMessage(messageData);
+      res.status(201).json(createdMessage);
+    } catch (error) {
+      console.error("Error creating property manager message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
   // Helper function to get job type display name
   function getJobTypeName(jobType: string): string {
     const jobTypeNames: Record<string, string> = {
@@ -868,6 +963,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching scheduled jobs:", error);
       res.status(500).json({ error: "Failed to fetch scheduled jobs" });
+    }
+  });
+
+  // QuickBooks OAuth Routes
+  app.get("/api/quickbooks/auth", (req, res) => {
+    try {
+      const authUrl = quickBooksService.getAuthorizationUrl();
+      res.json({ authUrl });
+    } catch (error) {
+      console.error("Error generating auth URL:", error);
+      res.status(500).json({ error: "Failed to generate authorization URL" });
+    }
+  });
+
+  app.get("/api/quickbooks/callback", async (req, res) => {
+    try {
+      const { code, realmId } = req.query;
+      
+      if (!code || !realmId) {
+        return res.status(400).json({ error: "Missing authorization code or realm ID" });
+      }
+
+      const tokens = await quickBooksService.exchangeCodeForTokens(code as string, realmId as string);
+      qbTokens = tokens;
+      quickBooksService.initializeClient(tokens);
+
+      res.redirect("/invoices?qb_connected=true");
+    } catch (error) {
+      console.error("Error handling QuickBooks callback:", error);
+      res.status(500).json({ error: "Failed to complete QuickBooks authorization" });
+    }
+  });
+
+  // QuickBooks connection status
+  app.get("/api/quickbooks/status", async (req, res) => {
+    try {
+      if (!qbTokens) {
+        return res.json({ connected: false });
+      }
+
+      // Check if token is expired
+      const isExpired = new Date() > qbTokens.expiresAt;
+      if (isExpired && qbTokens.refreshToken) {
+        try {
+          const newTokens = await quickBooksService.refreshAccessToken(qbTokens.refreshToken);
+          newTokens.companyId = qbTokens.companyId;
+          qbTokens = newTokens;
+          quickBooksService.initializeClient(qbTokens);
+        } catch (refreshError) {
+          console.error("Error refreshing token:", refreshError);
+          return res.json({ connected: false, error: "Token expired and refresh failed" });
+        }
+      }
+
+      const isConnected = await quickBooksService.testConnection();
+      res.json({ 
+        connected: isConnected,
+        companyId: qbTokens.companyId,
+        expiresAt: qbTokens.expiresAt
+      });
+    } catch (error) {
+      console.error("Error checking QuickBooks status:", error);
+      res.json({ connected: false, error: "Connection test failed" });
+    }
+  });
+
+  // Sync invoice to QuickBooks
+  app.post("/api/invoices/:id/sync-to-quickbooks", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      if (!qbTokens) {
+        return res.status(400).json({ error: "QuickBooks not connected" });
+      }
+
+      const invoice = await storage.getInvoice(id);
+      if (!invoice) {
+        return res.status(404).json({ error: "Invoice not found" });
+      }
+
+      const client = await storage.getClient(invoice.clientId);
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+
+      // Create or find customer in QuickBooks
+      let customers = await quickBooksService.getCustomers();
+      let qbCustomer = customers.find((c: any) => 
+        c.Name === client.name || c.PrimaryEmailAddr?.Address === client.email
+      );
+
+      if (!qbCustomer) {
+        qbCustomer = await quickBooksService.createCustomer(
+          client.name,
+          client.email,
+          {
+            Line1: client.address,
+            City: client.city,
+            CountrySubDivisionCode: client.state,
+            PostalCode: client.zipCode,
+          }
+        );
+      }
+
+      // Prepare invoice data
+      const invoiceRequest: CreateInvoiceRequest = {
+        customerId: qbCustomer.Id,
+        customerName: client.name,
+        customerEmail: client.email,
+        lineItems: [
+          {
+            amount: parseFloat(invoice.amount),
+            description: invoice.description || `Invoice ${invoice.invoiceNumber}`,
+            itemName: "Property Management Services",
+            quantity: 1,
+            unitPrice: parseFloat(invoice.amount),
+          }
+        ],
+        dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : undefined,
+        invoiceNumber: invoice.invoiceNumber,
+        memo: invoice.description,
+      };
+
+      const qbInvoice = await quickBooksService.createInvoice(invoiceRequest);
+      
+      // Update local invoice with QuickBooks ID
+      await storage.updateInvoice(id, {
+        quickbooksId: qbInvoice.Id,
+        quickbooksDocNumber: qbInvoice.DocNumber,
+      });
+
+      res.json({
+        success: true,
+        quickbooksInvoice: qbInvoice,
+        quickbooksId: qbInvoice.Id,
+        docNumber: qbInvoice.DocNumber,
+      });
+    } catch (error) {
+      console.error("Error syncing invoice to QuickBooks:", error);
+      res.status(500).json({ 
+        error: "Failed to sync invoice to QuickBooks",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get QuickBooks customers
+  app.get("/api/quickbooks/customers", async (req, res) => {
+    try {
+      if (!qbTokens) {
+        return res.status(400).json({ error: "QuickBooks not connected" });
+      }
+
+      const customers = await quickBooksService.getCustomers();
+      res.json(customers);
+    } catch (error) {
+      console.error("Error fetching QuickBooks customers:", error);
+      res.status(500).json({ error: "Failed to fetch customers" });
     }
   });
 

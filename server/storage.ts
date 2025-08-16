@@ -1,4 +1,4 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog } from "@shared/schema";
+import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -49,6 +49,13 @@ export interface IStorage {
   getConversations(userId: string, userType: string): Promise<any[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: string): Promise<boolean>;
+
+  // Quote Requests
+  getQuoteRequests(): Promise<QuoteRequest[]>;
+  getQuoteRequest(id: string): Promise<QuoteRequest | undefined>;
+  getQuoteRequestsByRequester(requesterId: string): Promise<QuoteRequest[]>;
+  createQuoteRequest(quoteRequest: InsertQuoteRequest): Promise<QuoteRequest>;
+  updateQuoteRequest(id: string, quoteRequest: Partial<InsertQuoteRequest>): Promise<QuoteRequest | undefined>;
 
   // Users
   getUsers(): Promise<User[]>;

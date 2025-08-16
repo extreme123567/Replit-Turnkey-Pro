@@ -60,6 +60,10 @@ export default function PropertyManagerDashboard() {
   // Modal states
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  
+  // Filter state for jobs
+  const [jobFilter, setJobFilter] = useState("all"); // all, scheduled, in_progress, completed
   
   // Form states
   const [jobForm, setJobForm] = useState({
@@ -77,6 +81,19 @@ export default function PropertyManagerDashboard() {
     message: ''
   });
 
+  const [quoteForm, setQuoteForm] = useState({
+    title: '',
+    description: '',
+    property: '',
+    unitNumber: '',
+    category: 'maintenance',
+    priority: 'medium',
+    estimatedBudget: '',
+    preferredStartDate: '',
+    preferredEndDate: ''
+  });
+
+  // Data fetching
   const { data: stats, isLoading: statsLoading } = useQuery<PropertyManagerStats>({
     queryKey: ["/api/dashboard/property-manager", propertyManagerId],
     queryFn: async () => {
@@ -95,6 +112,15 @@ export default function PropertyManagerDashboard() {
     },
   });
 
+  const { data: jobs, isLoading: jobsLoading } = useQuery({
+    queryKey: ["/api/jobs", { managerId: propertyManagerId }],
+    queryFn: async () => {
+      const response = await fetch(`/api/jobs?managerId=${propertyManagerId}`);
+      if (!response.ok) throw new Error('Failed to fetch jobs');
+      return response.json();
+    },
+  });
+
   const { data: workOrders, isLoading: workOrdersLoading } = useQuery({
     queryKey: ["/api/work-orders/manager", propertyManagerId],
     queryFn: async () => {
@@ -104,7 +130,7 @@ export default function PropertyManagerDashboard() {
     },
   });
 
-  const isLoading = statsLoading || propertiesLoading || workOrdersLoading;
+  const isLoading = statsLoading || propertiesLoading || jobsLoading || workOrdersLoading;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -152,13 +178,19 @@ export default function PropertyManagerDashboard() {
           <p className="text-slate-600">Manage your properties and oversee operations</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Dialog open={isJobModalOpen} onOpenChange={setIsJobModalOpen}>
+          <Dialog open={isQuoteModalOpen} onOpenChange={setIsQuoteModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" data-testid="button-schedule-job">
-                <Calendar className="mr-2 h-4 w-4" />
-                Schedule Job
+              <Button variant="outline" data-testid="button-request-quote">
+                <DollarSign className="mr-2 h-4 w-4" />
+                Request Quote
               </Button>
             </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Request Quote from Office</DialogTitle>
+              </DialogHeader>
+              <QuoteRequestForm onSuccess={() => setIsQuoteModalOpen(false)} />
+            </DialogContent>
           </Dialog>
           
           <Dialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
@@ -168,12 +200,28 @@ export default function PropertyManagerDashboard() {
                 Message Office Staff
               </Button>
             </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Send Message to Office Staff</DialogTitle>
+              </DialogHeader>
+              <MessageForm onSuccess={() => setIsMessageModalOpen(false)} />
+            </DialogContent>
           </Dialog>
           
-          <Button className="servicepro-btn-primary" data-testid="button-add-property">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Property
-          </Button>
+          <Dialog open={isJobModalOpen} onOpenChange={setIsJobModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="servicepro-btn-primary" data-testid="button-schedule-job">
+                <Calendar className="mr-2 h-4 w-4" />
+                Schedule Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Schedule New Job</DialogTitle>
+              </DialogHeader>
+              <JobScheduleForm onSuccess={() => setIsJobModalOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -1151,6 +1199,133 @@ export default function PropertyManagerDashboard() {
               <Button className="servicepro-btn-primary">
                 <Send className="mr-2 h-4 w-4" />
                 Send Message
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quote Request Modal */}
+      <Dialog open={isQuoteModalOpen} onOpenChange={setIsQuoteModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Request Quote from Office</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="quote-title">Service Title</Label>
+              <Input
+                id="quote-title"
+                placeholder="e.g., Kitchen renovation - Unit 205"
+                value={quoteForm.title}
+                onChange={(e) => setQuoteForm({...quoteForm, title: e.target.value})}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="quote-description">Detailed Description</Label>
+              <Textarea
+                id="quote-description"
+                placeholder="Describe the work needed in detail, including materials and scope..."
+                rows={4}
+                value={quoteForm.description}
+                onChange={(e) => setQuoteForm({...quoteForm, description: e.target.value})}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="property">Property</Label>
+                <Select value={quoteForm.property} onValueChange={(value) => setQuoteForm({...quoteForm, property: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="maple-gardens">Maple Gardens Apartments</SelectItem>
+                    <SelectItem value="oak-village">Oak Village Townhomes</SelectItem>
+                    <SelectItem value="pine-heights">Pine Heights Complex</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="unit-number">Unit Number</Label>
+                <Input
+                  id="unit-number"
+                  placeholder="e.g., 205"
+                  value={quoteForm.unitNumber}
+                  onChange={(e) => setQuoteForm({...quoteForm, unitNumber: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="category">Service Category</Label>
+                <Select value={quoteForm.category} onValueChange={(value) => setQuoteForm({...quoteForm, category: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="repair">Repair</SelectItem>
+                    <SelectItem value="renovation">Renovation</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="landscaping">Landscaping</SelectItem>
+                    <SelectItem value="hvac">HVAC</SelectItem>
+                    <SelectItem value="plumbing">Plumbing</SelectItem>
+                    <SelectItem value="electrical">Electrical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={quoteForm.priority} onValueChange={(value) => setQuoteForm({...quoteForm, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="emergency">Emergency</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="estimated-budget">Estimated Budget (Optional)</Label>
+              <Input
+                id="estimated-budget"
+                type="number"
+                placeholder="5000"
+                value={quoteForm.estimatedBudget}
+                onChange={(e) => setQuoteForm({...quoteForm, estimatedBudget: e.target.value})}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="preferred-start">Preferred Start Date</Label>
+                <Input
+                  id="preferred-start"
+                  type="date"
+                  value={quoteForm.preferredStartDate}
+                  onChange={(e) => setQuoteForm({...quoteForm, preferredStartDate: e.target.value})}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="preferred-end">Preferred Completion</Label>
+                <Input
+                  id="preferred-end"
+                  type="date"
+                  value={quoteForm.preferredEndDate}
+                  onChange={(e) => setQuoteForm({...quoteForm, preferredEndDate: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setIsQuoteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button className="servicepro-btn-primary">
+                <DollarSign className="mr-2 h-4 w-4" />
+                Submit Quote Request
               </Button>
             </div>
           </div>
