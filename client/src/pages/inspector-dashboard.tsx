@@ -755,7 +755,7 @@ export default function InspectorDashboard() {
                   className={inspectionStatus === "pass" ? "bg-green-600 hover:bg-green-700" : "bg-amber-600 hover:bg-amber-700"}
                 >
                   {completeInspectionMutation.isPending ? "Submitting..." : 
-                   inspectionStatus === "pass" ? "Approve Job" : "Submit Callback"}
+                   inspectionStatus === "pass" ? "Mark Completed" : "Submit Callback"}
                 </Button>
               </div>
             </div>
