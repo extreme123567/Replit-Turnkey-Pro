@@ -1798,6 +1798,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Extra Dirty Request API Routes
+
+  // Create extra dirty request
+  app.post("/api/extra-dirty-requests", async (req, res) => {
+    try {
+      const request = await storage.createExtraDirtyRequest(req.body);
+      console.log(`Extra dirty request created: ${request.id} for job ${request.jobId}`);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating extra dirty request:", error);
+      res.status(500).json({ error: "Failed to create extra dirty request" });
+    }
+  });
+
+  // Get all extra dirty requests (for office staff)
+  app.get("/api/extra-dirty-requests", async (req, res) => {
+    try {
+      const requests = await storage.getExtraDirtyRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching extra dirty requests:", error);
+      res.status(500).json({ error: "Failed to fetch extra dirty requests" });
+    }
+  });
+
+  // Get extra dirty requests by technician
+  app.get("/api/extra-dirty-requests/technician/:technicianId", async (req, res) => {
+    try {
+      const { technicianId } = req.params;
+      const requests = await storage.getExtraDirtyRequestsByTechnician(technicianId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching extra dirty requests:", error);
+      res.status(500).json({ error: "Failed to fetch extra dirty requests" });
+    }
+  });
+
+  // Update extra dirty request status (office review)
+  app.put("/api/extra-dirty-requests/:id/office-review", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reviewedBy, notes, status } = req.body;
+      
+      const updated = await storage.updateExtraDirtyRequestStatus(
+        id, 
+        status || "office_review", 
+        reviewedBy, 
+        notes
+      );
+
+      if (!updated) {
+        return res.status(404).json({ error: "Extra dirty request not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating extra dirty request:", error);
+      res.status(500).json({ error: "Failed to update extra dirty request" });
+    }
+  });
+
+  // Repair Photo Request API Routes
+
+  // Create repair photo request
+  app.post("/api/repair-photo-requests", async (req, res) => {
+    try {
+      const request = await storage.createRepairPhotoRequest(req.body);
+      console.log(`Repair photo request created: ${request.id} for job ${request.jobId}`);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating repair photo request:", error);
+      res.status(500).json({ error: "Failed to create repair photo request" });
+    }
+  });
+
+  // Get all repair photo requests (for office staff)
+  app.get("/api/repair-photo-requests", async (req, res) => {
+    try {
+      const requests = await storage.getRepairPhotoRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching repair photo requests:", error);
+      res.status(500).json({ error: "Failed to fetch repair photo requests" });
+    }
+  });
+
+  // Get repair photo requests by painter
+  app.get("/api/repair-photo-requests/painter/:painterId", async (req, res) => {
+    try {
+      const { painterId } = req.params;
+      const requests = await storage.getRepairPhotoRequestsByPainter(painterId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching repair photo requests:", error);
+      res.status(500).json({ error: "Failed to fetch repair photo requests" });
+    }
+  });
+
+  // Update repair photo request status (office review)
+  app.put("/api/repair-photo-requests/:id/office-review", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reviewedBy, notes, status } = req.body;
+      
+      const updated = await storage.updateRepairPhotoRequestStatus(
+        id, 
+        status || "office_review", 
+        reviewedBy, 
+        notes
+      );
+
+      if (!updated) {
+        return res.status(404).json({ error: "Repair photo request not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating repair photo request:", error);
+      res.status(500).json({ error: "Failed to update repair photo request" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

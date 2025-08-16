@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +14,14 @@ import {
   Camera,
   FileText,
   Navigation,
-  AlertTriangle
+  AlertTriangle,
+  Trash2,
+  Upload
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface TechnicianStats {
   assignedOrders: number;
@@ -90,6 +95,86 @@ export default function TechnicianDashboard() {
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
     return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Component for Extra Dirty Request button
+  const ExtraDirtyButton = ({ technicianId }: { technicianId: string }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    const createExtraDirtyRequest = useMutation({
+      mutationFn: async (data: any) => {
+        return await apiRequest("/api/extra-dirty-requests", "POST", data);
+      },
+      onSuccess: () => {
+        toast({
+          title: "Extra Dirty Request Submitted",
+          description: "Your request has been sent to office staff for review.",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to submit extra dirty request. Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
+
+    const handleExtraDirtyRequest = async () => {
+      setIsLoading(true);
+      try {
+        await createExtraDirtyRequest.mutateAsync({
+          technicianId,
+          jobId: "current-job-id", // Would come from selected job
+          reason: "Unit requires additional cleaning time",
+          description: "This unit is significantly dirtier than standard and will require extra time and resources to complete properly.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <Button 
+        variant="outline" 
+        className="h-20 flex-col space-y-2"
+        onClick={handleExtraDirtyRequest}
+        disabled={isLoading}
+        data-testid="button-extra-dirty"
+      >
+        <Trash2 className="text-orange-600" size={20} />
+        <span className="text-sm font-medium">Extra Dirty</span>
+      </Button>
+    );
+  };
+
+  // Component for Repair Photo Upload button
+  const RepairPhotoButton = ({ painterId }: { painterId: string }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+
+    const handleRepairPhotos = () => {
+      toast({
+        title: "Photo Upload",
+        description: "Repair photo upload feature coming soon.",
+      });
+    };
+
+    return (
+      <Button 
+        variant="outline" 
+        className="h-20 flex-col space-y-2"
+        onClick={handleRepairPhotos}
+        disabled={isLoading}
+        data-testid="button-repair-photos"
+      >
+        <Upload className="text-purple-600" size={20} />
+        <span className="text-sm font-medium">Repair Photos</span>
+      </Button>
+    );
   };
 
   if (isLoading) {
@@ -357,22 +442,8 @@ export default function TechnicianDashboard() {
               <Timer className="text-emerald-600" size={20} />
               <span className="text-sm font-medium">Start Work Order</span>
             </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-upload-photos"
-            >
-              <Camera className="text-blue-600" size={20} />
-              <span className="text-sm font-medium">Upload Photos</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-add-notes"
-            >
-              <FileText className="text-purple-600" size={20} />
-              <span className="text-sm font-medium">Add Notes</span>
-            </Button>
+            <ExtraDirtyButton technicianId={technicianId} />
+            <RepairPhotoButton painterId={technicianId} />
             <Button 
               variant="outline" 
               className="h-20 flex-col space-y-2"

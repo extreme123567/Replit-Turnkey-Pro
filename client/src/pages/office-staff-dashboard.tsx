@@ -17,7 +17,11 @@ import {
   Mail,
   Wrench,
   X,
-  Check
+  Check,
+  Trash2,
+  Upload,
+  Eye,
+  ChevronRight
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -455,10 +459,8 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
   const { toast } = useToast();
 
   const approveMutation = useMutation({
-    mutationFn: (jobId: string) => apiRequest(`/api/jobs/${jobId}/approve`, {
-      method: "PUT",
-      body: JSON.stringify({ approvedBy: "office-staff-1" }),
-      headers: { "Content-Type": "application/json" }
+    mutationFn: (jobId: string) => apiRequest(`/api/jobs/${jobId}/approve`, "PUT", { 
+      approvedBy: "office-staff-1" 
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
@@ -480,10 +482,9 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => apiRequest(`/api/jobs/${jobId}/reject`, {
-      method: "PUT",
-      body: JSON.stringify({ rejectedBy: "office-staff-1", reason }),
-      headers: { "Content-Type": "application/json" }
+    mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => apiRequest(`/api/jobs/${jobId}/reject`, "PUT", { 
+      rejectedBy: "office-staff-1", 
+      reason 
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
@@ -514,6 +515,59 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Queries for extra dirty and repair photo requests
+  const { data: extraDirtyRequests, isLoading: extraDirtyLoading } = useQuery({
+    queryKey: ["/api/extra-dirty-requests"],
+    queryFn: async () => {
+      const response = await fetch('/api/extra-dirty-requests');
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: repairPhotoRequests, isLoading: repairPhotoLoading } = useQuery({
+    queryKey: ["/api/repair-photo-requests"],
+    queryFn: async () => {
+      const response = await fetch('/api/repair-photo-requests');
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  // Mutation for approving extra dirty requests
+  const approveExtraDirtyMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => 
+      apiRequest(`/api/extra-dirty-requests/${id}/office-review`, "PUT", { 
+        reviewedBy: "office-staff-1", 
+        notes, 
+        status: "manager_review" 
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/extra-dirty-requests"] });
+      toast({
+        title: "Request Approved",
+        description: "Extra dirty request sent to property manager for final approval.",
+      });
+    },
+  });
+
+  // Mutation for approving repair photo requests
+  const approveRepairPhotoMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => 
+      apiRequest(`/api/repair-photo-requests/${id}/office-review`, "PUT", { 
+        reviewedBy: "office-staff-1", 
+        notes, 
+        status: "manager_review" 
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/repair-photo-requests"] });
+      toast({
+        title: "Photos Approved",
+        description: "Repair photos sent to property manager for final approval.",
+      });
+    },
+  });
 
   return (
     <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">

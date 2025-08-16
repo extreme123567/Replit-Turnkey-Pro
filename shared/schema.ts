@@ -317,6 +317,53 @@ export const staffPayroll = pgTable("staff_payroll", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Extra Dirty Unit Requests
+export const extraDirtyRequests = pgTable("extra_dirty_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull(),
+  technicianId: varchar("technician_id").notNull(),
+  unitNumber: varchar("unit_number").notNull(),
+  description: text("description").notNull(),
+  photoUrls: text("photo_urls").array(),
+  estimatedExtraTime: integer("estimated_extra_time"), // additional minutes needed
+  estimatedExtraCost: decimal("estimated_extra_cost", { precision: 10, scale: 2 }),
+  status: varchar("status").notNull().default("pending"), // pending, office_review, manager_review, approved, rejected
+  officeReviewedBy: varchar("office_reviewed_by"),
+  officeReviewedAt: timestamp("office_reviewed_at"),
+  officeNotes: text("office_notes"),
+  managerReviewedBy: varchar("manager_reviewed_by"),
+  managerReviewedAt: timestamp("manager_reviewed_at"),
+  managerNotes: text("manager_notes"),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Repair Photo Requests (for painters)
+export const repairPhotoRequests = pgTable("repair_photo_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull(),
+  painterId: varchar("painter_id").notNull(),
+  repairType: varchar("repair_type").notNull(), // drywall, trim, ceiling, wall_damage, etc.
+  unitNumber: varchar("unit_number").notNull(),
+  roomLocation: varchar("room_location").notNull(),
+  description: text("description").notNull(),
+  beforePhotoUrls: text("before_photo_urls").array(),
+  afterPhotoUrls: text("after_photo_urls").array(),
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  estimatedTime: integer("estimated_time"), // minutes
+  status: varchar("status").notNull().default("pending"), // pending, office_review, manager_review, approved, rejected
+  officeReviewedBy: varchar("office_reviewed_by"),
+  officeReviewedAt: timestamp("office_reviewed_at"),
+  officeNotes: text("office_notes"),
+  managerReviewedBy: varchar("manager_reviewed_by"),
+  managerReviewedAt: timestamp("manager_reviewed_at"),
+  managerNotes: text("manager_notes"),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
@@ -437,6 +484,22 @@ export const insertStaffPayrollSchema = createInsertSchema(staffPayroll).omit({
   updatedAt: true,
 });
 
+export const insertExtraDirtyRequestSchema = createInsertSchema(extraDirtyRequests).omit({
+  id: true,
+  officeReviewedAt: true,
+  managerReviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRepairPhotoRequestSchema = createInsertSchema(repairPhotoRequests).omit({
+  id: true,
+  officeReviewedAt: true,
+  managerReviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
@@ -491,3 +554,9 @@ export type InsertCallbackResolution = z.infer<typeof insertCallbackResolutionSc
 
 export type StaffPayroll = typeof staffPayroll.$inferSelect;
 export type InsertStaffPayroll = z.infer<typeof insertStaffPayrollSchema>;
+
+export type ExtraDirtyRequest = typeof extraDirtyRequests.$inferSelect;
+export type InsertExtraDirtyRequest = z.infer<typeof insertExtraDirtyRequestSchema>;
+
+export type RepairPhotoRequest = typeof repairPhotoRequests.$inferSelect;
+export type InsertRepairPhotoRequest = z.infer<typeof insertRepairPhotoRequestSchema>;

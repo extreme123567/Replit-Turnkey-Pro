@@ -1,4 +1,4 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution, type StaffPayroll, type InsertStaffPayroll } from "@shared/schema";
+import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution, type StaffPayroll, type InsertStaffPayroll, type ExtraDirtyRequest, type InsertExtraDirtyRequest, type RepairPhotoRequest, type InsertRepairPhotoRequest } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -149,6 +149,18 @@ export interface IStorage {
   // Financial Analytics
   getFinancialSummary(): Promise<{ totalBilled: string; totalPaidOut: string; netProfit: string; }>;
 
+  // Extra Dirty Requests
+  createExtraDirtyRequest(request: InsertExtraDirtyRequest): Promise<ExtraDirtyRequest>;
+  getExtraDirtyRequests(): Promise<ExtraDirtyRequest[]>;
+  getExtraDirtyRequestsByTechnician(technicianId: string): Promise<ExtraDirtyRequest[]>;
+  updateExtraDirtyRequestStatus(id: string, status: string, reviewedBy: string, notes?: string): Promise<ExtraDirtyRequest | undefined>;
+
+  // Repair Photo Requests  
+  createRepairPhotoRequest(request: InsertRepairPhotoRequest): Promise<RepairPhotoRequest>;
+  getRepairPhotoRequests(): Promise<RepairPhotoRequest[]>;
+  getRepairPhotoRequestsByPainter(painterId: string): Promise<RepairPhotoRequest[]>;
+  updateRepairPhotoRequestStatus(id: string, status: string, reviewedBy: string, notes?: string): Promise<RepairPhotoRequest | undefined>;
+
   // Dashboard Analytics
   getDashboardStats(userRole: string, userId?: string): Promise<any>;
   getPropertyManagerStats(managerId: string): Promise<any>;
@@ -172,6 +184,8 @@ export class MemStorage implements IStorage {
   private inspections: Map<string, Inspection> = new Map();
   private callbackResolutions: Map<string, CallbackResolution> = new Map();
   private staffPayroll: Map<string, StaffPayroll> = new Map();
+  private extraDirtyRequests: Map<string, ExtraDirtyRequest> = new Map();
+  private repairPhotoRequests: Map<string, RepairPhotoRequest> = new Map();
   private userPermissions: Map<string, UserPermission> = new Map();
   private auditLogs: Map<string, AuditLog> = new Map();
   private invoiceCounter = 1;
@@ -1584,6 +1598,104 @@ export class MemStorage implements IStorage {
       totalPaidOut: totalPaidOut.toFixed(2),
       netProfit: netProfit.toFixed(2)
     };
+  }
+
+  // Extra Dirty Requests Implementation
+  async createExtraDirtyRequest(request: InsertExtraDirtyRequest): Promise<ExtraDirtyRequest> {
+    const id = randomUUID();
+    const extraDirtyRequest: ExtraDirtyRequest = {
+      ...request,
+      id,
+      status: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.extraDirtyRequests.set(id, extraDirtyRequest);
+    return extraDirtyRequest;
+  }
+
+  async getExtraDirtyRequests(): Promise<ExtraDirtyRequest[]> {
+    return Array.from(this.extraDirtyRequests.values());
+  }
+
+  async getExtraDirtyRequestsByTechnician(technicianId: string): Promise<ExtraDirtyRequest[]> {
+    return Array.from(this.extraDirtyRequests.values()).filter(req => req.technicianId === technicianId);
+  }
+
+  async updateExtraDirtyRequestStatus(id: string, status: string, reviewedBy: string, notes?: string): Promise<ExtraDirtyRequest | undefined> {
+    const request = this.extraDirtyRequests.get(id);
+    if (!request) return undefined;
+
+    const updated: ExtraDirtyRequest = {
+      ...request,
+      status,
+      updatedAt: new Date()
+    };
+
+    if (status === "office_review") {
+      updated.officeReviewedBy = reviewedBy;
+      updated.officeReviewedAt = new Date();
+      updated.officeNotes = notes;
+    } else if (status === "manager_review" || status === "approved" || status === "rejected") {
+      updated.managerReviewedBy = reviewedBy;
+      updated.managerReviewedAt = new Date();
+      updated.managerNotes = notes;
+      if (status === "rejected") {
+        updated.rejectionReason = notes;
+      }
+    }
+
+    this.extraDirtyRequests.set(id, updated);
+    return updated;
+  }
+
+  // Repair Photo Requests Implementation
+  async createRepairPhotoRequest(request: InsertRepairPhotoRequest): Promise<RepairPhotoRequest> {
+    const id = randomUUID();
+    const repairPhotoRequest: RepairPhotoRequest = {
+      ...request,
+      id,
+      status: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.repairPhotoRequests.set(id, repairPhotoRequest);
+    return repairPhotoRequest;
+  }
+
+  async getRepairPhotoRequests(): Promise<RepairPhotoRequest[]> {
+    return Array.from(this.repairPhotoRequests.values());
+  }
+
+  async getRepairPhotoRequestsByPainter(painterId: string): Promise<RepairPhotoRequest[]> {
+    return Array.from(this.repairPhotoRequests.values()).filter(req => req.painterId === painterId);
+  }
+
+  async updateRepairPhotoRequestStatus(id: string, status: string, reviewedBy: string, notes?: string): Promise<RepairPhotoRequest | undefined> {
+    const request = this.repairPhotoRequests.get(id);
+    if (!request) return undefined;
+
+    const updated: RepairPhotoRequest = {
+      ...request,
+      status,
+      updatedAt: new Date()
+    };
+
+    if (status === "office_review") {
+      updated.officeReviewedBy = reviewedBy;
+      updated.officeReviewedAt = new Date();
+      updated.officeNotes = notes;
+    } else if (status === "manager_review" || status === "approved" || status === "rejected") {
+      updated.managerReviewedBy = reviewedBy;
+      updated.managerReviewedAt = new Date();
+      updated.managerNotes = notes;
+      if (status === "rejected") {
+        updated.rejectionReason = notes;
+      }
+    }
+
+    this.repairPhotoRequests.set(id, updated);
+    return updated;
   }
 }
 
