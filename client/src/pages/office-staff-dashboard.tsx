@@ -232,7 +232,7 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Pending Job Approvals */}
             <Card>
               <CardHeader>
@@ -263,8 +263,8 @@ export default function OfficeStaffDashboard() {
               </CardContent>
             </Card>
 
-            {/* Color-Coded Job Calendar */}
-            <Card>
+            {/* Color-Coded Job Calendar - Spans 2 columns */}
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Calendar className="text-blue-500" size={20} />
@@ -272,183 +272,191 @@ export default function OfficeStaffDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Calendar Legend */}
-                  <div className="flex flex-wrap gap-3 text-xs">
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded"></div>
                       <span>Paint</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-red-500 rounded"></div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-red-500 rounded"></div>
                       <span>Clean</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-black rounded"></div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-black rounded"></div>
                       <span>Punch</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 bg-yellow-500 rounded"></div>
                       <span>Carpet</span>
                     </div>
                   </div>
 
-                  {/* Mini Calendar Grid */}
-                  <div className="grid grid-cols-7 gap-1 text-center">
+                  {/* Larger Calendar Grid */}
+                  <div className="grid grid-cols-7 gap-2 text-center">
                     {/* Calendar Headers */}
-                    <div className="text-xs font-medium text-gray-500 p-1">Sun</div>
-                    <div className="text-xs font-medium text-gray-500 p-1">Mon</div>
-                    <div className="text-xs font-medium text-gray-500 p-1">Tue</div>
-                    <div className="text-xs font-medium text-gray-500 p-1">Wed</div>
-                    <div className="text-xs font-medium text-gray-500 p-1">Thu</div>
-                    <div className="text-xs font-medium text-gray-500 p-1">Fri</div>
-                    <div className="text-xs font-medium text-gray-500 p-1">Sat</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Sun</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Mon</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Tue</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Wed</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Thu</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Fri</div>
+                    <div className="text-sm font-medium text-gray-500 p-2">Sat</div>
 
-                    {/* Calendar Days with Sample Jobs */}
-                    <div className="p-1"></div>
-                    <div className="p-1"></div>
-                    <div className="p-1"></div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">1</div>
+                    {/* Calendar Days with Sample Jobs - Larger cells */}
+                    <div className="p-2"></div>
+                    <div className="p-2"></div>
+                    <div className="p-2"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">1</div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">2</div>
-                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">2</div>
+                      <div className="w-4 h-2 bg-blue-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">3</div>
-                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">3</div>
+                      <div className="w-4 h-2 bg-red-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">4</div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">4</div>
                     </div>
 
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">5</div>
-                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">5</div>
+                      <div className="w-4 h-2 bg-black rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">6</div>
-                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">6</div>
+                      <div className="w-4 h-2 bg-yellow-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">7</div>
-                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">7</div>
+                      <div className="w-4 h-2 bg-blue-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">8</div>
-                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">8</div>
+                      <div className="w-4 h-2 bg-red-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded bg-blue-50">
-                      <div className="text-xs font-medium">9</div>
-                      <div className="flex space-x-1 justify-center">
-                        <div className="w-1 h-1 bg-blue-500 rounded"></div>
-                        <div className="w-1 h-1 bg-red-500 rounded"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px] bg-blue-50">
+                      <div className="text-sm font-bold">9</div>
+                      <div className="flex space-x-1 justify-center mt-1">
+                        <div className="w-2 h-2 bg-blue-500 rounded"></div>
+                        <div className="w-2 h-2 bg-red-500 rounded"></div>
                       </div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">10</div>
-                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">10</div>
+                      <div className="w-4 h-2 bg-black rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">11</div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">11</div>
                     </div>
 
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">12</div>
-                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">12</div>
+                      <div className="w-4 h-2 bg-yellow-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">13</div>
-                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">13</div>
+                      <div className="w-4 h-2 bg-blue-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">14</div>
-                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">14</div>
+                      <div className="w-4 h-2 bg-red-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">15</div>
-                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">15</div>
+                      <div className="w-4 h-2 bg-black rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded bg-green-50">
-                      <div className="text-xs font-medium">16</div>
-                      <div className="flex space-x-1 justify-center">
-                        <div className="w-1 h-1 bg-blue-500 rounded"></div>
-                        <div className="w-1 h-1 bg-yellow-500 rounded"></div>
-                        <div className="w-1 h-1 bg-red-500 rounded"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px] bg-green-50">
+                      <div className="text-sm font-bold">16</div>
+                      <div className="flex space-x-1 justify-center mt-1">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded"></div>
+                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded"></div>
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded"></div>
                       </div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">17</div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">17</div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">18</div>
-                    </div>
-
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">19</div>
-                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
-                    </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">20</div>
-                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
-                    </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">21</div>
-                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
-                    </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">22</div>
-                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
-                    </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">23</div>
-                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
-                    </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">24</div>
-                    </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">25</div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">18</div>
                     </div>
 
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">26</div>
-                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">19</div>
+                      <div className="w-4 h-2 bg-black rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">27</div>
-                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">20</div>
+                      <div className="w-4 h-2 bg-blue-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">28</div>
-                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">21</div>
+                      <div className="w-4 h-2 bg-red-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">29</div>
-                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">22</div>
+                      <div className="w-4 h-2 bg-yellow-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">30</div>
-                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">23</div>
+                      <div className="w-4 h-2 bg-blue-500 rounded mx-auto mt-1"></div>
                     </div>
-                    <div className="p-1 border rounded">
-                      <div className="text-xs">31</div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">24</div>
                     </div>
-                    <div className="p-1"></div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">25</div>
+                    </div>
+
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">26</div>
+                      <div className="w-4 h-2 bg-red-500 rounded mx-auto mt-1"></div>
+                    </div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">27</div>
+                      <div className="w-4 h-2 bg-black rounded mx-auto mt-1"></div>
+                    </div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">28</div>
+                      <div className="w-4 h-2 bg-yellow-500 rounded mx-auto mt-1"></div>
+                    </div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">29</div>
+                      <div className="w-4 h-2 bg-blue-500 rounded mx-auto mt-1"></div>
+                    </div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">30</div>
+                      <div className="w-4 h-2 bg-red-500 rounded mx-auto mt-1"></div>
+                    </div>
+                    <div className="p-3 border rounded-lg min-h-[60px]">
+                      <div className="text-sm font-medium">31</div>
+                    </div>
+                    <div className="p-2"></div>
                   </div>
 
                   {/* Today's Job Summary */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-800 mb-2">Today's Jobs</p>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                        <span>Paint Jobs</span>
-                        <span className="font-medium">2</span>
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <p className="text-base font-medium text-gray-800 mb-3">Today's Jobs</p>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <span className="text-sm">Paint Jobs</span>
+                        <span className="font-bold text-lg">2</span>
                       </div>
-                      <div className="flex items-center justify-between p-2 bg-red-50 rounded">
-                        <span>Clean Jobs</span>
-                        <span className="font-medium">1</span>
+                      <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                        <span className="text-sm">Clean Jobs</span>
+                        <span className="font-bold text-lg">1</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm">Punch Jobs</span>
+                        <span className="font-bold text-lg">0</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                        <span className="text-sm">Carpet Jobs</span>
+                        <span className="font-bold text-lg">0</span>
                       </div>
                     </div>
                   </div>
@@ -456,52 +464,6 @@ export default function OfficeStaffDashboard() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Recent Work Orders */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Wrench className="text-gray-500" size={20} />
-                <span>Recent Work Orders</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {workOrdersLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16" />
-                  ))
-                ) : recentWorkOrders?.length > 0 ? (
-                  recentWorkOrders.map((order: any) => (
-                    <div key={order.id} className="p-3 border rounded-lg" data-testid={`card-work-order-${order.id}`}>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-gray-900">{order.description}</p>
-                          <p className="text-sm text-gray-600">{order.propertyAddress}</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className={`text-xs ${getPriorityColor(order.priority)}`}>
-                              {order.priority}
-                            </Badge>
-                            <Badge variant="outline" className={`text-xs ${getStatusColor(order.status)}`}>
-                              {order.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">{order.assignedTechnician}</p>
-                          <p className="text-xs text-gray-500">{order.createdDate}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-4" data-testid="text-no-work-orders">
-                    No recent work orders
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Job Approvals Tab */}
