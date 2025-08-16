@@ -31,7 +31,8 @@ import {
   Settings,
   Check,
   X,
-  Wrench
+  Wrench,
+  Mail
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -75,421 +76,363 @@ export default function OfficeStaffDashboard() {
     },
   });
 
-  const { data: jobStats, isLoading: jobStatsLoading } = useQuery({
-    queryKey: ["/api/jobs/completion-stats"],
+  const { data: pendingApprovals, isLoading: approvalsLoading } = useQuery({
+    queryKey: ["/api/jobs/awaiting-approval"],
     queryFn: async () => {
-      const response = await fetch('/api/jobs/completion-stats');
-      if (!response.ok) throw new Error('Failed to fetch job completion stats');
+      const response = await fetch('/api/jobs/awaiting-approval');
+      if (!response.ok) throw new Error('Failed to fetch pending approvals');
       return response.json();
     },
   });
 
-  // Modal states
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("dashboard");
-
-  // Form states
-  const [messageForm, setMessageForm] = useState({
-    recipient: '',
-    subject: '',
-    message: '',
-    recipientType: 'technician' // 'technician' or 'property_manager'
+  const { data: upcomingLeaseExpirations, isLoading: leasesLoading } = useQuery({
+    queryKey: ["/api/leases/expiring"],
+    queryFn: async () => {
+      const response = await fetch('/api/leases/expiring');
+      if (!response.ok) throw new Error('Failed to fetch lease expirations');
+      return response.json();
+    },
   });
 
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { data: recentWorkOrders, isLoading: workOrdersLoading } = useQuery({
+    queryKey: ["/api/work-orders/recent"],
+    queryFn: async () => {
+      const response = await fetch('/api/work-orders/recent');
+      if (!response.ok) throw new Error('Failed to fetch work orders');
+      return response.json();
+    },
+  });
 
-  const isLoading = statsLoading || financialLoading || callbacksLoading || jobStatsLoading;
-
-  if (isLoading) {
+  if (statsLoading) {
     return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-80" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
           ))}
         </div>
+        <Skeleton className="h-96" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Office Staff Dashboard</h1>
-          <p className="text-slate-600">Administrative oversight and coordination</p>
-        </div>
-        <div className="flex space-x-3">
-          <Dialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" data-testid="button-send-message">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Send Message
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Send Message</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="recipient-type">Recipient Type</Label>
-                    <Select value={messageForm.recipientType} onValueChange={(value) => setMessageForm({...messageForm, recipientType: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="technician">Technician</SelectItem>
-                        <SelectItem value="property_manager">Property Manager</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="recipient">Recipient</Label>
-                    <Select value={messageForm.recipient} onValueChange={(value) => setMessageForm({...messageForm, recipient: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select recipient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {messageForm.recipientType === 'technician' ? (
-                          <>
-                            <SelectItem value="mike-johnson">Mike Johnson</SelectItem>
-                            <SelectItem value="sarah-chen">Sarah Chen</SelectItem>
-                            <SelectItem value="tom-wilson">Tom Wilson</SelectItem>
-                          </>
-                        ) : (
-                          <>
-                            <SelectItem value="pm-smith">John Smith - Maple Heights</SelectItem>
-                            <SelectItem value="pm-jones">Lisa Jones - Oak Grove</SelectItem>
-                            <SelectItem value="pm-brown">Mike Brown - Cedar Park</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="Message subject"
-                    value={messageForm.subject}
-                    onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Your message..."
-                    rows={4}
-                    value={messageForm.message}
-                    onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsMessageModalOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button className="servicepro-btn-primary">
-                    <Send className="mr-2 h-4 w-4" />
-                    Send Message
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Button className="servicepro-btn-primary" data-testid="button-create-work-order">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Work Order
-          </Button>
+        <h1 className="text-3xl font-bold text-gray-900" data-testid="text-office-dashboard-title">
+          Office Staff Dashboard
+        </h1>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <UserCheck className="w-4 h-4 mr-1" />
+            Office Staff
+          </Badge>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="accounts">Accounts</TabsTrigger>
-          <TabsTrigger value="payroll">Payroll</TabsTrigger>
-          <TabsTrigger value="management">Management</TabsTrigger>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-600 text-sm font-medium" data-testid="text-pending-approval-label">Pending Approval</p>
+                <p className="text-2xl font-bold text-red-700" data-testid="text-pending-approval-count">
+                  {stats?.pendingApproval || 0}
+                </p>
+              </div>
+              <AlertTriangle className="text-red-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-600 text-sm font-medium" data-testid="text-high-priority-label">High Priority</p>
+                <p className="text-2xl font-bold text-orange-700" data-testid="text-high-priority-count">
+                  {stats?.highPriorityOrders || 0}
+                </p>
+              </div>
+              <Clock className="text-orange-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-600 text-sm font-medium" data-testid="text-lease-expiring-label">Lease Expiring</p>
+                <p className="text-2xl font-bold text-yellow-700" data-testid="text-lease-expiring-count">
+                  {stats?.leaseExpirations || 0}
+                </p>
+              </div>
+              <Calendar className="text-yellow-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-600 text-sm font-medium" data-testid="text-active-staff-label">Active Staff</p>
+                <p className="text-2xl font-bold text-green-700" data-testid="text-active-staff-count">
+                  {stats?.activeStaff || 0}
+                </p>
+              </div>
+              <Users className="text-green-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-medium" data-testid="text-total-properties-label">Properties</p>
+                <p className="text-2xl font-bold text-blue-700" data-testid="text-total-properties-count">
+                  {stats?.totalProperties || 0}
+                </p>
+              </div>
+              <Building className="text-blue-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-600 text-sm font-medium" data-testid="text-total-tenants-label">Tenants</p>
+                <p className="text-2xl font-bold text-purple-700" data-testid="text-total-tenants-count">
+                  {stats?.totalTenants || 0}
+                </p>
+              </div>
+              <Users className="text-purple-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+          <TabsTrigger value="jobs" data-testid="tab-jobs">Job Approvals</TabsTrigger>
+          <TabsTrigger value="staff" data-testid="tab-staff">Staff Management</TabsTrigger>
+          <TabsTrigger value="messaging" data-testid="tab-messaging">Messaging</TabsTrigger>
+          <TabsTrigger value="callbacks" data-testid="tab-callbacks">Callbacks</TabsTrigger>
+          <TabsTrigger value="billing" data-testid="tab-billing">Billing</TabsTrigger>
+          <TabsTrigger value="accounts" data-testid="tab-accounts">Accounts</TabsTrigger>
+          <TabsTrigger value="payroll" data-testid="tab-payroll">Payroll</TabsTrigger>
         </TabsList>
 
-        {/* Dashboard Tab Content */}
-        <TabsContent value="dashboard" className="space-y-6 mt-6">
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="servicepro-card">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-600 text-sm font-medium">Jobs Scheduled</p>
-                    <p className="text-2xl font-bold text-blue-800 mt-1" data-testid="stat-jobs-scheduled">
-                      {jobStats?.scheduled || 12}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Calendar className="text-blue-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Jobs approved and assigned</p>
-          </CardContent>
-        </Card>
-
-        <Card className="servicepro-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Jobs Completed</p>
-                <p className="text-2xl font-bold text-emerald-800 mt-1" data-testid="stat-jobs-completed">
-                  {jobStats?.completed || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="text-emerald-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Jobs finished this period</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Financial Summary - Billed vs Paid Out */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="servicepro-card border-l-4 border-l-emerald-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Total Billed</p>
-                <p className="text-2xl font-bold text-emerald-800 mt-1" data-testid="stat-total-billed">
-                  ${financialSummary?.totalBilled || '0.00'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="text-emerald-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Revenue from completed jobs</p>
-          </CardContent>
-        </Card>
-
-        <Card className="servicepro-card border-l-4 border-l-orange-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Total Paid Out</p>
-                <p className="text-2xl font-bold text-orange-800 mt-1" data-testid="stat-total-paid">
-                  ${financialSummary?.totalPaidOut || '0.00'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Users className="text-orange-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Payments to technicians</p>
-          </CardContent>
-        </Card>
-
-        <Card className="servicepro-card border-l-4 border-l-blue-500">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-600 text-sm font-medium">Net Profit</p>
-                <p className={`text-2xl font-bold mt-1 ${
-                  parseFloat(financialSummary?.netProfit || '0') >= 0 
-                    ? 'text-blue-800' 
-                    : 'text-red-800'
-                }`} data-testid="stat-net-profit">
-                  ${financialSummary?.netProfit || '0.00'}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="text-blue-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 mt-2">Billed minus paid out</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Action Items and Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Pending Approvals */}
-        <Card className="servicepro-card">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Pending Approvals</span>
-              <Button variant="ghost" size="sm" className="text-blue-600">
-                View All
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <div className="space-y-4">
-              {pendingApprovals?.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <CheckCircle className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                  <p>No pending job approvals</p>
-                  <p className="text-sm">All jobs are approved or completed</p>
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pending Job Approvals */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <AlertTriangle className="text-red-500" size={20} />
+                  <span>Pending Job Approvals</span>
+                  <Badge variant="secondary" data-testid="badge-pending-approvals-count">
+                    {pendingApprovals?.length || 0}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {approvalsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16" />
+                    ))
+                  ) : pendingApprovals?.length > 0 ? (
+                    pendingApprovals.map((job: any) => (
+                      <JobApprovalCard key={job.id} job={job} />
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4" data-testid="text-no-pending-approvals">
+                      No pending approvals
+                    </p>
+                  )}
                 </div>
-              ) : (
-                pendingApprovals?.slice(0, 5).map((job: any) => (
-                  <JobApprovalCard key={job.id} job={job} />
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Upcoming Lease Expirations */}
-        <Card className="servicepro-card">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Upcoming Lease Expirations</span>
-              <Button variant="ghost" size="sm" className="text-blue-600">
-                View All
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <div className="space-y-4">
-              {upcomingLeaseExpirations?.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <Calendar className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                  <p>No upcoming expirations</p>
-                  <p className="text-sm">All leases are current</p>
+            {/* Upcoming Lease Expirations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="text-yellow-500" size={20} />
+                  <span>Upcoming Lease Expirations</span>
+                  <Badge variant="secondary" data-testid="badge-lease-expirations-count">
+                    {upcomingLeaseExpirations?.length || 0}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {leasesLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16" />
+                    ))
+                  ) : upcomingLeaseExpirations?.length > 0 ? (
+                    upcomingLeaseExpirations.map((lease: any) => (
+                      <div key={lease.id} className="p-3 border rounded-lg bg-yellow-50" data-testid={`card-lease-${lease.id}`}>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-gray-900">{lease.tenantName}</p>
+                            <p className="text-sm text-gray-600">{lease.propertyAddress}</p>
+                            <p className="text-sm text-yellow-600">Expires: {lease.expirationDate}</p>
+                          </div>
+                          <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">
+                            {lease.daysRemaining} days
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4" data-testid="text-no-lease-expirations">
+                      No upcoming expirations
+                    </p>
+                  )}
                 </div>
-              ) : (
-                upcomingLeaseExpirations?.slice(0, 5).map((lease: any) => (
-                  <div key={lease.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Users className="text-purple-600 text-sm" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">{lease.name}</p>
-                        <p className="text-sm text-slate-600">{lease.propertyName} - Unit {lease.unitNumber}</p>
-                        <p className="text-sm text-slate-600">Expires: {new Date(lease.leaseEnd).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <p className="text-sm font-medium text-slate-800">${lease.monthlyRent}/mo</p>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="text-blue-600 border-blue-200">
-                          <Phone size={12} />
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-blue-600 border-blue-200">
-                          <Mail size={12} />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Work Orders */}
-      <Card className="servicepro-card">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Recent Work Orders</span>
-            <Button variant="ghost" size="sm" className="text-blue-600">
-              View All
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <div className="grid gap-4">
-            {recentWorkOrders?.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <FileText className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                <p>No recent work orders</p>
-                <p className="text-sm">Work orders will appear here as they're created</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recentWorkOrders?.slice(0, 6).map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FileText className="text-blue-600 text-sm" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">{order.title}</p>
-                        <p className="text-sm text-slate-600">{order.propertyName}</p>
-                        <p className="text-sm text-slate-600">#{order.id.slice(0, 8)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <Badge className={getPriorityColor(order.priority)}>
-                        {order.priority}
-                      </Badge>
-                      <Badge className={getStatusColor(order.status)}>
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Quick Actions */}
-      <Card className="servicepro-card">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-process-applications"
-            >
-              <FileText className="text-blue-600" size={20} />
-              <span className="text-sm font-medium">Process Applications</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-schedule-tours"
-            >
-              <Calendar className="text-emerald-600" size={20} />
-              <span className="text-sm font-medium">Schedule Tours</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-manage-leases"
-            >
-              <Users className="text-purple-600" size={20} />
-              <span className="text-sm font-medium">Manage Leases</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-generate-reports"
-            >
-              <TrendingUp className="text-amber-600" size={20} />
-              <span className="text-sm font-medium">Generate Reports</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="text-blue-500" size={20} />
+                <span>Quick Actions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col space-y-2"
+                  data-testid="button-process-applications"
+                >
+                  <FileText className="text-blue-600" size={20} />
+                  <span className="text-sm font-medium">Process Applications</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col space-y-2"
+                  data-testid="button-schedule-tours"
+                >
+                  <Calendar className="text-emerald-600" size={20} />
+                  <span className="text-sm font-medium">Schedule Tours</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col space-y-2"
+                  data-testid="button-manage-leases"
+                >
+                  <Users className="text-purple-600" size={20} />
+                  <span className="text-sm font-medium">Manage Leases</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col space-y-2"
+                  data-testid="button-generate-reports"
+                >
+                  <TrendingUp className="text-amber-600" size={20} />
+                  <span className="text-sm font-medium">Generate Reports</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Work Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Wrench className="text-gray-500" size={20} />
+                <span>Recent Work Orders</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {workOrdersLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16" />
+                  ))
+                ) : recentWorkOrders?.length > 0 ? (
+                  recentWorkOrders.map((order: any) => (
+                    <div key={order.id} className="p-3 border rounded-lg" data-testid={`card-work-order-${order.id}`}>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-gray-900">{order.description}</p>
+                          <p className="text-sm text-gray-600">{order.propertyAddress}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="outline" className={`text-xs ${getPriorityColor(order.priority)}`}>
+                              {order.priority}
+                            </Badge>
+                            <Badge variant="outline" className={`text-xs ${getStatusColor(order.status)}`}>
+                              {order.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">{order.assignedTechnician}</p>
+                          <p className="text-xs text-gray-500">{order.createdDate}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4" data-testid="text-no-work-orders">
+                    No recent work orders
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Job Approvals Tab */}
+        <TabsContent value="jobs" className="space-y-6">
+          <JobApprovalsSection />
+        </TabsContent>
+
+        {/* Staff Management Tab */}
+        <TabsContent value="staff" className="space-y-6">
+          <StaffManagementSection />
+        </TabsContent>
+
+        {/* Messaging Tab */}
+        <TabsContent value="messaging" className="space-y-6">
+          <MessagingSection />
+        </TabsContent>
+
+        {/* Callbacks Tab */}
+        <TabsContent value="callbacks" className="space-y-6">
+          <CallbacksSection />
+        </TabsContent>
+
+        {/* Billing Tab */}
+        <TabsContent value="billing" className="space-y-6">
+          <BillingSection />
+        </TabsContent>
+
+        {/* Accounts Tab */}
+        <TabsContent value="accounts" className="space-y-6">
+          <AccountsSection />
+        </TabsContent>
+
+        {/* Payroll Tab */}
+        <TabsContent value="payroll" className="space-y-6">
+          <PayrollSection />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -517,7 +460,7 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
         variant: "default"
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Approval Failed",
         description: "Unable to approve job. Please try again.",
@@ -527,134 +470,339 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => apiRequest(`/api/jobs/${jobId}/reject`, "PUT", { 
-      rejectedBy: "office-staff-1", 
-      reason 
-    }),
+    mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => 
+      apiRequest(`/api/jobs/${jobId}/reject`, "PUT", { 
+        reason,
+        rejectedBy: "office-staff-1" 
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/completion-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/financial/summary"] });
       toast({
         title: "Job Rejected",
-        description: "The job has been rejected and will not be scheduled",
+        description: "The job has been rejected",
         variant: "default"
       });
-    },
-    onError: (error) => {
-      toast({
-        title: "Rejection Failed",
-        description: "Unable to reject job. Please try again.",
-        variant: "destructive"
-      });
     }
-  });
-
-  const getJobTypeColor = (type: string) => {
-    switch (type) {
-      case 'paint': return 'bg-purple-100 text-purple-800';
-      case 'repairs': return 'bg-orange-100 text-orange-800';
-      case 'clean': return 'bg-blue-100 text-blue-800';
-      case 'carpet': return 'bg-green-100 text-green-800';
-      case 'punch': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Queries for extra dirty and repair photo requests
-  const { data: extraDirtyRequests, isLoading: extraDirtyLoading } = useQuery({
-    queryKey: ["/api/extra-dirty-requests"],
-    queryFn: async () => {
-      const response = await fetch('/api/extra-dirty-requests');
-      if (!response.ok) return [];
-      return response.json();
-    },
-  });
-
-  const { data: repairPhotoRequests, isLoading: repairPhotoLoading } = useQuery({
-    queryKey: ["/api/repair-photo-requests"],
-    queryFn: async () => {
-      const response = await fetch('/api/repair-photo-requests');
-      if (!response.ok) return [];
-      return response.json();
-    },
-  });
-
-  // Mutation for approving extra dirty requests
-  const approveExtraDirtyMutation = useMutation({
-    mutationFn: ({ id, notes }: { id: string; notes: string }) => 
-      apiRequest(`/api/extra-dirty-requests/${id}/office-review`, "PUT", { 
-        reviewedBy: "office-staff-1", 
-        notes, 
-        status: "manager_review" 
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/extra-dirty-requests"] });
-      toast({
-        title: "Request Approved",
-        description: "Extra dirty request sent to property manager for final approval.",
-      });
-    },
-  });
-
-  // Mutation for approving repair photo requests
-  const approveRepairPhotoMutation = useMutation({
-    mutationFn: ({ id, notes }: { id: string; notes: string }) => 
-      apiRequest(`/api/repair-photo-requests/${id}/office-review`, "PUT", { 
-        reviewedBy: "office-staff-1", 
-        notes, 
-        status: "manager_review" 
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repair-photo-requests"] });
-      toast({
-        title: "Photos Approved",
-        description: "Repair photos sent to property manager for final approval.",
-      });
-    },
   });
 
   return (
-    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
-      <div className="flex items-center space-x-4">
-        <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-          <Wrench className="text-amber-600" size={16} />
-        </div>
+    <div className="p-3 border rounded-lg bg-red-50" data-testid={`card-job-approval-${job.id}`}>
+      <div className="flex justify-between items-start">
         <div>
-          <p className="font-medium text-slate-800">{job.title}</p>
-          <p className="text-sm text-slate-600">#{job.id.slice(0, 8)}</p>
-          <div className="flex items-center space-x-2 mt-1">
-            <Badge variant="outline" className={getJobTypeColor(job.type)}>
-              {job.type}
-            </Badge>
-            <span className="text-sm text-slate-600">Est: ${job.budget || '75.00'}</span>
-          </div>
+          <p className="font-medium text-gray-900">{job.type}</p>
+          <Badge variant="outline" className={`text-xs mt-1 ${getJobTypeColor(job.type)}`}>
+            {job.type}
+          </Badge>
+          <p className="text-sm text-gray-600 mt-1">{job.description}</p>
         </div>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-          onClick={() => approveMutation.mutate(job.id)}
-          disabled={approveMutation.isPending}
-          data-testid={`button-approve-${job.id}`}
-        >
-          <Check size={14} className="mr-1" />
-          {approveMutation.isPending ? "..." : "Approve"}
-        </Button>
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="text-red-600 border-red-200 hover:bg-red-50"
-          onClick={() => rejectMutation.mutate({ jobId: job.id, reason: "Budget constraints" })}
-          disabled={rejectMutation.isPending}
-          data-testid={`button-reject-${job.id}`}
-        >
-          <X size={14} className="mr-1" />
-          {rejectMutation.isPending ? "..." : "Reject"}
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+            onClick={() => approveMutation.mutate(job.id)}
+            disabled={approveMutation.isPending}
+            data-testid={`button-approve-${job.id}`}
+          >
+            <Check size={14} />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+            onClick={() => rejectMutation.mutate({ jobId: job.id, reason: "Not approved" })}
+            disabled={rejectMutation.isPending}
+            data-testid={`button-reject-${job.id}`}
+          >
+            <X size={14} />
+          </Button>
+        </div>
       </div>
     </div>
   );
+}
+
+// Job Approvals Section
+function JobApprovalsSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Job Approval Queue</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600">Detailed job approval interface will be implemented here.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Staff Management Section
+function StaffManagementSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Staff Management</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600">Staff assignment and management tools will be implemented here.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Messaging Section
+function MessagingSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Messaging Center</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600">Communication tools for technicians and property managers will be implemented here.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Callbacks Section
+function CallbacksSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Callback Tracking</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600">Callback tracking and management will be implemented here.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Billing Section
+function BillingSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Billing Overview</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600">Billing and payout tracking will be implemented here.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Accounts Section
+function AccountsSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Accounts Management</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="bg-blue-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <FileText className="text-blue-600" size={20} />
+                  <span>Invoice Management</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline" data-testid="button-create-invoice">
+                    <Plus className="mr-2" size={16} />
+                    Create New Invoice
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" data-testid="button-pending-invoices">
+                    <Clock className="mr-2" size={16} />
+                    Pending Invoices
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" data-testid="button-paid-invoices">
+                    <CheckCircle className="mr-2" size={16} />
+                    Paid Invoices
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-green-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <DollarSign className="text-green-600" size={20} />
+                  <span>Revenue Tracking</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-700">$45,230</p>
+                    <p className="text-sm text-green-600">This Month</p>
+                  </div>
+                  <Button className="w-full" variant="outline" data-testid="button-revenue-report">
+                    <TrendingUp className="mr-2" size={16} />
+                    View Revenue Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Payroll Section
+function PayrollSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Payroll Management</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-purple-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <Calculator className="text-purple-600" size={20} />
+                  <span>Payroll Calculator</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button className="w-full" variant="outline" data-testid="button-calculate-payroll">
+                    <Calculator className="mr-2" size={16} />
+                    Calculate Payroll
+                  </Button>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-purple-700">$12,450</p>
+                    <p className="text-sm text-purple-600">Current Period</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-orange-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <CreditCard className="text-orange-600" size={20} />
+                  <span>Payment Processing</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button className="w-full" variant="outline" data-testid="button-process-payments">
+                    <Send className="mr-2" size={16} />
+                    Process Payments
+                  </Button>
+                  <Button className="w-full" variant="outline" data-testid="button-payment-history">
+                    <Clock className="mr-2" size={16} />
+                    Payment History
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-teal-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <Wallet className="text-teal-600" size={20} />
+                  <span>Tax & Benefits</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button className="w-full" variant="outline" data-testid="button-tax-documents">
+                    <FileText className="mr-2" size={16} />
+                    Tax Documents
+                  </Button>
+                  <Button className="w-full" variant="outline" data-testid="button-benefits-admin">
+                    <Users className="mr-2" size={16} />
+                    Benefits Admin
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Payroll Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Payroll Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Bi-weekly Payroll - Period 15</p>
+                    <p className="text-sm text-gray-600">Processed on Aug 15, 2025</p>
+                  </div>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    Completed
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Bonus Payments - Q3</p>
+                    <p className="text-sm text-gray-600">Scheduled for Aug 20, 2025</p>
+                  </div>
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                    Pending
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Helper functions
+function getPriorityColor(priority: string) {
+  switch (priority?.toLowerCase()) {
+    case 'high':
+      return 'bg-red-50 text-red-700 border-red-200';
+    case 'medium':
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    case 'low':
+      return 'bg-green-50 text-green-700 border-green-200';
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+  }
+}
+
+function getStatusColor(status: string) {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+    case 'in-progress':
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'completed':
+      return 'bg-green-50 text-green-700 border-green-200';
+    case 'cancelled':
+      return 'bg-red-50 text-red-700 border-red-200';
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+  }
+}
+
+function getJobTypeColor(type: string) {
+  switch (type?.toLowerCase()) {
+    case 'extra dirty':
+      return 'bg-orange-50 text-orange-700 border-orange-200';
+    case 'extra repairs':
+      return 'bg-red-50 text-red-700 border-red-200';
+    case 'paint':
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'clean':
+      return 'bg-green-50 text-green-700 border-green-200';
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200';
+  }
 }
