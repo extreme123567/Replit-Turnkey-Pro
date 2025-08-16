@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   AlertTriangle, 
@@ -66,10 +67,7 @@ function RequestQuoteButton() {
 
   const submitQuoteMutation = useMutation({
     mutationFn: async (quoteData: any) => {
-      return apiRequest("/api/quote-requests", {
-        method: "POST",
-        body: JSON.stringify(quoteData),
-      });
+      return apiRequest("/api/quote-requests", "POST", quoteData);
     },
     onSuccess: () => {
       toast({
@@ -283,10 +281,7 @@ function MessageStaffButton() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      return apiRequest("/api/messages", {
-        method: "POST",
-        body: JSON.stringify(messageData),
-      });
+      return apiRequest("/api/messages", "POST", messageData);
     },
     onSuccess: () => {
       toast({
@@ -404,9 +399,11 @@ function MessageStaffButton() {
 // Schedule Job Button Component
 function ScheduleJobButton() {
   const [open, setOpen] = useState(false);
-  const [jobType, setJobType] = useState("");
+  const [property, setProperty] = useState("");
   const [unitNumber, setUnitNumber] = useState("");
-  const [propertyAddress, setPropertyAddress] = useState("");
+  const [bedroomSize, setBedroomSize] = useState("");
+  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const [jobLocation, setJobLocation] = useState(""); // "in-unit" or "on-property"
   const [scheduledDate, setScheduledDate] = useState("");
   const [notes, setNotes] = useState("");
   const [assignedTechnician, setAssignedTechnician] = useState("");
@@ -417,10 +414,7 @@ function ScheduleJobButton() {
 
   const scheduleJobMutation = useMutation({
     mutationFn: async (jobData: any) => {
-      return apiRequest("/api/jobs/schedule", {
-        method: "POST",
-        body: JSON.stringify(jobData),
-      });
+      return apiRequest("/api/jobs/schedule", "POST", jobData);
     },
     onSuccess: () => {
       toast({
@@ -431,9 +425,11 @@ function ScheduleJobButton() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/office"] });
       setOpen(false);
       // Reset form
-      setJobType("");
+      setProperty("");
       setUnitNumber("");
-      setPropertyAddress("");
+      setBedroomSize("");
+      setSelectedJobs([]);
+      setJobLocation("");
       setScheduledDate("");
       setNotes("");
       setAssignedTechnician("");
@@ -449,19 +445,21 @@ function ScheduleJobButton() {
   });
 
   const handleScheduleJob = () => {
-    if (!jobType || !unitNumber || !propertyAddress || !scheduledDate) {
+    if (!property || !unitNumber || !bedroomSize || selectedJobs.length === 0 || !jobLocation || !scheduledDate) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields and select at least one job type.",
         variant: "destructive",
       });
       return;
     }
 
     scheduleJobMutation.mutate({
-      type: jobType,
+      property,
       unitNumber,
-      propertyAddress,
+      bedroomSize,
+      jobTypes: selectedJobs,
+      location: jobLocation,
       scheduledDate,
       notes,
       assignedTechnician: assignedTechnician || null,
@@ -469,6 +467,14 @@ function ScheduleJobButton() {
       status: "scheduled",
       scheduledBy: "office-staff"
     });
+  };
+
+  const toggleJobSelection = (jobType: string) => {
+    setSelectedJobs(prev => 
+      prev.includes(jobType) 
+        ? prev.filter(job => job !== jobType)
+        : [...prev, jobType]
+    );
   };
 
   return (
@@ -479,91 +485,137 @@ function ScheduleJobButton() {
           Schedule New Job
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Schedule New Job</DialogTitle>
           <DialogDescription>
-            Create a new job assignment for your team.
+            Create multiple job assignments for a unit.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Property Selection */}
           <div>
-            <Label htmlFor="jobType">Job Type *</Label>
-            <Select value={jobType} onValueChange={setJobType}>
-              <SelectTrigger data-testid="select-job-type">
-                <SelectValue placeholder="Select job type" />
+            <Label htmlFor="property">Property *</Label>
+            <Select value={property} onValueChange={setProperty}>
+              <SelectTrigger data-testid="select-property">
+                <SelectValue placeholder="Select property" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="punch">Punch</SelectItem>
-                <SelectItem value="paint">Paint</SelectItem>
-                <SelectItem value="clean">Clean</SelectItem>
-                <SelectItem value="carpet">Carpet</SelectItem>
-                <SelectItem value="repairs">Repairs</SelectItem>
-                <SelectItem value="bulk-trash">Bulk Trash</SelectItem>
+                <SelectItem value="maple-gardens">Maple Gardens</SelectItem>
+                <SelectItem value="oak-village">Oak Village</SelectItem>
+                <SelectItem value="pine-heights">Pine Heights</SelectItem>
+                <SelectItem value="willow-creek">Willow Creek</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="unitNumber">Unit Number *</Label>
-            <Input
-              id="unitNumber"
-              value={unitNumber}
-              onChange={(e) => setUnitNumber(e.target.value)}
-              placeholder="e.g., 101A"
-              data-testid="input-unit-number"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            {/* Unit Number */}
+            <div>
+              <Label htmlFor="unitNumber">Unit Number *</Label>
+              <Input
+                id="unitNumber"
+                value={unitNumber}
+                onChange={(e) => setUnitNumber(e.target.value)}
+                placeholder="e.g., 205"
+                data-testid="input-unit-number"
+              />
+            </div>
+
+            {/* Bedroom Size */}
+            <div>
+              <Label htmlFor="bedroomSize">Bedroom Size *</Label>
+              <Select value={bedroomSize} onValueChange={setBedroomSize}>
+                <SelectTrigger data-testid="select-bedroom-size">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="studio">Studio</SelectItem>
+                  <SelectItem value="1br">1 Bedroom</SelectItem>
+                  <SelectItem value="2br">2 Bedroom</SelectItem>
+                  <SelectItem value="3br">3+ Bedroom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
+          {/* Job Types - Multiple Selection */}
           <div>
-            <Label htmlFor="propertyAddress">Property Address *</Label>
-            <Input
-              id="propertyAddress"
-              value={propertyAddress}
-              onChange={(e) => setPropertyAddress(e.target.value)}
-              placeholder="e.g., 123 Main St"
-              data-testid="input-property-address"
-            />
+            <Label>Job Types * (Select all that apply)</Label>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              {['punch', 'paint', 'clean', 'carpet', 'repairs', 'bulk-trash'].map((jobType) => (
+                <div key={jobType} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`job-${jobType}`}
+                    checked={selectedJobs.includes(jobType)}
+                    onCheckedChange={() => toggleJobSelection(jobType)}
+                    data-testid={`checkbox-${jobType}`}
+                  />
+                  <Label htmlFor={`job-${jobType}`} className="text-sm font-medium capitalize">
+                    {jobType === 'bulk-trash' ? 'Bulk Trash' : jobType}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Job Location */}
           <div>
-            <Label htmlFor="scheduledDate">Scheduled Date *</Label>
-            <Input
-              id="scheduledDate"
-              type="date"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              data-testid="input-scheduled-date"
-            />
+            <Label htmlFor="jobLocation">Location *</Label>
+            <Select value={jobLocation} onValueChange={setJobLocation}>
+              <SelectTrigger data-testid="select-job-location">
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="in-unit">In Unit</SelectItem>
+                <SelectItem value="on-property">On Property</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            {/* Scheduled Date */}
+            <div>
+              <Label htmlFor="scheduledDate">Scheduled Date *</Label>
+              <Input
+                id="scheduledDate"
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                data-testid="input-scheduled-date"
+              />
+            </div>
+
+            {/* Priority */}
+            <div>
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger data-testid="select-priority">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Assigned Technician */}
           <div>
             <Label htmlFor="assignedTechnician">Assigned Technician</Label>
             <Select value={assignedTechnician} onValueChange={setAssignedTechnician}>
-              <SelectTrigger data-testid="select-technician">
+              <SelectTrigger data-testid="select-assigned-technician">
                 <SelectValue placeholder="Select technician (optional)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Unassigned</SelectItem>
                 <SelectItem value="tech-1">John Smith</SelectItem>
                 <SelectItem value="tech-2">Mike Johnson</SelectItem>
-                <SelectItem value="tech-3">Sarah Wilson</SelectItem>
+                <SelectItem value="tech-3">Sarah Williams</SelectItem>
                 <SelectItem value="tech-4">David Brown</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="priority">Priority</Label>
-            <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger data-testid="select-priority">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
               </SelectContent>
             </Select>
           </div>
