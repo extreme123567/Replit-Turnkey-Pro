@@ -25,7 +25,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -55,6 +55,11 @@ const JOB_TYPES = [
 export default function Scheduling() {
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Fetch properties for the dropdown
+  const { data: properties = [], isLoading: propertiesLoading } = useQuery({
+    queryKey: ["/api/properties"],
+  });
   
   const form = useForm<JobSchedulingForm>({
     resolver: zodResolver(jobSchedulingSchema),
@@ -96,6 +101,25 @@ export default function Scheduling() {
     form.setValue("selectedJobs", updated);
   };
 
+  const seedDataMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/dev/seed-data", "POST", {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test Data Created",
+        description: "Sample properties have been added for testing the scheduling system",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to Create Test Data",
+        description: "Unable to create sample properties",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = async (data: JobSchedulingForm) => {
     scheduleJobsMutation.mutate(data);
   };
@@ -122,6 +146,15 @@ export default function Scheduling() {
           <h1 className="text-2xl font-bold text-slate-800">Job Scheduling</h1>
           <p className="text-slate-600">Schedule multiple jobs for unit preparation</p>
         </div>
+        <Button 
+          onClick={() => seedDataMutation.mutate()}
+          disabled={seedDataMutation.isPending}
+          variant="outline"
+          className="text-sm"
+          data-testid="button-create-test-data"
+        >
+          {seedDataMutation.isPending ? "Creating..." : "Create Test Properties"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -144,9 +177,17 @@ export default function Scheduling() {
                         <SelectValue placeholder="Select property" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="prop-1">Sunrise Apartments</SelectItem>
-                        <SelectItem value="prop-2">Oakwood Complex</SelectItem>
-                        <SelectItem value="prop-3">Pine Valley Homes</SelectItem>
+                        {propertiesLoading ? (
+                          <SelectItem value="" disabled>Loading properties...</SelectItem>
+                        ) : properties.length === 0 ? (
+                          <SelectItem value="" disabled>No properties available - Click "Create Test Properties"</SelectItem>
+                        ) : (
+                          properties.map((property: any) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              {property.name} - {property.address}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

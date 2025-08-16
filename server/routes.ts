@@ -871,6 +871,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development endpoint to seed test data
+  app.post("/api/dev/seed-data", async (req, res) => {
+    try {
+      // Create sample properties for testing
+      const property1 = await storage.createProperty({
+        name: "Sunset Apartments",
+        address: "123 Main Street",
+        city: "Springfield",
+        state: "IL",
+        zipCode: "62701",
+        propertyType: "apartment",
+        units: 50,
+        managerId: "pm-1"
+      });
+
+      const property2 = await storage.createProperty({
+        name: "Oak Ridge Condos",
+        address: "456 Oak Avenue", 
+        city: "Springfield",
+        state: "IL",
+        zipCode: "62702",
+        propertyType: "condo",
+        units: 30,
+        managerId: "pm-1"
+      });
+
+      res.json({ 
+        message: "Sample data created successfully",
+        properties: [property1, property2]
+      });
+    } catch (error) {
+      console.error("Error seeding data:", error);
+      res.status(500).json({ error: "Failed to seed data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
