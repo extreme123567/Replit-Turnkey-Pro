@@ -1,4 +1,4 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution } from "@shared/schema";
+import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution, type StaffPayroll, type InsertStaffPayroll } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -131,6 +131,14 @@ export interface IStorage {
   updateCallbackResolution(id: string, resolution: Partial<InsertCallbackResolution>): Promise<CallbackResolution | undefined>;
   deleteCallbackResolution(id: string): Promise<boolean>;
 
+  // Staff Payroll
+  getStaffPayroll(staffId: string): Promise<StaffPayroll[]>;
+  getPayrollByPeriod(payPeriod: string): Promise<StaffPayroll[]>;
+  createPayrollEntry(payroll: InsertStaffPayroll): Promise<StaffPayroll>;
+  updatePayrollEntry(id: string, payroll: Partial<InsertStaffPayroll>): Promise<StaffPayroll | undefined>;
+  deductPayForCallback(jobId: string, callbackId: string): Promise<boolean>;
+  restorePayAfterCallback(callbackId: string): Promise<boolean>;
+
   // Dashboard Analytics
   getDashboardStats(userRole: string, userId?: string): Promise<any>;
   getPropertyManagerStats(managerId: string): Promise<any>;
@@ -153,6 +161,7 @@ export class MemStorage implements IStorage {
   private maintenanceSchedule: Map<string, MaintenanceSchedule> = new Map();
   private inspections: Map<string, Inspection> = new Map();
   private callbackResolutions: Map<string, CallbackResolution> = new Map();
+  private staffPayroll: Map<string, StaffPayroll> = new Map();
   private userPermissions: Map<string, UserPermission> = new Map();
   private auditLogs: Map<string, AuditLog> = new Map();
   private invoiceCounter = 1;
@@ -1210,6 +1219,83 @@ export class MemStorage implements IStorage {
 
   async deleteCallbackResolution(id: string): Promise<boolean> {
     return this.callbackResolutions.delete(id);
+  }
+
+  // Staff Payroll Implementation
+  async getStaffPayroll(staffId: string): Promise<StaffPayroll[]> {
+    return Array.from(this.staffPayroll.values()).filter(p => p.staffId === staffId);
+  }
+
+  async getPayrollByPeriod(payPeriod: string): Promise<StaffPayroll[]> {
+    return Array.from(this.staffPayroll.values()).filter(p => p.payPeriod === payPeriod);
+  }
+
+  async createPayrollEntry(payroll: InsertStaffPayroll): Promise<StaffPayroll> {
+    const id = Date.now().toString();
+    const newPayroll: StaffPayroll = {
+      ...payroll,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.staffPayroll.set(id, newPayroll);
+    return newPayroll;
+  }
+
+  async updatePayrollEntry(id: string, payroll: Partial<InsertStaffPayroll>): Promise<StaffPayroll | undefined> {
+    const existing = this.staffPayroll.get(id);
+    if (!existing) return undefined;
+    
+    const updated: StaffPayroll = {
+      ...existing,
+      ...payroll,
+      updatedAt: new Date(),
+    };
+    this.staffPayroll.set(id, updated);
+    return updated;
+  }
+
+  async deductPayForCallback(jobId: string, callbackId: string): Promise<boolean> {
+    // Find the payroll entry for this job
+    const payrollEntries = Array.from(this.staffPayroll.values()).filter(p => p.jobId === jobId);
+    
+    for (const entry of payrollEntries) {
+      if (entry.payStatus === "earned") {
+        const updated: StaffPayroll = {
+          ...entry,
+          payStatus: "deducted",
+          callbackId: callbackId,
+          currentPayAmount: "0.00", // Deduct full amount
+          deductedAt: new Date(),
+          updatedAt: new Date(),
+          notes: `Pay deducted due to callback - Job ${jobId} failed inspection`
+        };
+        this.staffPayroll.set(entry.id, updated);
+      }
+    }
+    
+    return true;
+  }
+
+  async restorePayAfterCallback(callbackId: string): Promise<boolean> {
+    // Find payroll entries that were deducted for this callback
+    const payrollEntries = Array.from(this.staffPayroll.values()).filter(p => p.callbackId === callbackId);
+    
+    for (const entry of payrollEntries) {
+      if (entry.payStatus === "deducted") {
+        const updated: StaffPayroll = {
+          ...entry,
+          payStatus: "restored",
+          currentPayAmount: entry.basePayAmount, // Restore original amount
+          restoredAt: new Date(),
+          updatedAt: new Date(),
+          notes: `Pay restored after callback completion - Job ${entry.jobId} verified`
+        };
+        this.staffPayroll.set(entry.id, updated);
+      }
+    }
+    
+    return true;
   }
 }
 

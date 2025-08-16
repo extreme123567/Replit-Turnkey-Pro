@@ -1382,6 +1382,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         afterPhotos: []
       });
 
+      // Deduct pay for the failed job
+      await storage.deductPayForCallback(jobId, callbackResolution.id);
+
+      console.log(`Pay deducted for callback on job ${jobId} - technician ${technicianId}`);
+
       res.status(201).json(callbackResolution);
     } catch (error) {
       console.error("Error creating callback resolution:", error);
@@ -1556,7 +1561,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         await storage.createMessage(technicianNotification);
 
-        console.log(`Callback verification complete for job ${updatedCallback.jobId}`);
+        // Restore pay after successful verification
+        await storage.restorePayAfterCallback(callbackId);
+
+        console.log(`Callback verification complete and pay restored for job ${updatedCallback.jobId}`);
       } else {
         // If not verified, notify technician of needed revisions
         const revisionNotification = {
@@ -1584,6 +1592,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error verifying callback:", error);
       res.status(500).json({ error: "Failed to verify callback" });
+    }
+  });
+
+  // Staff Payroll API Routes
+
+  // Get payroll for a specific staff member
+  app.get("/api/payroll/staff/:staffId", async (req, res) => {
+    try {
+      const { staffId } = req.params;
+      const payrollEntries = await storage.getStaffPayroll(staffId);
+      
+      // Calculate totals
+      const totalEarned = payrollEntries
+        .filter(p => p.payStatus === "earned" || p.payStatus === "restored")
+        .reduce((sum, p) => sum + parseFloat(p.currentPayAmount || "0"), 0);
+      
+      const totalDeducted = payrollEntries
+        .filter(p => p.payStatus === "deducted")
+        .reduce((sum, p) => sum + parseFloat(p.basePayAmount || "0"), 0);
+
+      res.json({
+        entries: payrollEntries,
+        summary: {
+          totalEarned: totalEarned.toFixed(2),
+          totalDeducted: totalDeducted.toFixed(2),
+          netPay: (totalEarned - totalDeducted).toFixed(2),
+          entriesCount: payrollEntries.length
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching staff payroll:", error);
+      res.status(500).json({ error: "Failed to fetch payroll" });
+    }
+  });
+
+  // Create payroll entry when job is completed
+  app.post("/api/payroll/create", async (req, res) => {
+    try {
+      const { staffId, jobId, jobType, basePayAmount } = req.body;
+      
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+      
+      const payrollEntry = await storage.createPayrollEntry({
+        staffId,
+        jobId,
+        jobType,
+        basePayAmount,
+        currentPayAmount: basePayAmount,
+        payStatus: "earned",
+        payPeriod: currentMonth,
+        notes: `Payment for ${jobType} job completion`
+      });
+
+      res.status(201).json(payrollEntry);
+    } catch (error) {
+      console.error("Error creating payroll entry:", error);
+      res.status(500).json({ error: "Failed to create payroll entry" });
+    }
+  });
+
+  // Get payroll by pay period
+  app.get("/api/payroll/period/:period", async (req, res) => {
+    try {
+      const { period } = req.params;
+      const payrollEntries = await storage.getPayrollByPeriod(period);
+      
+      // Group by staff
+      const staffPayroll = payrollEntries.reduce((acc, entry) => {
+        if (!acc[entry.staffId]) {
+          acc[entry.staffId] = {
+            staffId: entry.staffId,
+            entries: [],
+            totalEarned: 0,
+            totalDeducted: 0
+          };
+        }
+        
+        acc[entry.staffId].entries.push(entry);
+        
+        if (entry.payStatus === "earned" || entry.payStatus === "restored") {
+          acc[entry.staffId].totalEarned += parseFloat(entry.currentPayAmount || "0");
+        } else if (entry.payStatus === "deducted") {
+          acc[entry.staffId].totalDeducted += parseFloat(entry.basePayAmount || "0");
+        }
+        
+        return acc;
+      }, {} as any);
+
+      res.json(staffPayroll);
+    } catch (error) {
+      console.error("Error fetching payroll by period:", error);
+      res.status(500).json({ error: "Failed to fetch payroll period data" });
     }
   });
 

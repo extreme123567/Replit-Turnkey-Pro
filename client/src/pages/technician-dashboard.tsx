@@ -56,6 +56,15 @@ export default function TechnicianDashboard() {
     },
   });
 
+  const { data: payrollData, isLoading: payrollLoading } = useQuery({
+    queryKey: ["/api/payroll/staff", technicianId],
+    queryFn: async () => {
+      const response = await fetch(`/api/payroll/staff/${technicianId}`);
+      if (!response.ok) throw new Error('Failed to fetch payroll data');
+      return response.json();
+    },
+  });
+
   const isLoading = statsLoading || ordersLoading || scheduleLoading;
 
   const getPriorityColor = (priority: string) => {
@@ -173,19 +182,53 @@ export default function TechnicianDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600 text-sm font-medium">Today's Schedule</p>
-                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-todays-schedule">
-                  {stats?.todaysSchedule?.length || 0}
+                <p className="text-slate-600 text-sm font-medium">This Month's Pay</p>
+                <p className="text-2xl font-bold text-emerald-800 mt-1" data-testid="stat-monthly-pay">
+                  ${payrollData?.summary?.netPay || "0.00"}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Clock className="text-amber-600" size={20} />
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="text-emerald-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">Scheduled jobs</p>
+            {payrollData?.summary?.totalDeducted > 0 && (
+              <p className="text-sm text-red-600 mt-1">
+                ${payrollData.summary.totalDeducted} deducted for callbacks
+              </p>
+            )}
+            <p className="text-sm text-slate-600 mt-1">Net earnings after callbacks</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Payroll Summary */}
+      {payrollData?.entries?.length > 0 && (
+        <Card className="servicepro-card">
+          <CardHeader>
+            <CardTitle>Pay Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {payrollData.entries.slice(0, 5).map((entry: any) => (
+                <div key={entry.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="font-medium">{entry.jobType} job</p>
+                    <p className="text-sm text-slate-600">Job #{entry.jobId}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-medium ${entry.payStatus === 'deducted' ? 'text-red-600' : 'text-emerald-600'}`}>
+                      ${entry.currentPayAmount}
+                    </p>
+                    <Badge variant={entry.payStatus === 'deducted' ? 'destructive' : 'secondary'}>
+                      {entry.payStatus === 'deducted' ? 'Deducted' : entry.payStatus === 'restored' ? 'Restored' : 'Earned'}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Today's Schedule and Assigned Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

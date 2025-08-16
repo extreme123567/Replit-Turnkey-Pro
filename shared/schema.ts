@@ -299,6 +299,24 @@ export const callbackResolutions = pgTable("callback_resolutions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Staff Pay Tracking
+export const staffPayroll = pgTable("staff_payroll", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(),
+  jobId: varchar("job_id").notNull(),
+  jobType: varchar("job_type").notNull(), // punch, repairs, paint, clean, carpet, inspected, etc.
+  basePayAmount: decimal("base_pay_amount", { precision: 10, scale: 2 }).notNull(),
+  currentPayAmount: decimal("current_pay_amount", { precision: 10, scale: 2 }).notNull(), // adjusted for callbacks
+  payStatus: varchar("pay_status").notNull().default("earned"), // earned, deducted, restored
+  callbackId: varchar("callback_id"), // links to callback if pay was deducted
+  deductedAt: timestamp("deducted_at"),
+  restoredAt: timestamp("restored_at"),
+  payPeriod: varchar("pay_period").notNull(), // YYYY-MM format
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
@@ -411,6 +429,14 @@ export const insertCallbackResolutionSchema = createInsertSchema(callbackResolut
   updatedAt: true,
 });
 
+export const insertStaffPayrollSchema = createInsertSchema(staffPayroll).omit({
+  id: true,
+  deductedAt: true,
+  restoredAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
@@ -462,3 +488,6 @@ export type InsertQuoteRequest = z.infer<typeof insertQuoteRequestSchema>;
 
 export type CallbackResolution = typeof callbackResolutions.$inferSelect;
 export type InsertCallbackResolution = z.infer<typeof insertCallbackResolutionSchema>;
+
+export type StaffPayroll = typeof staffPayroll.$inferSelect;
+export type InsertStaffPayroll = z.infer<typeof insertStaffPayrollSchema>;
