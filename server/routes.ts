@@ -421,8 +421,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "jobType must be 'paint' or 'clean'" });
       }
 
-      if (jobType === 'clean' && !['studio', '1br', '2br', '3br'].includes(unitType)) {
-        return res.status(400).json({ error: "unitType must be 'studio', '1br', '2br', or '3br' for clean jobs" });
+      if (!['studio', '1br', '2br', '3br'].includes(unitType)) {
+        return res.status(400).json({ error: "unitType must be 'studio', '1br', '2br', or '3br'" });
       }
       
       const payout = await storage.createJobPayout(jobId, staffId, jobType, unitCount, unitType);

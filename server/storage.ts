@@ -139,7 +139,7 @@ export interface IStorage {
   deductPayForCallback(jobId: string, callbackId: string): Promise<boolean>;
   restorePayAfterCallback(callbackId: string): Promise<boolean>;
   createJobPayout(jobId: string, staffId: string, jobType: 'paint' | 'clean', unitCount?: number, unitType?: 'studio' | '1br' | '2br' | '3br'): Promise<StaffPayroll>;
-  getPayoutRates(): Promise<{ paint: number; clean: { studio: number; '1br': number; '2br': number; '3br': number } }>;
+  getPayoutRates(): Promise<{ paint: { studio: number; '1br': number; '2br': number; '3br': number }; clean: { studio: number; '1br': number; '2br': number; '3br': number } }>;
 
   // Job Management
   getJobsByProperty(propertyId: string): Promise<Job[]>;
@@ -1505,7 +1505,13 @@ export class MemStorage implements IStorage {
 
   // Payout calculation for paint and clean jobs
   async createJobPayout(jobId: string, staffId: string, jobType: 'paint' | 'clean', unitCount: number = 1, unitType: 'studio' | '1br' | '2br' | '3br' = 'studio'): Promise<StaffPayroll> {
-    const paintRate = 85.00; // $85 per unit painted
+    // Paint rates based on unit size
+    const paintRates = {
+      'studio': 175.00,
+      '1br': 175.00,
+      '2br': 200.00,
+      '3br': 225.00
+    };
     
     // Clean rates based on unit size
     const cleanRates = {
@@ -1515,7 +1521,7 @@ export class MemStorage implements IStorage {
       '3br': 105.00
     };
     
-    const rate = jobType === 'paint' ? paintRate : cleanRates[unitType];
+    const rate = jobType === 'paint' ? paintRates[unitType] : cleanRates[unitType];
     const baseAmount = rate * unitCount;
     
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
@@ -1528,17 +1534,20 @@ export class MemStorage implements IStorage {
       currentPayAmount: baseAmount.toFixed(2),
       payStatus: 'earned',
       payPeriod: currentMonth,
-      notes: jobType === 'paint' 
-        ? `Paint job payout - ${unitCount} unit(s) at $${paintRate} per unit`
-        : `Clean job payout - ${unitCount} ${unitType} unit(s) at $${rate} per unit`
+      notes: `${jobType} job payout - ${unitCount} ${unitType} unit(s) at $${rate} per unit`
     };
 
     return this.createPayrollEntry(payrollEntry);
   }
 
-  async getPayoutRates(): Promise<{ paint: number; clean: { studio: number; '1br': number; '2br': number; '3br': number } }> {
+  async getPayoutRates(): Promise<{ paint: { studio: number; '1br': number; '2br': number; '3br': number }; clean: { studio: number; '1br': number; '2br': number; '3br': number } }> {
     return {
-      paint: 85.00,
+      paint: {
+        studio: 175.00,
+        '1br': 175.00,
+        '2br': 200.00,
+        '3br': 225.00
+      },
       clean: {
         studio: 80.00,
         '1br': 80.00,

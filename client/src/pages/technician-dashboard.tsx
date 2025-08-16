@@ -32,7 +32,13 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
   const queryClient = useQueryClient();
 
   // Pricing structure
-  const paintRate = 85;
+  const paintRates = {
+    studio: 175,
+    '1br': 175,
+    '2br': 200,
+    '3br': 225
+  };
+  
   const cleanRates = {
     studio: 80,
     '1br': 80,
@@ -41,11 +47,8 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
   };
 
   const calculatePayout = () => {
-    if (jobType === 'paint') {
-      return paintRate * unitCount;
-    } else {
-      return cleanRates[unitType] * unitCount;
-    }
+    const rates = jobType === 'paint' ? paintRates : cleanRates;
+    return rates[unitType] * unitCount;
   };
   
   const completeJobWithPayout = useMutation({
@@ -99,18 +102,27 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
         <span className="text-sm text-slate-600">units</span>
       </div>
       
-      {jobType === 'clean' && (
-        <select
-          value={unitType}
-          onChange={(e) => setUnitType(e.target.value as 'studio' | '1br' | '2br' | '3br')}
-          className="w-full px-2 py-1 text-sm border rounded"
-        >
-          <option value="studio">Studio ($80)</option>
-          <option value="1br">1 Bedroom ($80)</option>
-          <option value="2br">2 Bedroom ($95)</option>
-          <option value="3br">3 Bedroom ($105)</option>
-        </select>
-      )}
+      <select
+        value={unitType}
+        onChange={(e) => setUnitType(e.target.value as 'studio' | '1br' | '2br' | '3br')}
+        className="w-full px-2 py-1 text-sm border rounded"
+      >
+        {jobType === 'paint' ? (
+          <>
+            <option value="studio">Studio ($175)</option>
+            <option value="1br">1 Bedroom ($175)</option>
+            <option value="2br">2 Bedroom ($200)</option>
+            <option value="3br">3 Bedroom ($225)</option>
+          </>
+        ) : (
+          <>
+            <option value="studio">Studio ($80)</option>
+            <option value="1br">1 Bedroom ($80)</option>
+            <option value="2br">2 Bedroom ($95)</option>
+            <option value="3br">3 Bedroom ($105)</option>
+          </>
+        )}
+      </select>
       
       <Button 
         variant="outline" 

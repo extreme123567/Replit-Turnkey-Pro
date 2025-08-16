@@ -7,7 +7,10 @@ ServicePro is a comprehensive property management platform designed for professi
 ## Recent Changes (August 2025)
 
 ### Automated Payout System for Technicians (Latest)
-- **Paint Job Payouts**: Fixed rate of $85 per unit completed with automatic payout calculation
+- **Paint Job Payouts**: Size-based pricing structure:
+  - Studio & 1-Bedroom: $175 per unit
+  - 2-Bedroom: $200 per unit
+  - 3-Bedroom: $225 per unit
 - **Cleaning Job Payouts**: Size-based pricing structure:
   - Studio & 1-Bedroom: $80 per unit
   - 2-Bedroom: $95 per unit  
