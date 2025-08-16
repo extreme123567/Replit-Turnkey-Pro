@@ -146,6 +146,9 @@ export interface IStorage {
   rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<Job | undefined>;
   getJobCompletionStats(): Promise<{ scheduled: number; completed: number; pending: number; }>;
 
+  // Financial Analytics
+  getFinancialSummary(): Promise<{ totalBilled: string; totalPaidOut: string; netProfit: string; }>;
+
   // Dashboard Analytics
   getDashboardStats(userRole: string, userId?: string): Promise<any>;
   getPropertyManagerStats(managerId: string): Promise<any>;
@@ -438,6 +441,57 @@ export class MemStorage implements IStorage {
     ];
 
     sampleJobsAwaitingApproval.forEach(job => {
+      const id = randomUUID();
+      const fullJob: Job = {
+        ...job,
+        id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.jobs.set(id, fullJob);
+    });
+
+    // Add some completed jobs to show financial data
+    const sampleCompletedJobs: InsertJob[] = [
+      {
+        title: "Paint Unit 501A - Completed",
+        type: "paint",
+        description: "Painted walls in living areas - completed successfully",
+        priority: "medium",
+        status: "completed",
+        estimatedHours: 5,
+        budget: "110.00",
+        assignedTo: "tech-1",
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "HVAC Repair Unit 202B - Completed",
+        type: "repairs",
+        description: "Fixed AC cooling issue - unit running efficiently",
+        priority: "high", 
+        status: "completed",
+        estimatedHours: 4,
+        budget: "90.00",
+        assignedTo: "tech-1",
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "Deep Clean Unit 303C - Completed",
+        type: "clean",
+        description: "Unit cleaned and ready for new tenant",
+        priority: "medium",
+        status: "completed",
+        estimatedHours: 3,
+        budget: "75.00",
+        assignedTo: "tech-1",
+        clientId: this.clients.keys().next().value,
+        createdBy: "prop-manager-1"
+      }
+    ];
+
+    sampleCompletedJobs.forEach(job => {
       const id = randomUUID();
       const fullJob: Job = {
         ...job,
@@ -1506,6 +1560,30 @@ export class MemStorage implements IStorage {
     const pending = jobs.filter(job => job.status === "awaiting_approval").length;
 
     return { scheduled, completed, pending };
+  }
+
+  // Financial Analytics Implementation
+  async getFinancialSummary(): Promise<{ totalBilled: string; totalPaidOut: string; netProfit: string; }> {
+    // Calculate total amount billed from completed jobs
+    const completedJobs = Array.from(this.jobs.values()).filter(job => job.status === "completed");
+    const totalBilled = completedJobs.reduce((sum, job) => {
+      return sum + parseFloat(job.budget || "0");
+    }, 0);
+
+    // Calculate total amount paid out to staff (current pay amounts)
+    const payrollEntries = Array.from(this.staffPayroll.values());
+    const totalPaidOut = payrollEntries.reduce((sum, entry) => {
+      return sum + parseFloat(entry.currentPayAmount || "0");
+    }, 0);
+
+    // Calculate net profit
+    const netProfit = totalBilled - totalPaidOut;
+
+    return {
+      totalBilled: totalBilled.toFixed(2),
+      totalPaidOut: totalPaidOut.toFixed(2),
+      netProfit: netProfit.toFixed(2)
+    };
   }
 }
 

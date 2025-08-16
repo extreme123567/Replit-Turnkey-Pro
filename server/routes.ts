@@ -1787,6 +1787,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get financial summary (billed vs paid out)
+  app.get("/api/financial/summary", async (req, res) => {
+    try {
+      const summary = await storage.getFinancialSummary();
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching financial summary:", error);
+      res.status(500).json({ error: "Failed to fetch financial summary" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -79,7 +79,16 @@ export default function OfficeStaffDashboard() {
     },
   });
 
-  const isLoading = statsLoading || ordersLoading || leasesLoading || approvalsLoading || jobStatsLoading;
+  const { data: financialSummary, isLoading: financialLoading } = useQuery({
+    queryKey: ["/api/financial/summary"],
+    queryFn: async () => {
+      const response = await fetch('/api/financial/summary');
+      if (!response.ok) throw new Error('Failed to fetch financial summary');
+      return response.json();
+    },
+  });
+
+  const isLoading = statsLoading || ordersLoading || leasesLoading || approvalsLoading || jobStatsLoading || financialLoading;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -201,6 +210,64 @@ export default function OfficeStaffDashboard() {
               </div>
             </div>
             <p className="text-sm text-slate-600 mt-2">Jobs finished this period</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Financial Summary - Billed vs Paid Out */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="servicepro-card border-l-4 border-l-emerald-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Total Billed</p>
+                <p className="text-2xl font-bold text-emerald-800 mt-1" data-testid="stat-total-billed">
+                  ${financialSummary?.totalBilled || '0.00'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="text-emerald-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mt-2">Revenue from completed jobs</p>
+          </CardContent>
+        </Card>
+
+        <Card className="servicepro-card border-l-4 border-l-orange-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Total Paid Out</p>
+                <p className="text-2xl font-bold text-orange-800 mt-1" data-testid="stat-total-paid">
+                  ${financialSummary?.totalPaidOut || '0.00'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Users className="text-orange-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mt-2">Payments to technicians</p>
+          </CardContent>
+        </Card>
+
+        <Card className="servicepro-card border-l-4 border-l-blue-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">Net Profit</p>
+                <p className={`text-2xl font-bold mt-1 ${
+                  parseFloat(financialSummary?.netProfit || '0') >= 0 
+                    ? 'text-blue-800' 
+                    : 'text-red-800'
+                }`} data-testid="stat-net-profit">
+                  ${financialSummary?.netProfit || '0.00'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="text-blue-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mt-2">Billed minus paid out</p>
           </CardContent>
         </Card>
       </div>
@@ -396,6 +463,7 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/completion-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/financial/summary"] });
       toast({
         title: "Job Approved",
         description: "The job has been approved and assigned to technician",
@@ -420,6 +488,7 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/completion-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/financial/summary"] });
       toast({
         title: "Job Rejected",
         description: "The job has been rejected and will not be scheduled",
