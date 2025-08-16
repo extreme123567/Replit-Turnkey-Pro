@@ -56,9 +56,123 @@ export default function InspectorDashboard() {
   const [callbackNotes, setCallbackNotes] = useState("");
   const [activeTimers, setActiveTimers] = useState<{[jobId: string]: {startTime: Date, elapsedSeconds: number}}>({});
   const [timerIntervals, setTimerIntervals] = useState<{[jobId: string]: NodeJS.Timeout}>({});
+  const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [locationError, setLocationError] = useState<string>("");
+  const [geofenceStatus, setGeofenceStatus] = useState<{[jobId: string]: boolean}>({});
+
+  // Geolocation and geofencing functions
+  const getCurrentLocation = (): Promise<{latitude: number, longitude: number}> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by this browser"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          reject(new Error(`Location error: ${error.message}`));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    });
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  };
+
+  const checkGeofence = async (job: any): Promise<boolean> => {
+    try {
+      const location = await getCurrentLocation();
+      setCurrentLocation(location);
+      setLocationError("");
+
+      // Property coordinates (in real app, these would come from the job/property data)
+      const propertyCoordinates = getPropertyCoordinates(job.property);
+      
+      const distance = calculateDistance(
+        location.latitude, 
+        location.longitude, 
+        propertyCoordinates.latitude, 
+        propertyCoordinates.longitude
+      );
+
+      const GEOFENCE_RADIUS = 100; // 100 meters radius
+      const withinGeofence = distance <= GEOFENCE_RADIUS;
+      
+      setGeofenceStatus(prev => ({
+        ...prev,
+        [`${job.id}-${job.unit}`]: withinGeofence
+      }));
+
+      if (withinGeofence) {
+        toast({
+          title: "Location Verified",
+          description: `You are within range of ${job.property}. You can now start the inspection timer.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Location Required",
+          description: `You must be within 100 meters of ${job.property} to start inspection.`,
+          variant: "destructive"
+        });
+      }
+
+      return withinGeofence;
+    } catch (error) {
+      setLocationError(error instanceof Error ? error.message : "Location access denied");
+      return false;
+    }
+  };
+
+  const getPropertyCoordinates = (propertyName: string): {latitude: number, longitude: number} => {
+    // Mock property coordinates (in real app, these would be stored in database)
+    const propertyCoords: {[key: string]: {latitude: number, longitude: number}} = {
+      "Sunset Apartments": { latitude: 39.7817, longitude: -89.6501 }, // Springfield, IL
+      "Oak Ridge Condos": { latitude: 39.7956, longitude: -89.6645 },
+      "Pine Valley": { latitude: 39.7991, longitude: -89.6441 }
+    };
+    
+    return propertyCoords[propertyName] || { latitude: 39.7817, longitude: -89.6501 };
+  };
 
   // Timer functions
-  const startTimer = (jobId: string) => {
+  const startTimer = async (jobId: string, job?: any) => {
+    // Check geofence before starting timer
+    if (job) {
+      const withinGeofence = await checkGeofence(job);
+      if (!withinGeofence) {
+        toast({
+          title: "Location Required",
+          description: "You must be at the property location to start the inspection timer.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     const startTime = new Date();
     setActiveTimers(prev => ({
       ...prev,
@@ -370,6 +484,21 @@ export default function InspectorDashboard() {
         </Card>
       </div>
 
+      {/* Location Error Display */}
+      {locationError && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 text-red-700">
+              <AlertTriangle size={16} />
+              <span className="text-sm">Location Error: {locationError}</span>
+              <Button size="sm" variant="outline" onClick={() => setLocationError("")} className="ml-auto">
+                <X size={12} />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Jobs for Inspection */}
       <Card className="servicepro-card">
         <CardHeader>
@@ -379,6 +508,9 @@ export default function InspectorDashboard() {
               {jobsForInspection?.length || 0} jobs
             </Badge>
           </CardTitle>
+          <div className="text-sm text-slate-600 mt-2">
+            📍 Location verification required before starting unit timers (100m radius)
+          </div>
         </CardHeader>
         <CardContent className="p-6 pt-0">
           <div className="space-y-4">
@@ -406,6 +538,18 @@ export default function InspectorDashboard() {
                   <div className="text-right space-y-2">
                     <Badge className="bg-emerald-100 text-emerald-800">Ready for Inspection</Badge>
                     
+                    {/* Location Status */}
+                    {geofenceStatus[`${job.id}-${job.unit}`] !== undefined && (
+                      <div className={`px-2 py-1 rounded-lg text-xs flex items-center gap-1 ${
+                        geofenceStatus[`${job.id}-${job.unit}`] 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        <MapPin size={12} />
+                        {geofenceStatus[`${job.id}-${job.unit}`] ? 'At Property' : 'Not at Property'}
+                      </div>
+                    )}
+
                     {/* Timer Display */}
                     {activeTimers[`${job.id}-${job.unit}`] && (
                       <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-mono">
@@ -415,6 +559,19 @@ export default function InspectorDashboard() {
                     )}
                     
                     <div className="flex space-x-2">
+                      {/* Location Check Button */}
+                      {geofenceStatus[`${job.id}-${job.unit}`] === undefined && (
+                        <Button 
+                          size="sm"
+                          onClick={() => checkGeofence(job)}
+                          className="bg-slate-600 hover:bg-slate-700"
+                          data-testid={`button-check-location-${job.id}-${job.unit}`}
+                        >
+                          <MapPin className="mr-1" size={12} />
+                          Check Location
+                        </Button>
+                      )}
+
                       {/* Timer Controls */}
                       {activeTimers[`${job.id}-${job.unit}`] ? (
                         <Button 
@@ -429,9 +586,10 @@ export default function InspectorDashboard() {
                       ) : (
                         <Button 
                           size="sm"
-                          onClick={() => startTimer(`${job.id}-${job.unit}`)}
+                          onClick={() => startTimer(`${job.id}-${job.unit}`, job)}
                           className="bg-green-600 hover:bg-green-700"
                           data-testid={`button-start-timer-${job.id}-${job.unit}`}
+                          disabled={geofenceStatus[`${job.id}-${job.unit}`] === false}
                         >
                           <Play className="mr-1" size={12} />
                           Start Unit
