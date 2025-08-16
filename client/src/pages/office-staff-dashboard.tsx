@@ -263,93 +263,199 @@ export default function OfficeStaffDashboard() {
               </CardContent>
             </Card>
 
-            {/* Upcoming Lease Expirations */}
+            {/* Color-Coded Job Calendar */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="text-yellow-500" size={20} />
-                  <span>Upcoming Lease Expirations</span>
-                  <Badge variant="secondary" data-testid="badge-lease-expirations-count">
-                    {upcomingLeaseExpirations?.length || 0}
-                  </Badge>
+                  <Calendar className="text-blue-500" size={20} />
+                  <span>Job Schedule Calendar</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {leasesLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <Skeleton key={i} className="h-16" />
-                    ))
-                  ) : upcomingLeaseExpirations?.length > 0 ? (
-                    upcomingLeaseExpirations.map((lease: any) => (
-                      <div key={lease.id} className="p-3 border rounded-lg bg-yellow-50" data-testid={`card-lease-${lease.id}`}>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-gray-900">{lease.tenantName}</p>
-                            <p className="text-sm text-gray-600">{lease.propertyAddress}</p>
-                            <p className="text-sm text-yellow-600">Expires: {lease.expirationDate}</p>
-                          </div>
-                          <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">
-                            {lease.daysRemaining} days
-                          </Badge>
-                        </div>
+                <div className="space-y-4">
+                  {/* Calendar Legend */}
+                  <div className="flex flex-wrap gap-3 text-xs">
+                    <div className="flex items-center space-x-1">
+                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                      <span>Paint</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-3 h-3 bg-red-500 rounded"></div>
+                      <span>Clean</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-3 h-3 bg-black rounded"></div>
+                      <span>Punch</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                      <span>Carpet</span>
+                    </div>
+                  </div>
+
+                  {/* Mini Calendar Grid */}
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {/* Calendar Headers */}
+                    <div className="text-xs font-medium text-gray-500 p-1">Sun</div>
+                    <div className="text-xs font-medium text-gray-500 p-1">Mon</div>
+                    <div className="text-xs font-medium text-gray-500 p-1">Tue</div>
+                    <div className="text-xs font-medium text-gray-500 p-1">Wed</div>
+                    <div className="text-xs font-medium text-gray-500 p-1">Thu</div>
+                    <div className="text-xs font-medium text-gray-500 p-1">Fri</div>
+                    <div className="text-xs font-medium text-gray-500 p-1">Sat</div>
+
+                    {/* Calendar Days with Sample Jobs */}
+                    <div className="p-1"></div>
+                    <div className="p-1"></div>
+                    <div className="p-1"></div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">1</div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">2</div>
+                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">3</div>
+                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">4</div>
+                    </div>
+
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">5</div>
+                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">6</div>
+                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">7</div>
+                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">8</div>
+                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded bg-blue-50">
+                      <div className="text-xs font-medium">9</div>
+                      <div className="flex space-x-1 justify-center">
+                        <div className="w-1 h-1 bg-blue-500 rounded"></div>
+                        <div className="w-1 h-1 bg-red-500 rounded"></div>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 text-center py-4" data-testid="text-no-lease-expirations">
-                      No upcoming expirations
-                    </p>
-                  )}
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">10</div>
+                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">11</div>
+                    </div>
+
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">12</div>
+                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">13</div>
+                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">14</div>
+                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">15</div>
+                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded bg-green-50">
+                      <div className="text-xs font-medium">16</div>
+                      <div className="flex space-x-1 justify-center">
+                        <div className="w-1 h-1 bg-blue-500 rounded"></div>
+                        <div className="w-1 h-1 bg-yellow-500 rounded"></div>
+                        <div className="w-1 h-1 bg-red-500 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">17</div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">18</div>
+                    </div>
+
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">19</div>
+                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">20</div>
+                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">21</div>
+                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">22</div>
+                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">23</div>
+                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">24</div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">25</div>
+                    </div>
+
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">26</div>
+                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">27</div>
+                      <div className="w-2 h-1 bg-black rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">28</div>
+                      <div className="w-2 h-1 bg-yellow-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">29</div>
+                      <div className="w-2 h-1 bg-blue-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">30</div>
+                      <div className="w-2 h-1 bg-red-500 rounded mx-auto"></div>
+                    </div>
+                    <div className="p-1 border rounded">
+                      <div className="text-xs">31</div>
+                    </div>
+                    <div className="p-1"></div>
+                  </div>
+
+                  {/* Today's Job Summary */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-sm font-medium text-gray-800 mb-2">Today's Jobs</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                        <span>Paint Jobs</span>
+                        <span className="font-medium">2</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-red-50 rounded">
+                        <span>Clean Jobs</span>
+                        <span className="font-medium">1</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="text-blue-500" size={20} />
-                <span>Quick Actions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Button 
-                  variant="outline" 
-                  className="h-20 flex-col space-y-2"
-                  data-testid="button-process-applications"
-                >
-                  <FileText className="text-blue-600" size={20} />
-                  <span className="text-sm font-medium">Process Applications</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-20 flex-col space-y-2"
-                  data-testid="button-schedule-tours"
-                >
-                  <Calendar className="text-emerald-600" size={20} />
-                  <span className="text-sm font-medium">Schedule Tours</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-20 flex-col space-y-2"
-                  data-testid="button-manage-leases"
-                >
-                  <Users className="text-purple-600" size={20} />
-                  <span className="text-sm font-medium">Manage Leases</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-20 flex-col space-y-2"
-                  data-testid="button-generate-reports"
-                >
-                  <TrendingUp className="text-amber-600" size={20} />
-                  <span className="text-sm font-medium">Generate Reports</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Recent Work Orders */}
           <Card>
