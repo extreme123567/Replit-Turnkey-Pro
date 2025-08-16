@@ -312,6 +312,71 @@ export class MemStorage implements IStorage {
       };
       this.properties.set(id, fullProperty);
     });
+
+    // Initialize demo payroll data to show financial accountability system
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const technicianIds = Array.from(this.users.values())
+      .filter(user => user.role === "technician")
+      .map(user => user.id);
+
+    if (technicianIds.length > 0) {
+      const samplePayroll: InsertStaffPayroll[] = [
+        {
+          staffId: technicianIds[0],
+          jobId: "job-paint-201A", 
+          jobType: "paint",
+          basePayAmount: "85.00",
+          currentPayAmount: "0.00", // Deducted due to callback
+          payStatus: "deducted",
+          payPeriod: currentMonth,
+          notes: "Paint job Unit 201A - deducted due to failed inspection, awaiting callback resolution"
+        },
+        {
+          staffId: technicianIds[0],
+          jobId: "job-clean-105B",
+          jobType: "clean", 
+          basePayAmount: "65.00",
+          currentPayAmount: "65.00",
+          payStatus: "earned",
+          payPeriod: currentMonth,
+          notes: "Standard cleaning job completed successfully"
+        },
+        {
+          staffId: technicianIds[0],
+          jobId: "job-repairs-302C",
+          jobType: "repairs",
+          basePayAmount: "95.00",
+          currentPayAmount: "95.00", 
+          payStatus: "restored",
+          payPeriod: currentMonth,
+          notes: "Repair work - pay restored after callback verification"
+        },
+        {
+          staffId: technicianIds[0],
+          jobId: "job-carpet-104A",
+          jobType: "carpet",
+          basePayAmount: "120.00", 
+          currentPayAmount: "120.00",
+          payStatus: "earned",
+          payPeriod: currentMonth,
+          notes: "Carpet installation completed and approved"
+        }
+      ];
+
+      samplePayroll.forEach(payroll => {
+        const id = randomUUID();
+        const fullPayroll: StaffPayroll = {
+          ...payroll,
+          id,
+          callbackId: payroll.payStatus === "deducted" ? "callback-paint-201A" : null,
+          deductedAt: payroll.payStatus === "deducted" ? new Date() : null,
+          restoredAt: payroll.payStatus === "restored" ? new Date() : null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        this.staffPayroll.set(id, fullPayroll);
+      });
+    }
   }
 
   // Clients
