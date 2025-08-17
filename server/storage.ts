@@ -206,7 +206,6 @@ export class MemStorage implements IStorage {
   private extraDirtyRequests: Map<string, ExtraDirtyRequest> = new Map();
   private repairPhotoRequests: Map<string, RepairPhotoRequest> = new Map();
   private notifications: Map<string, Notification> = new Map();
-  private repairPhotoRequests: Map<string, RepairPhotoRequest> = new Map();
   private userPermissions: Map<string, UserPermission> = new Map();
   private auditLogs: Map<string, AuditLog> = new Map();
   private quoteRequests: Map<string, QuoteRequest> = new Map();
