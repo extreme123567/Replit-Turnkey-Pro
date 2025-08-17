@@ -448,17 +448,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Office Staff Dashboard
-  // Office staff dashboard endpoint (financial access removed) - Clean for testing
+  // Office staff dashboard endpoint (financial access removed) - Enhanced with approvals
   app.get("/api/dashboard/office", async (req, res) => {
     try {
+      const pendingQuoteRequests = await storage.getPendingQuoteRequests();
       const stats = {
         totalProperties: 2,
         activeJobs: 0,
         availableStaff: 4,
         emergencyRequests: 0,
-        pendingApprovals: 0,
+        pendingApprovals: pendingQuoteRequests.length, // Show pending quote approvals
         scheduledToday: 0,
-        recentActivity: [] // No recent jobs for clean testing
+        recentActivity: [], // No recent jobs for clean testing
+        pendingQuoteRequests: pendingQuoteRequests.slice(0, 5) // Show first 5 pending requests
       };
       res.json(stats);
     } catch (error) {
@@ -1044,6 +1046,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(quoteRequest);
     } catch (error) {
       res.status(400).json({ message: "Invalid quote request data" });
+    }
+  });
+
+  // Get pending quote requests (for Office Staff approval)
+  app.get("/api/quote-requests/pending-approval", async (req, res) => {
+    try {
+      const pendingRequests = await storage.getPendingQuoteRequests();
+      res.json(pendingRequests);
+    } catch (error) {
+      console.error("Error fetching pending quote requests:", error);
+      res.status(500).json({ error: "Failed to fetch pending quote requests" });
+    }
+  });
+
+  // Office Staff approves quote request and schedules work
+  app.post("/api/quote-requests/:id/approve-and-schedule", async (req, res) => {
+    try {
+      const { 
+        scheduledDate, 
+        assignedTechnicianId, 
+        estimatedCost, 
+        scheduledBy, // Office Staff user ID
+        notes 
+      } = req.body;
+
+      if (!scheduledDate || !assignedTechnicianId || !scheduledBy) {
+        return res.status(400).json({ 
+          error: "scheduledDate, assignedTechnicianId, and scheduledBy are required" 
+        });
+      }
+
+      // Approve the quote request and create work order
+      const result = await storage.approveQuoteRequestAndSchedule(
+        req.params.id,
+        {
+          scheduledDate: new Date(scheduledDate),
+          assignedTechnicianId,
+          estimatedCost: estimatedCost || "0",
+          scheduledBy,
+          notes
+        }
+      );
+
+      // Send notification to Property Manager
+      await storage.createNotification({
+        recipientId: result.quoteRequest.requesterId,
+        type: "work_scheduled",
+        title: "Work Order Scheduled",
+        message: `Your request "${result.quoteRequest.title}" has been approved and scheduled for ${new Date(scheduledDate).toLocaleDateString()}.`,
+        relatedEntityId: result.workOrder.id,
+        relatedEntityType: "work_order",
+        actionRequired: false,
+        actionUrl: `/work-orders/${result.workOrder.id}`
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error approving quote request:", error);
+      res.status(500).json({ error: "Failed to approve and schedule quote request" });
+    }
+  });
+
+  // Office Staff rejects quote request
+  app.post("/api/quote-requests/:id/reject", async (req, res) => {
+    try {
+      const { rejectionReason, rejectedBy } = req.body;
+
+      if (!rejectionReason || !rejectedBy) {
+        return res.status(400).json({ 
+          error: "rejectionReason and rejectedBy are required" 
+        });
+      }
+
+      const quoteRequest = await storage.rejectQuoteRequest(req.params.id, {
+        rejectionReason,
+        rejectedBy
+      });
+
+      // Send notification to Property Manager
+      await storage.createNotification({
+        recipientId: quoteRequest.requesterId,
+        type: "quote_rejected",
+        title: "Quote Request Rejected",
+        message: `Your request "${quoteRequest.title}" has been rejected. Reason: ${rejectionReason}`,
+        relatedEntityId: quoteRequest.id,
+        relatedEntityType: "quote_request",
+        actionRequired: true,
+        actionUrl: `/quote-requests/${quoteRequest.id}`
+      });
+
+      res.json(quoteRequest);
+    } catch (error) {
+      console.error("Error rejecting quote request:", error);
+      res.status(500).json({ error: "Failed to reject quote request" });
+    }
+  });
+
+  // Notifications endpoints
+  app.get("/api/notifications/:userId", async (req, res) => {
+    try {
+      const notifications = await storage.getUserNotifications(req.params.userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const notification = await storage.markNotificationAsRead(req.params.id);
+      res.json(notification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
     }
   });
 

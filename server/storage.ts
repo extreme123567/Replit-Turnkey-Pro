@@ -1,4 +1,4 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution, type StaffPayroll, type InsertStaffPayroll, type ExtraDirtyRequest, type InsertExtraDirtyRequest, type RepairPhotoRequest, type InsertRepairPhotoRequest } from "@shared/schema";
+import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution, type StaffPayroll, type InsertStaffPayroll, type ExtraDirtyRequest, type InsertExtraDirtyRequest, type RepairPhotoRequest, type InsertRepairPhotoRequest, type Notification, type InsertNotification } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -54,8 +54,25 @@ export interface IStorage {
   getQuoteRequests(): Promise<QuoteRequest[]>;
   getQuoteRequest(id: string): Promise<QuoteRequest | undefined>;
   getQuoteRequestsByRequester(requesterId: string): Promise<QuoteRequest[]>;
+  getPendingQuoteRequests(): Promise<QuoteRequest[]>;
   createQuoteRequest(quoteRequest: InsertQuoteRequest): Promise<QuoteRequest>;
   updateQuoteRequest(id: string, quoteRequest: Partial<InsertQuoteRequest>): Promise<QuoteRequest | undefined>;
+  approveQuoteRequestAndSchedule(id: string, scheduleData: {
+    scheduledDate: Date;
+    assignedTechnicianId: string;
+    estimatedCost: string;
+    scheduledBy: string;
+    notes?: string;
+  }): Promise<{ quoteRequest: QuoteRequest; workOrder: WorkOrder }>;
+  rejectQuoteRequest(id: string, rejectionData: {
+    rejectionReason: string;
+    rejectedBy: string;
+  }): Promise<QuoteRequest>;
+
+  // Notifications
+  getUserNotifications(userId: string): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: string): Promise<Notification>;
 
   // Users
   getUsers(): Promise<User[]>;
@@ -187,6 +204,8 @@ export class MemStorage implements IStorage {
   private callbackResolutions: Map<string, CallbackResolution> = new Map();
   private staffPayroll: Map<string, StaffPayroll> = new Map();
   private extraDirtyRequests: Map<string, ExtraDirtyRequest> = new Map();
+  private repairPhotoRequests: Map<string, RepairPhotoRequest> = new Map();
+  private notifications: Map<string, Notification> = new Map();
   private repairPhotoRequests: Map<string, RepairPhotoRequest> = new Map();
   private userPermissions: Map<string, UserPermission> = new Map();
   private auditLogs: Map<string, AuditLog> = new Map();
@@ -1581,12 +1600,130 @@ export class MemStorage implements IStorage {
     const newQuoteRequest: QuoteRequest = {
       ...quoteRequest,
       id,
-      status: 'pending',
+      status: 'pending_office_approval',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
     this.quoteRequests.set(id, newQuoteRequest);
     return newQuoteRequest;
+  }
+
+  async getPendingQuoteRequests(): Promise<QuoteRequest[]> {
+    return Array.from(this.quoteRequests.values())
+      .filter(quote => quote.status === 'pending_office_approval')
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  async approveQuoteRequestAndSchedule(id: string, scheduleData: {
+    scheduledDate: Date;
+    assignedTechnicianId: string;
+    estimatedCost: string;
+    scheduledBy: string;
+    notes?: string;
+  }): Promise<{ quoteRequest: QuoteRequest; workOrder: WorkOrder }> {
+    const quoteRequest = this.quoteRequests.get(id);
+    if (!quoteRequest) {
+      throw new Error("Quote request not found");
+    }
+
+    // Update quote request status
+    const updatedQuoteRequest: QuoteRequest = {
+      ...quoteRequest,
+      status: 'office_approved',
+      scheduledDate: scheduleData.scheduledDate,
+      scheduledBy: scheduleData.scheduledBy,
+      approvedBy: scheduleData.scheduledBy,
+      approvedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.quoteRequests.set(id, updatedQuoteRequest);
+
+    // Create work order from approved quote request
+    const workOrderId = randomUUID();
+    const workOrder: WorkOrder = {
+      id: workOrderId,
+      propertyId: quoteRequest.propertyId || '',
+      unitNumber: quoteRequest.unitNumber || '',
+      category: quoteRequest.category,
+      priority: quoteRequest.priority,
+      status: 'scheduled',
+      title: quoteRequest.title,
+      description: quoteRequest.description,
+      assignedTechnicianId: scheduleData.assignedTechnicianId,
+      requestedBy: 'property_manager',
+      scheduledDate: scheduleData.scheduledDate,
+      estimatedCost: scheduleData.estimatedCost,
+      notes: scheduleData.notes || '',
+      quoteRequestId: id,
+      propertyManagerNotified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.workOrders.set(workOrderId, workOrder);
+
+    // Update quote request with work order reference
+    updatedQuoteRequest.workOrderId = workOrderId;
+    this.quoteRequests.set(id, updatedQuoteRequest);
+
+    return { quoteRequest: updatedQuoteRequest, workOrder };
+  }
+
+  async rejectQuoteRequest(id: string, rejectionData: {
+    rejectionReason: string;
+    rejectedBy: string;
+  }): Promise<QuoteRequest> {
+    const quoteRequest = this.quoteRequests.get(id);
+    if (!quoteRequest) {
+      throw new Error("Quote request not found");
+    }
+
+    const updatedQuoteRequest: QuoteRequest = {
+      ...quoteRequest,
+      status: 'office_rejected',
+      rejectedBy: rejectionData.rejectedBy,
+      rejectedAt: new Date(),
+      rejectionReason: rejectionData.rejectionReason,
+      updatedAt: new Date(),
+    };
+    
+    this.quoteRequests.set(id, updatedQuoteRequest);
+    return updatedQuoteRequest;
+  }
+
+  // Notification methods
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    return Array.from(this.notifications.values())
+      .filter(notification => notification.recipientId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const id = randomUUID();
+    const newNotification: Notification = {
+      ...notification,
+      id,
+      isRead: false,
+      createdAt: new Date(),
+    };
+    this.notifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: string): Promise<Notification> {
+    const notification = this.notifications.get(id);
+    if (!notification) {
+      throw new Error("Notification not found");
+    }
+
+    const updatedNotification: Notification = {
+      ...notification,
+      isRead: true,
+      readAt: new Date(),
+    };
+    
+    this.notifications.set(id, updatedNotification);
+    return updatedNotification;
   }
 
   async updateQuoteRequest(id: string, updates: Partial<InsertQuoteRequest>): Promise<QuoteRequest | undefined> {

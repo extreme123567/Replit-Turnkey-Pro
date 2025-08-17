@@ -140,7 +140,7 @@ export const workOrders = pgTable("work_orders", {
   category: text("category").notNull(), // maintenance, emergency, inspection, tenant_request, extra_dirty, repair
   jobType: text("job_type"), // punch, repairs, paint, clean, carpet, inspected, unit_trash_out, onsite_bulk_trash
   priority: text("priority").notNull().default("medium"), // low, medium, high, emergency
-  status: text("status").notNull().default("open"), // open, assigned, in_progress, completed, cancelled, pending_approval, approved, rejected
+  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, completed, cancelled
   title: text("title").notNull(),
   description: text("description"),
   assignedTechnicianId: varchar("assigned_technician_id").references(() => staff.id),
@@ -161,6 +161,8 @@ export const workOrders = pgTable("work_orders", {
   rejectionReason: text("rejection_reason"),
   imageRequirement: text("image_requirement").default("none"), // none, before_only, after_only, before_and_after
   notes: text("notes"),
+  quoteRequestId: varchar("quote_request_id").references(() => quoteRequests.id), // Link back to original quote request
+  propertyManagerNotified: boolean("property_manager_notified").default(false), // Track PM notification
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -268,12 +270,19 @@ export const quoteRequests = pgTable("quote_requests", {
   estimatedBudget: varchar("estimated_budget"),
   preferredStartDate: timestamp("preferred_start_date"),
   preferredEndDate: timestamp("preferred_end_date"),
-  status: varchar("status").notNull().default("pending"), // pending, in_review, quoted, approved, rejected, completed
+  status: varchar("status").notNull().default("pending_office_approval"), // pending_office_approval, office_approved, office_rejected, scheduled, in_progress, completed
   quoteAmount: varchar("quote_amount"),
   quotedBy: varchar("quoted_by").references(() => users.id),
   quotedAt: timestamp("quoted_at"),
   approvedBy: varchar("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
+  rejectedBy: varchar("rejected_by").references(() => users.id),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  scheduledDate: timestamp("scheduled_date"), // When Office Staff schedules the work
+  scheduledBy: varchar("scheduled_by").references(() => users.id),
+  assignedTechnicianId: varchar("assigned_technician_id").references(() => staff.id),
+  workOrderId: varchar("work_order_id").references(() => workOrders.id), // Created work order after approval
   notes: text("notes"),
   attachments: jsonb("attachments").default([]), // array of file URLs
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -455,9 +464,36 @@ export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).omit({
   id: true,
   quotedAt: true,
   approvedAt: true,
+  rejectedAt: true,
+  scheduledBy: true,
+  workOrderId: true,
   createdAt: true,
   updatedAt: true,
 });
+
+// Notifications table for tracking workflow communications
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recipientId: varchar("recipient_id").references(() => users.id).notNull(),
+  type: varchar("type").notNull(), // quote_approved, quote_rejected, work_scheduled, work_completed
+  title: varchar("title").notNull(),
+  message: text("message").notNull(),
+  relatedEntityId: varchar("related_entity_id"), // ID of quote request or work order
+  relatedEntityType: varchar("related_entity_type"), // quote_request, work_order
+  isRead: boolean("is_read").default(false),
+  actionRequired: boolean("action_required").default(false),
+  actionUrl: varchar("action_url"), // Deep link to relevant page
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  readAt: timestamp("read_at"),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
 export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).omit({
   id: true,
