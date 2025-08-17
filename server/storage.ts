@@ -518,6 +518,61 @@ export class MemStorage implements IStorage {
       };
       this.jobs.set(id, fullJob);
     });
+
+    // Create sample work orders with assigned status for testing "Start Job" functionality
+    const sampleWorkOrders: InsertWorkOrder[] = [
+      {
+        title: "Paint Unit 205B - Kitchen & Bathroom",
+        description: "Paint kitchen walls (primer + 2 coats) and bathroom ceiling",
+        type: "paint",
+        status: "assigned",
+        priority: "medium",
+        propertyId: Array.from(this.properties.values())[0]?.id || "property-1",
+        unitNumber: "205B",
+        assignedTo: "tech-1",
+        estimatedHours: 4,
+        scheduledDate: new Date(),
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "HVAC Service Unit 308A - Filter Replacement",
+        description: "Replace HVAC filters and check system operation",
+        type: "hvac",
+        status: "assigned", 
+        priority: "high",
+        propertyId: Array.from(this.properties.values())[0]?.id || "property-1",
+        unitNumber: "308A",
+        assignedTo: "tech-1",
+        estimatedHours: 2,
+        scheduledDate: new Date(),
+        createdBy: "prop-manager-1"
+      },
+      {
+        title: "Deep Clean Unit 102C - Move-out Cleaning",
+        description: "Complete deep clean including appliances, carpets, and fixtures",
+        type: "cleaning",
+        status: "assigned",
+        priority: "medium", 
+        propertyId: Array.from(this.properties.values())[1]?.id || "property-2",
+        unitNumber: "102C",
+        assignedTo: "tech-1",
+        estimatedHours: 5,
+        scheduledDate: new Date(),
+        createdBy: "prop-manager-1"
+      }
+    ];
+
+    sampleWorkOrders.forEach(workOrder => {
+      const id = randomUUID();
+      const fullWorkOrder: WorkOrder = {
+        ...workOrder,
+        id,
+        completedDate: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.workOrders.set(id, fullWorkOrder);
+    });
   }
 
   // Clients
