@@ -406,63 +406,7 @@ export default function TechnicianDashboard() {
         </Card>
       </div>
 
-      {/* Payout Rates for Paint and Clean Jobs */}
-      <Card className="servicepro-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="text-emerald-600" size={16} />
-            </div>
-            <span>Payout Rates</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Paint Job Rate */}
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium text-blue-800">Paint Jobs</span>
-                </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  Per Unit
-                </Badge>
-              </div>
-              <p className="text-2xl font-bold text-blue-800">$85.00</p>
-              <p className="text-sm text-blue-600">Fixed rate per unit painted</p>
-            </div>
 
-            {/* Clean Job Rate */}
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 bg-green-500 rounded-full"></div>
-                  <span className="font-medium text-green-800">Clean Jobs</span>
-                </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Per Unit
-                </Badge>
-              </div>
-              <p className="text-2xl font-bold text-green-800">$75.00</p>
-              <p className="text-sm text-green-600">Fixed rate per unit cleaned</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-            <div className="flex items-start space-x-2">
-              <AlertTriangle className="text-amber-600 mt-0.5" size={16} />
-              <div>
-                <p className="text-sm font-medium text-amber-800">Payment Schedule</p>
-                <p className="text-sm text-amber-700">
-                  Paint and clean job payments are processed weekly every Friday. 
-                  Deductions may apply for failed inspections or callback work.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Payroll Summary */}
       {payrollData?.entries?.length > 0 && (
@@ -477,11 +421,7 @@ export default function TechnicianDashboard() {
                   <div>
                     <p className="font-medium">{entry.jobType} job</p>
                     <p className="text-sm text-slate-600">Job #{entry.jobId}</p>
-                    {(entry.jobType === 'paint' || entry.jobType === 'clean') && (
-                      <p className="text-xs text-blue-600">
-                        Fixed rate: ${entry.jobType === 'paint' ? '85.00' : '75.00'} per unit
-                      </p>
-                    )}
+
                   </div>
                   <div className="text-right">
                     <p className={`font-medium ${entry.payStatus === 'deducted' ? 'text-red-600' : 'text-emerald-600'}`}>
