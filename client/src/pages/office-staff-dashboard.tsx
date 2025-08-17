@@ -657,6 +657,7 @@ export default function OfficeStaffDashboard() {
             <div className="flex items-center space-x-3">
               <RequestQuoteButton />
               <MessageStaffButton />
+              <ScheduleJobButton />
               <UnitsCompletedWidget />
             </div>
           </div>
