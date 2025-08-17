@@ -55,6 +55,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
+  // Admin job scheduling endpoint
+  app.post("/api/jobs", authenticate, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      // Create a simplified job structure that matches the jobs table
+      const jobData = {
+        title: req.body.jobType || "Maintenance Job",
+        description: req.body.description || "",
+        clientId: req.body.propertyId || "default-property", // Map propertyId to clientId
+        assignedStaffId: req.body.assignedTechnicianId,
+        status: "scheduled",
+        priority: req.body.priority || "medium",
+        estimatedHours: req.body.estimatedHours || "2",
+        amount: req.body.amount || "100.00",
+        scheduledDate: req.body.scheduledDate ? new Date(req.body.scheduledDate) : new Date(),
+      };
+
+      const job = await storage.createJob(jobData);
+      
+      res.status(201).json({
+        message: "Job scheduled successfully",
+        job,
+      });
+    } catch (error) {
+      console.error("Create job error:", error);
+      res.status(400).json({ message: "Failed to schedule job", error: error.message });
+    }
+  });
+
   // Create user endpoint (admin only)
   app.post("/api/auth/users", authenticate, requireAdmin, async (req: AuthRequest, res) => {
     try {
@@ -72,6 +100,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Create user error:", error);
       res.status(400).json({ message: "Invalid user data" });
+    }
+  });
+
+  // Get jobs endpoint - used by admin dashboard
+  app.get("/api/jobs", authenticate, async (req: AuthRequest, res) => {
+    try {
+      const jobs = await storage.getJobs();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Get jobs error:", error);
+      res.status(500).json({ message: "Failed to fetch jobs" });
+    }
+  });
+
+  // Get staff endpoint - used by admin job scheduling
+  app.get("/api/staff", authenticate, async (req: AuthRequest, res) => {
+    try {
+      const staff = await storage.getStaff();
+      res.json(staff);
+    } catch (error) {
+      console.error("Get staff error:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  // Get properties endpoint - used by admin job scheduling
+  app.get("/api/properties", authenticate, async (req: AuthRequest, res) => {
+    try {
+      const properties = await storage.getProperties();
+      res.json(properties);
+    } catch (error) {
+      console.error("Get properties error:", error);
+      res.status(500).json({ message: "Failed to fetch properties" });
     }
   });
 

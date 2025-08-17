@@ -304,7 +304,91 @@ export class MemStorage implements IStorage {
 
     // Add demo users to storage
     for (const user of defaultUsers) {
-      this.users.set(user.id, user as User);
+      this.users.set(user.id, user);
+    }
+
+    // Add sample staff members
+    const sampleStaff = [
+      {
+        id: "tech-1",
+        firstName: "Mark",
+        lastName: "Kebets", 
+        email: "tech@servicepro.com",
+        phone: "(252) 555-0001",
+        role: "technician",
+        department: "Maintenance",
+        hourlyRate: "25.00",
+        status: "active" as const,
+        hoursThisWeek: "32.50",
+        activeJobs: 3,
+        permissions: ["complete_jobs", "upload_photos"],
+        assignedRegions: ["New Bern"],
+        lastLogin: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "tech-2",
+        firstName: "Sarah",
+        lastName: "Johnson",
+        email: "sarah@servicepro.com", 
+        phone: "(252) 555-0002",
+        role: "technician",
+        department: "Maintenance",
+        hourlyRate: "23.00",
+        status: "active" as const,
+        hoursThisWeek: "38.75",
+        activeJobs: 2,
+        permissions: ["complete_jobs", "upload_photos"],
+        assignedRegions: ["New Bern"],
+        lastLogin: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    ];
+
+    for (const staff of sampleStaff) {
+      this.staff.set(staff.id, staff);
+    }
+
+    // Add sample properties
+    const sampleProperties = [
+      {
+        id: "prop-1",
+        name: "Sunset Gardens Apartments",
+        address: "1234 Sunset Blvd",
+        city: "New Bern",
+        state: "NC",
+        zipCode: "28560",
+        propertyType: "multi_family",
+        units: 24,
+        yearBuilt: 1985,
+        squareFootage: 28800,
+        managerId: "pm-1",
+        status: "active" as const,
+        monthlyRent: "850.00",
+        createdAt: new Date(),
+      },
+      {
+        id: "prop-2", 
+        name: "Oak Ridge Complex",
+        address: "5678 Oak Ridge Dr",
+        city: "New Bern",
+        state: "NC", 
+        zipCode: "28562",
+        propertyType: "multi_family",
+        units: 18,
+        yearBuilt: 1992,
+        squareFootage: 21600,
+        managerId: "pm-1",
+        status: "active" as const,
+        monthlyRent: "950.00",
+        createdAt: new Date(),
+      }
+    ];
+
+    for (const property of sampleProperties) {
+      this.properties.set(property.id, property);
     }
   }
 
@@ -398,7 +482,7 @@ export class MemStorage implements IStorage {
   }
 
   async getJobsByStaff(staffId: string): Promise<Job[]> {
-    return Array.from(this.jobs.values()).filter(job => job.assignedTo === staffId);
+    return Array.from(this.jobs.values()).filter(job => job.assignedStaffId === staffId);
   }
 
   async createJob(insertJob: InsertJob): Promise<Job> {
@@ -406,8 +490,9 @@ export class MemStorage implements IStorage {
     const job: Job = {
       ...insertJob,
       id,
+      actualHours: null,
+      completedDate: null,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     this.jobs.set(id, job);
     return job;

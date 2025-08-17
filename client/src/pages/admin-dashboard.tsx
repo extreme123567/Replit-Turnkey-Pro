@@ -3,6 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   DollarSign,
   TrendingUp,
@@ -24,9 +33,13 @@ import {
   Phone,
   Mail,
   Wrench,
-  Home
+  Home,
+  Plus,
+  ClipboardCheck
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { insertJobSchema, type InsertJob } from "@shared/schema";
+import { z } from "zod";
 
 interface AdminStats {
   totalRevenue: number;
@@ -54,7 +67,24 @@ interface FinancialSummary {
   payoutHistory: number[];
 }
 
+// Job scheduling form schema
+const jobScheduleSchema = z.object({
+  jobType: z.string().min(1, "Job type is required"),
+  description: z.string().optional(),
+  priority: z.string().default("medium"),
+  scheduledDate: z.string().min(1, "Scheduled date is required"),
+  assignedTechnicianId: z.string().min(1, "Please assign a technician"),
+  propertyId: z.string().min(1, "Please select a property"),
+  estimatedHours: z.string().optional(),
+  amount: z.string().optional(),
+});
+
+type JobScheduleFormData = z.infer<typeof jobScheduleSchema>;
+
 export default function AdminDashboard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   // Fetch admin stats
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ["/api/dashboard/admin"],
@@ -73,6 +103,53 @@ export default function AdminDashboard() {
   // Fetch all staff for management
   const { data: staff, isLoading: staffLoading } = useQuery({
     queryKey: ["/api/staff"],
+  });
+
+  // Fetch scheduled jobs for admin overview
+  const { data: scheduledJobs, isLoading: jobsLoading } = useQuery({
+    queryKey: ["/api/jobs"],
+  });
+
+  // Filter staff for technicians
+  const technicians = staff?.filter((member: any) => member.role === 'technician') || [];
+
+  // Job scheduling form
+  const jobForm = useForm<JobScheduleFormData>({
+    resolver: zodResolver(jobScheduleSchema),
+    defaultValues: {
+      jobType: "",
+      description: "",
+      priority: "medium",
+      scheduledDate: "",
+      assignedTechnicianId: "",
+      propertyId: "",
+    },
+  });
+
+  // Create job mutation
+  const createJobMutation = useMutation({
+    mutationFn: async (data: JobScheduleFormData) => {
+      const response = await apiRequest("/api/jobs", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job scheduled successfully",
+        description: "The job has been assigned to the technician.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      jobForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to schedule job",
+        description: error.message || "Please check your input and try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (statsLoading) {
@@ -277,8 +354,9 @@ export default function AdminDashboard() {
 
       {/* Main Admin Tabs */}
       <Tabs defaultValue="financial" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="financial" data-testid="tab-financial">Financial</TabsTrigger>
+          <TabsTrigger value="schedule" data-testid="tab-schedule">Job Scheduling</TabsTrigger>
           <TabsTrigger value="properties" data-testid="tab-properties">Properties</TabsTrigger>
           <TabsTrigger value="staff" data-testid="tab-staff">Staff Management</TabsTrigger>
           <TabsTrigger value="operations" data-testid="tab-operations">Operations</TabsTrigger>
@@ -382,6 +460,234 @@ export default function AdminDashboard() {
                       <span className="font-semibold text-blue-700">$480</span>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Job Scheduling Tab */}
+        <TabsContent value="schedule" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Schedule New Job */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="text-blue-600" size={20} />
+                  <span>Schedule New Job</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...jobForm}>
+                  <form onSubmit={jobForm.handleSubmit((data) => createJobMutation.mutate(data))} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={jobForm.control}
+                        name="jobType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Job Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-job-type">
+                                  <SelectValue placeholder="Select job type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="cleaning">Cleaning</SelectItem>
+                                <SelectItem value="painting">Painting</SelectItem>
+                                <SelectItem value="maintenance">Maintenance</SelectItem>
+                                <SelectItem value="inspection">Inspection</SelectItem>
+                                <SelectItem value="repair">Repair</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={jobForm.control}
+                        name="priority"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Priority</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-priority">
+                                  <SelectValue placeholder="Select priority" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="emergency">Emergency</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={jobForm.control}
+                      name="propertyId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Property</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-property">
+                                <SelectValue placeholder="Select property" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {properties?.map((property: any) => (
+                                <SelectItem key={property.id} value={property.id}>
+                                  {property.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={jobForm.control}
+                      name="assignedTechnicianId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Assign Technician</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-technician">
+                                <SelectValue placeholder="Select technician" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {technicians?.map((tech: any) => (
+                                <SelectItem key={tech.id} value={tech.id}>
+                                  {tech.firstName} {tech.lastName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={jobForm.control}
+                      name="scheduledDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Scheduled Date</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="datetime-local" 
+                              data-testid="input-scheduled-date"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={jobForm.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Job Description</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Describe the work to be performed..."
+                              data-testid="textarea-description"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={createJobMutation.isPending}
+                      data-testid="button-schedule-job"
+                    >
+                      {createJobMutation.isPending ? (
+                        <>
+                          <Clock className="mr-2" size={16} />
+                          Scheduling...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="mr-2" size={16} />
+                          Schedule Job
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+
+            {/* Scheduled Jobs Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <ClipboardCheck className="text-green-600" size={20} />
+                  <span>Scheduled Jobs</span>
+                  <Badge variant="secondary">{scheduledJobs?.length || 0}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {jobsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16" />
+                    ))
+                  ) : scheduledJobs?.length ? (
+                    scheduledJobs.slice(0, 5).map((job: any) => (
+                      <div key={job.id} className="p-3 border border-slate-200 rounded-lg bg-slate-50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-slate-800">{job.jobType}</p>
+                            <p className="text-sm text-slate-600">{job.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge 
+                              variant={
+                                job.priority === "emergency" ? "destructive" :
+                                job.priority === "high" ? "default" : 
+                                "secondary"
+                              }
+                            >
+                              {job.priority}
+                            </Badge>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'Not scheduled'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <Calendar className="mx-auto mb-3" size={48} />
+                      <p>No jobs scheduled yet</p>
+                      <p className="text-sm mt-1">Use the form to schedule your first job</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
