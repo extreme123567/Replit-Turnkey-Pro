@@ -84,6 +84,7 @@ type JobScheduleFormData = z.infer<typeof jobScheduleSchema>;
 export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch admin stats
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
@@ -166,98 +167,87 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-slate-600 mt-1">Complete business oversight and financial control</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Admin Dashboard</h1>
+            <p className="text-sm text-slate-600">ServicePro Management</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs px-2 py-1">
+              <Shield className="mr-1" size={10} />
+              Admin
+            </Badge>
+          </div>
         </div>
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-          <Shield className="mr-1" size={12} />
-          Admin Access
-        </Badge>
       </div>
 
-      {/* Financial Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 text-sm font-medium">Total Revenue (YTD)</p>
-                <p className="text-2xl font-bold text-green-700 mt-1" data-testid="stat-total-revenue">
+      <div className="px-4 py-4 space-y-4">
+
+        {/* Financial Overview Cards - Mobile Optimized */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <DollarSign className="text-green-600" size={16} />
+                </div>
+                <p className="text-green-600 text-xs font-medium">Total Revenue</p>
+                <p className="text-lg font-bold text-green-700 mt-1" data-testid="stat-total-revenue">
                   ${stats?.totalRevenue?.toLocaleString() || "0"}
                 </p>
+                <p className="text-xs text-green-600 mt-1">YTD</p>
               </div>
-              <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
-                <DollarSign className="text-green-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-green-600 mt-2">
-              {stats?.monthlyGrowth ? `+${stats.monthlyGrowth}% from last month` : 'Ready for your first revenue'}
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 text-sm font-medium">Total Payouts (YTD)</p>
-                <p className="text-2xl font-bold text-blue-700 mt-1" data-testid="stat-total-payouts">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Wallet className="text-blue-600" size={16} />
+                </div>
+                <p className="text-blue-600 text-xs font-medium">Total Payouts</p>
+                <p className="text-lg font-bold text-blue-700 mt-1" data-testid="stat-total-payouts">
                   ${stats?.totalPayouts?.toLocaleString() || "0"}
                 </p>
+                <p className="text-xs text-blue-600 mt-1">YTD</p>
               </div>
-              <div className="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
-                <Wallet className="text-blue-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-blue-600 mt-2">Technician payments</p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 text-sm font-medium">Net Profit (YTD)</p>
-                <p className="text-2xl font-bold text-purple-700 mt-1" data-testid="stat-net-profit">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <TrendingUp className="text-purple-600" size={16} />
+                </div>
+                <p className="text-purple-600 text-xs font-medium">Net Profit</p>
+                <p className="text-lg font-bold text-purple-700 mt-1" data-testid="stat-net-profit">
                   ${stats?.netProfit?.toLocaleString() || "0"}
                 </p>
+                <p className="text-xs text-purple-600 mt-1">YTD</p>
               </div>
-              <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
-                <TrendingUp className="text-purple-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-purple-600 mt-2">
-              {stats?.totalRevenue && stats.totalRevenue > 0 
-                ? `${Math.round((stats.netProfit / stats.totalRevenue) * 100)}% profit margin`
-                : 'Profit tracking ready'
-              }
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-600 text-sm font-medium">Active Operations</p>
-                <p className="text-2xl font-bold text-amber-700 mt-1" data-testid="stat-active-operations">
+          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="w-10 h-10 bg-amber-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Clock className="text-amber-600" size={16} />
+                </div>
+                <p className="text-amber-600 text-xs font-medium">Active Jobs</p>
+                <p className="text-lg font-bold text-amber-700 mt-1" data-testid="stat-active-jobs">
                   {stats?.activeJobs || 0}
                 </p>
+                <p className="text-xs text-amber-600 mt-1">In Progress</p>
               </div>
-              <div className="w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center">
-                <Wrench className="text-amber-600" size={20} />
-              </div>
-            </div>
-            <p className="text-sm text-amber-600 mt-2">
-              {stats?.activeJobs ? 'Jobs in progress' : 'Ready for job assignments'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
 
       {/* Property Portfolio Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
