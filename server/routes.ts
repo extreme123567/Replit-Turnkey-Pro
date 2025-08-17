@@ -694,6 +694,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update work order (edit job)
+  app.put("/api/work-orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      // Convert scheduledDate string to Date if provided
+      if (updateData.scheduledDate) {
+        updateData.scheduledDate = new Date(updateData.scheduledDate);
+      }
+      
+      // Convert estimatedCost string to number if provided
+      if (updateData.estimatedCost) {
+        updateData.estimatedCost = parseFloat(updateData.estimatedCost);
+      }
+
+      const updatedWorkOrder = await storage.updateWorkOrder(id, updateData);
+      if (!updatedWorkOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+      
+      res.json(updatedWorkOrder);
+    } catch (error) {
+      console.error("Error updating work order:", error);
+      res.status(500).json({ error: "Failed to update work order" });
+    }
+  });
+
+  // Assign team member to work order
+  app.put("/api/work-orders/:id/assign", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { assignedTechnicianId, scheduledDate, notes } = req.body;
+      
+      const updateData: any = {
+        assignedTechnicianId,
+        updatedAt: new Date(),
+      };
+      
+      if (scheduledDate) {
+        updateData.scheduledDate = new Date(scheduledDate);
+      }
+      
+      if (notes) {
+        updateData.notes = notes;
+      }
+
+      const updatedWorkOrder = await storage.updateWorkOrder(id, updateData);
+      if (!updatedWorkOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+      
+      res.json(updatedWorkOrder);
+    } catch (error) {
+      console.error("Error assigning team member:", error);
+      res.status(500).json({ error: "Failed to assign team member" });
+    }
+  });
+
   app.get("/api/work-orders/:id", async (req, res) => {
     try {
       const workOrder = await storage.getWorkOrder(req.params.id);

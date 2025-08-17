@@ -37,12 +37,26 @@ import {
   Trash2,
   MapPin,
   MessageSquare,
-  User
+  User,
+  Edit,
+  UserPlus,
+  Save
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 interface OfficeStats {
   pendingApproval: number;
@@ -51,6 +65,590 @@ interface OfficeStats {
   activeStaff: number;
   totalProperties: number;
   totalTenants: number;
+}
+
+// Job editing form schema
+const editJobSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  priority: z.string().min(1, "Priority is required"),
+  scheduledDate: z.string().min(1, "Scheduled date is required"),
+  assignedTechnicianId: z.string().optional(),
+  propertyId: z.string().min(1, "Property is required"),
+  unitNumber: z.string().optional(),
+  estimatedCost: z.string().optional(),
+  category: z.string().min(1, "Category is required"),
+  jobType: z.string().optional(),
+});
+
+type EditJobFormData = z.infer<typeof editJobSchema>;
+
+// Team assignment form schema
+const assignTeamSchema = z.object({
+  assignedTechnicianId: z.string().min(1, "Please select a team member"),
+  scheduledDate: z.string().min(1, "Scheduled date is required"),
+  notes: z.string().optional(),
+});
+
+type AssignTeamFormData = z.infer<typeof assignTeamSchema>;
+
+// Edit Job Dialog Component
+function EditJobDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const editForm = useForm<EditJobFormData>({
+    resolver: zodResolver(editJobSchema),
+    defaultValues: {
+      title: job?.title || "",
+      description: job?.description || "",
+      priority: job?.priority || "medium",
+      scheduledDate: job?.scheduledDate ? new Date(job.scheduledDate).toISOString().split('T')[0] : "",
+      assignedTechnicianId: job?.assignedTechnicianId || "",
+      propertyId: job?.propertyId || "",
+      unitNumber: job?.unitNumber || "",
+      estimatedCost: job?.estimatedCost || "",
+      category: job?.category || "maintenance",
+      jobType: job?.jobType || "",
+    },
+  });
+
+  const { data: properties } = useQuery({ queryKey: ["/api/properties"] });
+  const { data: staff } = useQuery({ queryKey: ["/api/staff"] });
+
+  const updateJobMutation = useMutation({
+    mutationFn: async (data: EditJobFormData) => {
+      return apiRequest(`/api/work-orders/${job.id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job updated successfully",
+        description: "The job details have been updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      onJobUpdated();
+      setOpen(false);
+      editForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update job",
+        description: error.message || "Please check your input and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: EditJobFormData) => {
+    updateJobMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
+          <Edit size={16} className="mr-1" />
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit Job Details</DialogTitle>
+          <DialogDescription>
+            Update job information and assignment details.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...editForm}>
+          <form onSubmit={editForm.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Job Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter job title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="emergency">Emergency</SelectItem>
+                        <SelectItem value="inspection">Inspection</SelectItem>
+                        <SelectItem value="tenant_request">Tenant Request</SelectItem>
+                        <SelectItem value="extra_dirty">Extra Dirty</SelectItem>
+                        <SelectItem value="repair">Repair</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={editForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter job description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={editForm.control}
+                name="propertyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select property" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(properties as any[])?.map((property: any) => (
+                          <SelectItem key={property.id} value={property.id}>
+                            {property.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="unitNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 101" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={editForm.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="emergency">Emergency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="scheduledDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Scheduled Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="estimatedCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimated Cost</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={editForm.control}
+              name="assignedTechnicianId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assigned Technician</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select technician" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Unassigned</SelectItem>
+                      {(staff as any[])?.filter(member => member.role === 'technician').map((technician: any) => (
+                        <SelectItem key={technician.id} value={technician.id}>
+                          {technician.firstName} {technician.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateJobMutation.isPending}>
+                <Save size={16} className="mr-2" />
+                {updateJobMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Assign Team Member Dialog Component
+function AssignTeamDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const assignForm = useForm<AssignTeamFormData>({
+    resolver: zodResolver(assignTeamSchema),
+    defaultValues: {
+      assignedTechnicianId: job?.assignedTechnicianId || "",
+      scheduledDate: job?.scheduledDate ? new Date(job.scheduledDate).toISOString().split('T')[0] : "",
+      notes: "",
+    },
+  });
+
+  const { data: staff } = useQuery({ queryKey: ["/api/staff"] });
+
+  const assignTeamMutation = useMutation({
+    mutationFn: async (data: AssignTeamFormData) => {
+      return apiRequest(`/api/work-orders/${job.id}/assign`, "PUT", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Team member assigned successfully",
+        description: "The job has been assigned to the selected team member.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      onJobUpdated();
+      setOpen(false);
+      assignForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to assign team member",
+        description: error.message || "Please check your selection and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: AssignTeamFormData) => {
+    assignTeamMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-800">
+          <UserPlus size={16} className="mr-1" />
+          Assign
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign Team Member</DialogTitle>
+          <DialogDescription>
+            Assign this job to a team member and set the schedule.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...assignForm}>
+          <form onSubmit={assignForm.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={assignForm.control}
+              name="assignedTechnicianId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select Team Member</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a team member" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(staff as any[])?.filter(member => 
+                        member.role === 'technician' || member.role === 'inspector'
+                      ).map((member: any) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.firstName} {member.lastName} ({member.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={assignForm.control}
+              name="scheduledDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Scheduled Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={assignForm.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assignment Notes</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Add any special instructions or notes for the team member..." 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={assignTeamMutation.isPending}>
+                <UserPlus size={16} className="mr-2" />
+                {assignTeamMutation.isPending ? "Assigning..." : "Assign Team Member"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Scheduled Jobs List Component
+function ScheduledJobsList() {
+  const { data: jobs, isLoading: jobsLoading, refetch: refetchJobs } = useQuery({ 
+    queryKey: ["/api/work-orders"] 
+  });
+  const { data: properties } = useQuery({ queryKey: ["/api/properties"] });
+  const { data: staff } = useQuery({ queryKey: ["/api/staff"] });
+
+  const handleJobUpdated = () => {
+    refetchJobs();
+  };
+
+  const getPropertyName = (propertyId: string) => {
+    const property = (properties as any[])?.find(p => p.id === propertyId);
+    return property?.name || 'Unknown Property';
+  };
+
+  const getAssignedTechnician = (technicianId: string) => {
+    const technician = (staff as any[])?.find(s => s.id === technicianId);
+    return technician ? `${technician.firstName} ${technician.lastName}` : 'Unassigned';
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'emergency': return 'bg-red-100 text-red-700 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-700 border-green-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'in_progress': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'completed': return 'bg-green-100 text-green-700 border-green-200';
+      case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  if (jobsLoading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-24" />
+        ))}
+      </div>
+    );
+  }
+
+  const scheduledJobs = (jobs as any[])?.filter(job => 
+    job.status === 'scheduled' || job.status === 'in_progress'
+  ) || [];
+
+  if (scheduledJobs.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-2 text-sm font-medium text-gray-900">No scheduled jobs</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          All jobs are completed or no jobs have been scheduled yet.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {scheduledJobs.map((job: any) => (
+        <div 
+          key={job.id} 
+          className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors"
+          data-testid={`job-card-${job.id}`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="font-medium text-slate-900">{job.title}</h3>
+                    <Badge className={`text-xs ${getPriorityColor(job.priority)}`}>
+                      {job.priority}
+                    </Badge>
+                    <Badge className={`text-xs ${getStatusColor(job.status)}`}>
+                      {job.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600">
+                    <div className="flex items-center">
+                      <Building className="mr-2 h-4 w-4" />
+                      {getPropertyName(job.propertyId)}
+                      {job.unitNumber && ` - Unit ${job.unitNumber}`}
+                    </div>
+                    <div className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      {getAssignedTechnician(job.assignedTechnicianId)}
+                    </div>
+                    <div className="flex items-center">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'Not scheduled'}
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="mr-2 h-4 w-4" />
+                      {job.estimatedCost ? `$${job.estimatedCost}` : 'No estimate'}
+                    </div>
+                  </div>
+                  
+                  {job.description && (
+                    <p className="text-sm text-slate-500 mt-2 line-clamp-2">
+                      {job.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2 ml-4">
+              <EditJobDialog job={job} onJobUpdated={handleJobUpdated} />
+              <AssignTeamDialog job={job} onJobUpdated={handleJobUpdated} />
+              <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
+                <Eye size={16} className="mr-1" />
+                View
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+      
+      {/* Summary Stats */}
+      <div className="pt-4 border-t border-slate-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <p className="text-2xl font-bold text-blue-600">
+              {scheduledJobs.filter(j => j.status === 'scheduled').length}
+            </p>
+            <p className="text-sm text-slate-600">Scheduled</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-amber-600">
+              {scheduledJobs.filter(j => j.status === 'in_progress').length}
+            </p>
+            <p className="text-sm text-slate-600">In Progress</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-red-600">
+              {scheduledJobs.filter(j => j.priority === 'high' || j.priority === 'emergency').length}
+            </p>
+            <p className="text-sm text-slate-600">High Priority</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-slate-600">
+              {scheduledJobs.filter(j => !j.assignedTechnicianId).length}
+            </p>
+            <p className="text-sm text-slate-600">Unassigned</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Request Quote Button Component
@@ -1322,6 +1920,26 @@ export default function OfficeStaffDashboard() {
 
         {/* Job Approvals Tab */}
         <TabsContent value="jobs" className="space-y-6">
+          {/* Scheduled Jobs Management */}
+          <Card className="servicepro-card">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="text-blue-600" size={20} />
+                  <span>Scheduled Jobs Management</span>
+                  <Badge variant="secondary" className="ml-2">
+                    Active Jobs
+                  </Badge>
+                </div>
+                <div className="text-right text-sm">
+                  <p className="text-slate-600">Manage assignments and updates</p>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <ScheduledJobsList />
+            </CardContent>
+          </Card>
           <JobApprovalsSection />
         </TabsContent>
 
