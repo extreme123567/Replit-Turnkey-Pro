@@ -721,6 +721,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quote Request routes
+  app.get("/api/quote-requests", async (req, res) => {
+    try {
+      const quoteRequests = await storage.getQuoteRequests();
+      res.json(quoteRequests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quote requests" });
+    }
+  });
+
+  app.get("/api/quote-requests/:id", async (req, res) => {
+    try {
+      const quoteRequest = await storage.getQuoteRequest(req.params.id);
+      if (!quoteRequest) {
+        return res.status(404).json({ error: "Quote request not found" });
+      }
+      res.json(quoteRequest);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch quote request" });
+    }
+  });
+
+  app.get("/api/quote-requests/requester/:requesterId", async (req, res) => {
+    try {
+      const quoteRequests = await storage.getQuoteRequestsByRequester(req.params.requesterId);
+      res.json(quoteRequests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch requester quote requests" });
+    }
+  });
+
+  app.post("/api/quote-requests", async (req, res) => {
+    try {
+      const validatedData = insertQuoteRequestSchema.parse(req.body);
+      const quoteRequest = await storage.createQuoteRequest(validatedData);
+      res.status(201).json(quoteRequest);
+    } catch (error) {
+      console.error("Error creating quote request:", error);
+      res.status(400).json({ error: "Invalid quote request data" });
+    }
+  });
+
+  app.put("/api/quote-requests/:id", async (req, res) => {
+    try {
+      const quoteRequest = await storage.updateQuoteRequest(req.params.id, req.body);
+      if (!quoteRequest) {
+        return res.status(404).json({ error: "Quote request not found" });
+      }
+      res.json(quoteRequest);
+    } catch (error) {
+      console.error("Error updating quote request:", error);
+      res.status(500).json({ error: "Failed to update quote request" });
+    }
+  });
+
   // User Permissions routes
   app.get("/api/users/:userId/permissions", async (req, res) => {
     try {

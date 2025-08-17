@@ -190,6 +190,7 @@ export class MemStorage implements IStorage {
   private repairPhotoRequests: Map<string, RepairPhotoRequest> = new Map();
   private userPermissions: Map<string, UserPermission> = new Map();
   private auditLogs: Map<string, AuditLog> = new Map();
+  private quoteRequests: Map<string, QuoteRequest> = new Map();
   private invoiceCounter = 1;
 
   constructor() {
@@ -1501,6 +1502,49 @@ export class MemStorage implements IStorage {
     }
     
     return true;
+  }
+
+  // Quote Requests
+  async getQuoteRequests(): Promise<QuoteRequest[]> {
+    return Array.from(this.quoteRequests.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async getQuoteRequest(id: string): Promise<QuoteRequest | undefined> {
+    return this.quoteRequests.get(id);
+  }
+
+  async getQuoteRequestsByRequester(requesterId: string): Promise<QuoteRequest[]> {
+    return Array.from(this.quoteRequests.values())
+      .filter(quote => quote.requesterId === requesterId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async createQuoteRequest(quoteRequest: InsertQuoteRequest): Promise<QuoteRequest> {
+    const id = randomUUID();
+    const newQuoteRequest: QuoteRequest = {
+      ...quoteRequest,
+      id,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.quoteRequests.set(id, newQuoteRequest);
+    return newQuoteRequest;
+  }
+
+  async updateQuoteRequest(id: string, updates: Partial<InsertQuoteRequest>): Promise<QuoteRequest | undefined> {
+    const existing = this.quoteRequests.get(id);
+    if (!existing) return undefined;
+    
+    const updated: QuoteRequest = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.quoteRequests.set(id, updated);
+    return updated;
   }
 
   // Payout calculation for paint and clean jobs

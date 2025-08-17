@@ -18,7 +18,6 @@ import {
   FileText,
   DollarSign,
   Building,
-
   Send,
   UserCheck,
   Plus,
@@ -35,7 +34,10 @@ import {
   Wrench,
   Mail,
   Home,
-  Trash2
+  Trash2,
+  MapPin,
+  MessageSquare,
+  User
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -460,8 +462,10 @@ export default function OfficeStaffDashboard() {
   const [quoteForm, setQuoteForm] = useState({
     title: '',
     description: '',
-    property: '',
-    unitNumber: ''
+    propertyId: '',
+    unitNumber: '',
+    category: 'maintenance',
+    priority: 'medium'
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<OfficeStats>({
@@ -517,6 +521,60 @@ export default function OfficeStaffDashboard() {
       return response.json();
     },
   });
+
+  // Quote requests query
+  const { data: quoteRequests = [], isLoading: quotesLoading, refetch: refetchQuotes } = useQuery({
+    queryKey: ['/api/quote-requests'],
+    queryFn: async () => {
+      const response = await fetch('/api/quote-requests');
+      if (!response.ok) throw new Error('Failed to fetch quote requests');
+      return response.json();
+    },
+  });
+
+  // Submit quote request
+  const handleSubmitQuote = async () => {
+    try {
+      if (!quoteForm.title || !quoteForm.description || !quoteForm.propertyId) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      const response = await fetch('/api/quote-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...quoteForm,
+          requesterId: 'office-staff-1', // This would come from auth context
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create quote request');
+      }
+
+      // Reset form and close modal
+      setQuoteForm({
+        title: '',
+        description: '',
+        propertyId: '',
+        unitNumber: '',
+        category: 'maintenance',
+        priority: 'medium'
+      });
+      setIsQuoteModalOpen(false);
+      
+      // Refresh quote requests
+      refetchQuotes();
+      
+      alert('Quote request sent successfully!');
+    } catch (error) {
+      console.error('Error submitting quote:', error);
+      alert('Failed to send quote request. Please try again.');
+    }
+  };
 
   if (statsLoading) {
     return (
@@ -575,7 +633,7 @@ export default function OfficeStaffDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="property">Property</Label>
-                    <Select value={quoteForm.property} onValueChange={(value) => setQuoteForm({...quoteForm, property: value})}>
+                    <Select value={quoteForm.propertyId} onValueChange={(value) => setQuoteForm({...quoteForm, propertyId: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select property" />
                       </SelectTrigger>
@@ -596,11 +654,42 @@ export default function OfficeStaffDashboard() {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={quoteForm.category} onValueChange={(value) => setQuoteForm({...quoteForm, category: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="repair">Repair</SelectItem>
+                        <SelectItem value="renovation">Renovation</SelectItem>
+                        <SelectItem value="cleaning">Cleaning</SelectItem>
+                        <SelectItem value="painting">Painting</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select value={quoteForm.priority} onValueChange={(value) => setQuoteForm({...quoteForm, priority: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="emergency">Emergency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button variant="outline" onClick={() => setIsQuoteModalOpen(false)}>
                     Cancel
                   </Button>
-                  <Button className="servicepro-btn-primary">
+                  <Button className="servicepro-btn-primary" onClick={handleSubmitQuote}>
                     <DollarSign className="mr-2 h-4 w-4" />
                     Submit Quote Request
                   </Button>
@@ -685,8 +774,9 @@ export default function OfficeStaffDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+          <TabsTrigger value="quotes" data-testid="tab-quotes">Quotes</TabsTrigger>
           <TabsTrigger value="jobs" data-testid="tab-jobs">Job Approvals</TabsTrigger>
           <TabsTrigger value="staff" data-testid="tab-staff">Staff Management</TabsTrigger>
           <TabsTrigger value="messaging" data-testid="tab-messaging">Messaging</TabsTrigger>
@@ -988,6 +1078,11 @@ export default function OfficeStaffDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Quotes Tab */}
+        <TabsContent value="quotes" className="space-y-6">
+          <QuotesSection quoteRequests={quoteRequests} isLoading={quotesLoading} />
         </TabsContent>
 
         {/* Job Approvals Tab */}
@@ -1397,4 +1492,98 @@ function getJobTypeColor(type: string) {
     default:
       return 'bg-gray-50 text-gray-700 border-gray-200';
   }
+}
+
+// Quotes Section Component
+function QuotesSection({ quoteRequests, isLoading }: { quoteRequests: any[], isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">Quote Requests</h3>
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-semibold">Quote Requests</h3>
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          {quoteRequests.length} Pending
+        </Badge>
+      </div>
+
+      {quoteRequests.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <DollarSign className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No Quote Requests</h4>
+            <p className="text-gray-600">
+              There are no pending quote requests at the moment.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {quoteRequests.map((quote: any) => (
+            <Card key={quote.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg mb-2">{quote.title}</h4>
+                    <p className="text-gray-600 mb-2">{quote.description}</p>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <span className="flex items-center">
+                        <Building className="h-4 w-4 mr-1" />
+                        {quote.propertyId}
+                      </span>
+                      {quote.unitNumber && (
+                        <span className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          Unit {quote.unitNumber}
+                        </span>
+                      )}
+                      <span className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {new Date(quote.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
+                    <Badge variant="outline" className={getPriorityColor(quote.priority)}>
+                      {quote.priority}
+                    </Badge>
+                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                      {quote.category}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="flex items-center text-sm text-gray-500">
+                    <User className="h-4 w-4 mr-1" />
+                    Requested by: {quote.requesterId}
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Follow Up
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
