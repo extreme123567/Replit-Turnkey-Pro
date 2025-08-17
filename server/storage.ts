@@ -981,7 +981,7 @@ export class MemStorage implements IStorage {
   }
 
   async getWorkOrdersByTechnician(technicianId: string): Promise<WorkOrder[]> {
-    return Array.from(this.workOrders.values()).filter(order => order.assignedTechnicianId === technicianId);
+    return Array.from(this.workOrders.values()).filter(order => order.assignedTo === technicianId);
   }
 
   async getWorkOrdersByStatus(status: string): Promise<WorkOrder[]> {
