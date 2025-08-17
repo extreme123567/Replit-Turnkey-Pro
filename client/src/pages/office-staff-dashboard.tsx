@@ -904,6 +904,136 @@ export default function OfficeStaffDashboard() {
             </Card>
           </div>
 
+          {/* Properties List with Revenue Tracking */}
+          <Card className="servicepro-card">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Building className="text-blue-600" size={20} />
+                  <span>Property Portfolio</span>
+                  <Badge variant="secondary" className="ml-2">
+                    2
+                  </Badge>
+                </div>
+                <div className="text-right text-sm">
+                  <p className="text-slate-600">Total Revenue</p>
+                  <p className="text-lg font-bold text-green-600">
+                    $75,600/mo
+                  </p>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="space-y-4">
+                {/* Sunset Gardens Property */}
+                <div className="p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" data-testid="property-sunset-gardens">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Building className="text-blue-600 text-sm" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Sunset Gardens Apartments</p>
+                        <p className="text-sm text-slate-600 flex items-center">
+                          <MapPin className="mr-1" size={12} />
+                          Charlotte, NC
+                        </p>
+                        <p className="text-xs text-slate-500">24 units • 22 occupied</p>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Revenue</p>
+                          <p className="text-sm font-bold text-green-600">
+                            $28,800
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Per Unit</p>
+                          <p className="text-sm font-medium text-blue-600">
+                            $1,200
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-slate-200 rounded-full h-1.5 w-16">
+                          <div 
+                            className="bg-green-500 h-1.5 rounded-full" 
+                            style={{width: "92%"}}
+                          />
+                        </div>
+                        <span className="text-xs text-slate-600">92%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Oak Ridge Complex Property */}
+                <div className="p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" data-testid="property-oak-ridge">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <Building className="text-emerald-600 text-sm" size={16} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">Oak Ridge Complex</p>
+                        <p className="text-sm text-slate-600 flex items-center">
+                          <MapPin className="mr-1" size={12} />
+                          Charlotte, NC
+                        </p>
+                        <p className="text-xs text-slate-500">36 units • 34 occupied</p>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Revenue</p>
+                          <p className="text-sm font-bold text-green-600">
+                            $46,800
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Per Unit</p>
+                          <p className="text-sm font-medium text-blue-600">
+                            $1,300
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-slate-200 rounded-full h-1.5 w-16">
+                          <div 
+                            className="bg-emerald-500 h-1.5 rounded-full" 
+                            style={{width: "94%"}}
+                          />
+                        </div>
+                        <span className="text-xs text-slate-600">94%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Revenue Summary */}
+                <div className="pt-3 border-t border-slate-100">
+                  <div className="grid grid-cols-3 gap-4 text-center text-xs">
+                    <div>
+                      <p className="text-slate-500">Avg Occupancy</p>
+                      <p className="font-semibold text-green-700">93%</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Total Units</p>
+                      <p className="font-semibold text-blue-700">60</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">YTD Revenue</p>
+                      <p className="font-semibold text-green-700">$604,800</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Pending Job Approvals */}
             <Card>
