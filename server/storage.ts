@@ -76,7 +76,7 @@ export interface IStorage {
 
   // Authentication
   getUserById(id: string): Promise<User | undefined>;
-  getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLastLogin(id: string): Promise<boolean>;
 
@@ -227,7 +227,7 @@ export class MemStorage implements IStorage {
     const defaultUsers = [
       {
         id: "admin-1",
-        phoneNumber: "2525551001",
+        email: "admin@servicepro.com",
         password: "$2b$12$2AnEdtdy55ZbofRd8l7eC.8N30.9IQeQIwxQ0WTALoLJELIY21GDy", // "admin123"
         firstName: "System",
         lastName: "Administrator",
@@ -242,7 +242,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "office-1",
-        phoneNumber: "2525551002", 
+        email: "office@servicepro.com", 
         password: "$2b$12$eJrpiYXZhsMV8CCxaxXO6ewSkuX20yrrc1XUR8Xy0soDoNo0VfQX2", // "office123"
         firstName: "Leslie",
         lastName: "Rodriguez",
@@ -257,7 +257,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "pm-1",
-        phoneNumber: "2525551003",
+        email: "manager@servicepro.com",
         password: "$2b$12$l5S0VJo//V7MEWo9Zs2npOhqCvMT/0ADfOD6g6gHK3imEzbHQ7jK2", // "manager123"
         firstName: "Property",
         lastName: "Manager",
@@ -272,7 +272,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "tech-1",
-        phoneNumber: "2525551004",
+        email: "tech@servicepro.com",
         password: "$2b$12$p42Hg4b2EdHvhMX0lkghuuyPE6pfQpP4P6CQQq2r0eb/W27IYXw5q", // "tech123"
         firstName: "Mark",
         lastName: "Kebets",
@@ -287,7 +287,7 @@ export class MemStorage implements IStorage {
       },
       {
         id: "inspector-1",
-        phoneNumber: "2525551005",
+        email: "inspector@servicepro.com",
         password: "$2b$12$n97VaIruHdAawozIdzg17OwbfpRQcVYkQNySHo6qiWWFEckU67U9u", // "inspector123"
         firstName: "Quality",
         lastName: "Inspector",
@@ -843,9 +843,9 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
     for (const user of this.users.values()) {
-      if (user.phoneNumber === phoneNumber) {
+      if (user.email === email) {
         return user;
       }
     }

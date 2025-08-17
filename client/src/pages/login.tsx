@@ -17,7 +17,7 @@ interface LoginResponse {
   message: string;
   user: {
     id: string;
-    phoneNumber: string;
+    email: string;
     firstName: string;
     lastName: string;
     role: string;
@@ -34,7 +34,7 @@ export default function Login() {
   const form = useForm<LoginRequest>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      phoneNumber: "",
+      email: "",
       password: "",
     },
   });
@@ -87,7 +87,7 @@ export default function Login() {
           </div>
           <CardTitle className="text-xl">Sign in to your account</CardTitle>
           <CardDescription>
-            Enter your phone number and password to access your dashboard
+            Enter your email and password to access your dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,15 +101,15 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="phoneNumber"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>Email Address</FormLabel>
                     <FormControl>
                       <Input
-                        type="tel"
-                        placeholder="(252) 555-1001"
-                        data-testid="input-phone"
+                        type="email"
+                        placeholder="Enter your email"
+                        data-testid="input-email"
                         {...field}
                       />
                     </FormControl>

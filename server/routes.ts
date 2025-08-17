@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!result) {
         console.log('=== LOGIN FAILED ===');
-        return res.status(401).json({ message: "Invalid phone number or password" });
+        return res.status(401).json({ message: "Invalid email or password" });
       }
 
       console.log('=== LOGIN SUCCESS ===');

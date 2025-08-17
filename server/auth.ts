@@ -29,7 +29,7 @@ export class AuthService {
     return jwt.sign(
       {
         id: user.id,
-        phoneNumber: user.phoneNumber,
+        email: user.email,
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -51,19 +51,12 @@ export class AuthService {
   // Login user
   static async login(loginData: LoginRequest): Promise<{ user: User; token: string } | null> {
     try {
-      // Normalize phone number by removing all non-digits
-      const normalizedPhone = loginData.phoneNumber.replace(/\D/g, '');
-      console.log('Login attempt:', { originalPhone: loginData.phoneNumber, normalizedPhone });
-      
-      const user = await storage.getUserByPhoneNumber(normalizedPhone);
-      console.log('User found:', user ? 'Yes' : 'No');
-      
+      const user = await storage.getUserByEmail(loginData.email.toLowerCase().trim());
       if (!user) {
         return null;
       }
 
       const isPasswordValid = await this.verifyPassword(loginData.password, user.password);
-      console.log('Password valid:', isPasswordValid);
       if (!isPasswordValid) {
         return null;
       }
