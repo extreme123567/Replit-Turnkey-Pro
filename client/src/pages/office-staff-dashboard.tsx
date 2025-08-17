@@ -403,8 +403,8 @@ function ScheduleJobButton() {
   const [unitNumber, setUnitNumber] = useState("");
   const [bedroomSize, setBedroomSize] = useState("");
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const [jobDates, setJobDates] = useState<Record<string, string>>({});
   const [jobLocation, setJobLocation] = useState(""); // "in-unit" or "on-property"
-  const [scheduledDate, setScheduledDate] = useState("");
   const [notes, setNotes] = useState("");
   const [assignedTechnician, setAssignedTechnician] = useState("");
   const [priority, setPriority] = useState("medium");
@@ -429,8 +429,8 @@ function ScheduleJobButton() {
       setUnitNumber("");
       setBedroomSize("");
       setSelectedJobs([]);
+      setJobDates({});
       setJobLocation("");
-      setScheduledDate("");
       setNotes("");
       setAssignedTechnician("");
       setPriority("medium");
@@ -450,58 +450,70 @@ function ScheduleJobButton() {
       unitNumber,
       bedroomSize,
       selectedJobs,
+      jobDates,
       jobLocation,
-      scheduledDate,
       notes,
       assignedTechnician,
       priority
     });
 
-    if (!property || !unitNumber || !bedroomSize || selectedJobs.length === 0 || !jobLocation || !scheduledDate) {
-      console.log("Validation failed - missing required fields");
+    // Check that all selected jobs have dates
+    const missingDates = selectedJobs.filter(job => !jobDates[job]);
+    if (!property || !unitNumber || !bedroomSize || selectedJobs.length === 0 || !jobLocation || missingDates.length > 0) {
+      console.log("Validation failed - missing required fields or dates");
+      let message = "Please fill in all required fields and select at least one job type.";
+      if (missingDates.length > 0) {
+        message += ` Missing dates for: ${missingDates.join(", ")}.`;
+      }
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields and select at least one job type.",
+        description: message,
         variant: "destructive",
       });
       return;
     }
 
-    console.log("Submitting job with data:", {
-      property,
-      unitNumber,
-      bedroomSize,
-      jobTypes: selectedJobs,
-      location: jobLocation,
-      scheduledDate,
-      notes,
-      assignedTechnician: assignedTechnician === "unassigned" ? null : assignedTechnician,
-      priority,
-      status: "scheduled",
-      scheduledBy: "office-staff"
-    });
-
-    scheduleJobMutation.mutate({
-      property,
-      unitNumber,
-      bedroomSize,
-      jobTypes: selectedJobs,
-      location: jobLocation,
-      scheduledDate,
-      notes,
-      assignedTechnician: assignedTechnician === "unassigned" ? null : assignedTechnician,
-      priority,
-      status: "scheduled",
-      scheduledBy: "office-staff"
+    // Submit each job separately with its own date
+    selectedJobs.forEach(jobType => {
+      console.log(`Submitting ${jobType} job with date: ${jobDates[jobType]}`);
+      scheduleJobMutation.mutate({
+        property,
+        unitNumber,
+        bedroomSize,
+        jobTypes: [jobType],
+        location: jobLocation,
+        scheduledDate: jobDates[jobType],
+        notes,
+        assignedTechnician: assignedTechnician === "unassigned" ? null : assignedTechnician,
+        priority,
+        status: "scheduled",
+        scheduledBy: "office-staff"
+      });
     });
   };
 
   const toggleJobSelection = (jobType: string) => {
-    setSelectedJobs(prev => 
-      prev.includes(jobType) 
-        ? prev.filter(job => job !== jobType)
-        : [...prev, jobType]
-    );
+    setSelectedJobs(prev => {
+      if (prev.includes(jobType)) {
+        // Remove job and its date
+        setJobDates(prevDates => {
+          const newDates = { ...prevDates };
+          delete newDates[jobType];
+          return newDates;
+        });
+        return prev.filter(job => job !== jobType);
+      } else {
+        // Add job
+        return [...prev, jobType];
+      }
+    });
+  };
+
+  const updateJobDate = (jobType: string, date: string) => {
+    setJobDates(prev => ({
+      ...prev,
+      [jobType]: date
+    }));
   };
 
   return (
@@ -586,6 +598,29 @@ function ScheduleJobButton() {
             </div>
           </div>
 
+          {/* Date Inputs for Selected Jobs */}
+          {selectedJobs.length > 0 && (
+            <div>
+              <Label>Scheduled Dates * (One per job type)</Label>
+              <div className="grid grid-cols-1 gap-3 mt-2">
+                {selectedJobs.map((jobType) => (
+                  <div key={`date-${jobType}`} className="flex items-center space-x-3">
+                    <Label className="min-w-[120px] text-sm capitalize">
+                      {jobType === 'bulk-trash' ? 'Bulk Trash' : jobType}:
+                    </Label>
+                    <Input
+                      type="date"
+                      value={jobDates[jobType] || ""}
+                      onChange={(e) => updateJobDate(jobType, e.target.value)}
+                      data-testid={`input-date-${jobType}`}
+                      className="flex-1"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Job Location */}
           <div>
             <Label htmlFor="jobLocation">Location *</Label>
@@ -600,34 +635,20 @@ function ScheduleJobButton() {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Scheduled Date */}
-            <div>
-              <Label htmlFor="scheduledDate">Scheduled Date *</Label>
-              <Input
-                id="scheduledDate"
-                type="date"
-                value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
-                data-testid="input-scheduled-date"
-              />
-            </div>
-
-            {/* Priority */}
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger data-testid="select-priority">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Priority */}
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger data-testid="select-priority">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Assigned Technician */}
