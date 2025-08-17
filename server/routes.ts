@@ -27,7 +27,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
+      console.log('Login request received:', req.body);
       const validatedData = loginSchema.parse(req.body);
+      console.log('Validated data:', validatedData);
       const result = await AuthService.login(validatedData);
       
       if (!result) {
