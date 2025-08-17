@@ -48,6 +48,8 @@ export default function Login() {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log("Login successful, storing token and user data");
+      
       // Store the token in localStorage
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("current_user", JSON.stringify(data.user));
@@ -62,7 +64,10 @@ export default function Login() {
       };
 
       const redirectPath = roleRoutes[data.user.role] || "/";
-      setLocation(redirectPath);
+      console.log("Redirecting to:", redirectPath);
+      
+      // Force a page refresh to ensure the auth state is updated
+      window.location.href = redirectPath;
     },
     onError: (error: any) => {
       console.error("Login failed:", error);

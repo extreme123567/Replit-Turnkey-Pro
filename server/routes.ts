@@ -27,35 +27,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
-      console.log('=== LOGIN REQUEST DEBUG ===');
-      console.log('Raw request body:', req.body);
-      console.log('Request headers:', req.headers);
-      
       const validatedData = loginSchema.parse(req.body);
-      console.log('Validated data:', validatedData);
-      
       const result = await AuthService.login(validatedData);
-      console.log('Login result:', result ? 'SUCCESS' : 'FAILED');
       
       if (!result) {
-        console.log('=== LOGIN FAILED ===');
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      console.log('=== LOGIN SUCCESS ===');
       res.json({
         message: "Login successful",
         user: result.user,
         token: result.token,
       });
     } catch (error) {
-      console.error("=== LOGIN ERROR ===", error);
+      console.error("Login error:", error);
       res.status(400).json({ message: "Invalid login data" });
     }
   });
 
   // Get current user (requires authentication)
   app.get("/api/auth/me", authenticate, async (req: AuthRequest, res) => {
+    res.json(req.user);
+  });
+
+  // Alternative endpoint for user auth check
+  app.get("/api/auth/user", authenticate, async (req: AuthRequest, res) => {
     res.json(req.user);
   });
 
