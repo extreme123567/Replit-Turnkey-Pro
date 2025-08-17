@@ -74,6 +74,52 @@ export default function PropertyManagerDashboard() {
     message: ''
   });
 
+  const [quoteRequestForm, setQuoteRequestForm] = useState({
+    title: '',
+    description: '',
+    propertyId: '',
+    unitNumber: '',
+    category: 'apartment-turn',
+    priority: 'medium'
+  });
+
+  const handleQuoteRequest = async () => {
+    try {
+      const response = await fetch('/api/quote-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...quoteRequestForm,
+          requestedBy: propertyManagerId,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit quote request');
+      }
+
+      // Reset form and close modal
+      setQuoteRequestForm({
+        title: '',
+        description: '',
+        propertyId: '',
+        unitNumber: '',
+        category: 'apartment-turn',
+        priority: 'medium'
+      });
+      setIsQuoteModalOpen(false);
+      
+      alert('Quote request submitted successfully! Office staff will respond soon.');
+    } catch (error) {
+      console.error('Error submitting quote request:', error);
+      alert('Failed to submit quote request. Please try again.');
+    }
+  };
+
   const [quoteForm, setQuoteForm] = useState({
     title: '',
     description: '',
@@ -188,8 +234,8 @@ export default function PropertyManagerDashboard() {
                   <Input
                     id="quote-title"
                     placeholder="e.g., Kitchen renovation - Unit 205"
-                    value={quoteForm.title}
-                    onChange={(e) => setQuoteForm({...quoteForm, title: e.target.value})}
+                    value={quoteRequestForm.title}
+                    onChange={(e) => setQuoteRequestForm({...quoteRequestForm, title: e.target.value})}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -198,14 +244,14 @@ export default function PropertyManagerDashboard() {
                     id="quote-description"
                     placeholder="Describe the work needed in detail..."
                     rows={3}
-                    value={quoteForm.description}
-                    onChange={(e) => setQuoteForm({...quoteForm, description: e.target.value})}
+                    value={quoteRequestForm.description}
+                    onChange={(e) => setQuoteRequestForm({...quoteRequestForm, description: e.target.value})}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="property">Property</Label>
-                    <Select value={quoteForm.property} onValueChange={(value) => setQuoteForm({...quoteForm, property: value})}>
+                    <Select value={quoteRequestForm.propertyId} onValueChange={(value) => setQuoteRequestForm({...quoteRequestForm, propertyId: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select property" />
                       </SelectTrigger>
@@ -221,8 +267,8 @@ export default function PropertyManagerDashboard() {
                     <Input
                       id="unit-number"
                       placeholder="e.g., 205"
-                      value={quoteForm.unitNumber}
-                      onChange={(e) => setQuoteForm({...quoteForm, unitNumber: e.target.value})}
+                      value={quoteRequestForm.unitNumber}
+                      onChange={(e) => setQuoteRequestForm({...quoteRequestForm, unitNumber: e.target.value})}
                     />
                   </div>
                 </div>
@@ -230,9 +276,9 @@ export default function PropertyManagerDashboard() {
                   <Button variant="outline" onClick={() => setIsQuoteModalOpen(false)}>
                     Cancel
                   </Button>
-                  <Button className="servicepro-btn-primary">
+                  <Button className="servicepro-btn-primary" onClick={handleQuoteRequest}>
                     <DollarSign className="mr-2 h-4 w-4" />
-                    Submit Quote Request
+                    Request Quote
                   </Button>
                 </div>
               </div>

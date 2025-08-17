@@ -569,10 +569,10 @@ export default function OfficeStaffDashboard() {
       // Refresh quote requests
       refetchQuotes();
       
-      alert('Quote request sent successfully!');
+      alert('Quote sent successfully!');
     } catch (error) {
       console.error('Error submitting quote:', error);
-      alert('Failed to send quote request. Please try again.');
+      alert('Failed to send quote. Please try again.');
     }
   };
 
@@ -601,9 +601,9 @@ export default function OfficeStaffDashboard() {
         <div className="flex items-center space-x-3">
           <Dialog open={isQuoteModalOpen} onOpenChange={setIsQuoteModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" data-testid="button-request-quote">
+              <Button variant="outline" data-testid="button-send-quote">
                 <DollarSign className="mr-2 h-4 w-4" />
-                Request Quote
+                Send Quote
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -611,7 +611,7 @@ export default function OfficeStaffDashboard() {
                 <div className="text-center border-b pb-4">
                   <h1 className="text-2xl font-bold text-blue-900">QC APARTMENT TURNS</h1>
                   <p className="text-sm text-gray-600 mt-1">4321 Stuart Andrew Blvd Ste D, Charlotte, NC 28217</p>
-                  <DialogTitle className="text-xl font-semibold mt-4 text-gray-800">Service Quote Request</DialogTitle>
+                  <DialogTitle className="text-xl font-semibold mt-4 text-gray-800">Send Service Quote</DialogTitle>
                 </div>
               </DialogHeader>
               
@@ -748,7 +748,7 @@ export default function OfficeStaffDashboard() {
                       onClick={handleSubmitQuote}
                     >
                       <DollarSign className="mr-2 h-4 w-4" />
-                      Submit Quote Request
+                      Send Quote
                     </Button>
                   </div>
                 </div>
