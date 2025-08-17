@@ -310,7 +310,7 @@ export class MemStorage implements IStorage {
         units: 24,
         yearBuilt: 1985,
         squareFootage: 18000,
-        managerId: Array.from(this.users.values())[0]?.id,
+        managerId: "pm-1",
         status: "active",
         monthlyRent: "2400.00"
       },
@@ -324,7 +324,7 @@ export class MemStorage implements IStorage {
         units: 8,
         yearBuilt: 2010,
         squareFootage: 12000,
-        managerId: Array.from(this.users.values())[0]?.id,
+        managerId: "pm-1",
         status: "active",
         monthlyRent: "3200.00"
       }

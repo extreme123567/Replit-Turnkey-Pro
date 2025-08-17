@@ -63,6 +63,8 @@ export default function PropertyManagerDashboard() {
   // Modal states
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isWorkOrderModalOpen, setIsWorkOrderModalOpen] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   
   // Filter state for jobs
   const [jobFilter, setJobFilter] = useState("all"); // all, scheduled, in_progress, completed
@@ -120,6 +122,41 @@ export default function PropertyManagerDashboard() {
     }
   };
 
+  const handleWorkOrderClick = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+    setIsWorkOrderModalOpen(true);
+  };
+
+  const handleAssignTechnician = async (workOrderId: string, technicianId: string) => {
+    try {
+      const response = await fetch(`/api/work-orders/${workOrderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignedTo: technicianId,
+          status: 'assigned'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign technician');
+      }
+
+      setIsWorkOrderModalOpen(false);
+      setSelectedWorkOrder(null);
+      
+      // Refresh work orders
+      window.location.reload();
+      
+      alert('Technician assigned successfully!');
+    } catch (error) {
+      console.error('Error assigning technician:', error);
+      alert('Failed to assign technician. Please try again.');
+    }
+  };
+
   const [quoteForm, setQuoteForm] = useState({
     title: '',
     description: '',
@@ -169,7 +206,16 @@ export default function PropertyManagerDashboard() {
     },
   });
 
-  const isLoading = statsLoading || propertiesLoading || jobsLoading || workOrdersLoading;
+  const { data: technicians, isLoading: techniciansLoading } = useQuery({
+    queryKey: ["/api/staff/technicians"],
+    queryFn: async () => {
+      const response = await fetch('/api/staff?role=technician');
+      if (!response.ok) throw new Error('Failed to fetch technicians');
+      return response.json();
+    },
+  });
+
+  const isLoading = statsLoading || propertiesLoading || jobsLoading || workOrdersLoading || techniciansLoading;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -528,129 +574,74 @@ export default function PropertyManagerDashboard() {
           <div className="space-y-4">
             {/* Job Status Display */}
             <div className="space-y-3">
-              {/* Show jobs based on filter */}
-              {(jobFilter === "all" || jobFilter === "scheduled") && (
-                <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+              {/* Show actual work orders */}
+              {workOrders?.filter(wo => jobFilter === "all" || wo.status === jobFilter || 
+                (jobFilter === "scheduled" && wo.status === "scheduled")).map((workOrder) => (
+                <div 
+                  key={workOrder.id} 
+                  className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${
+                    workOrder.status === "scheduled" ? "border-blue-200 bg-blue-50" :
+                    workOrder.status === "assigned" ? "border-purple-200 bg-purple-50" :
+                    workOrder.status === "in_progress" ? "border-amber-200 bg-amber-50" :
+                    "border-green-200 bg-green-50"
+                  }`}
+                  onClick={() => handleWorkOrderClick(workOrder)}
+                  data-testid={`work-order-${workOrder.id}`}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-start space-x-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Calendar className="text-blue-600" size={16} />
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        workOrder.status === "scheduled" ? "bg-blue-100" :
+                        workOrder.status === "assigned" ? "bg-purple-100" :
+                        workOrder.status === "in_progress" ? "bg-amber-100" :
+                        "bg-green-100"
+                      }`}>
+                        {workOrder.status === "scheduled" ? <Calendar className="text-blue-600" size={16} /> :
+                         workOrder.status === "assigned" ? <UserCheck className="text-purple-600" size={16} /> :
+                         workOrder.status === "in_progress" ? <Clock className="text-amber-600" size={16} /> :
+                         <CheckCircle className="text-green-600" size={16} />}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">Punch List - Unit 304</p>
-                        <p className="text-sm text-slate-600">Touch-ups and final details • Est. 2 hours</p>
-                        <p className="text-xs text-blue-600 mt-1">Scheduled: Today 2:00 PM</p>
+                        <p className="font-medium text-slate-800">{workOrder.title}</p>
+                        <p className="text-sm text-slate-600">{workOrder.description} • Est. {workOrder.estimatedHours} hours</p>
+                        <p className={`text-xs mt-1 ${
+                          workOrder.status === "scheduled" ? "text-blue-600" :
+                          workOrder.status === "assigned" ? "text-purple-600" :
+                          workOrder.status === "in_progress" ? "text-amber-600" :
+                          "text-green-600"
+                        }`}>
+                          {workOrder.status === "scheduled" ? `Scheduled: ${new Date(workOrder.scheduledDate).toLocaleDateString()} ${new Date(workOrder.scheduledDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` :
+                           workOrder.status === "completed" ? `Completed: ${workOrder.completedDate ? new Date(workOrder.completedDate).toLocaleDateString() : 'Today'}` :
+                           workOrder.status === "assigned" ? "Assigned - Ready to start" :
+                           "In Progress"}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <Badge className="bg-blue-100 text-blue-800">Scheduled</Badge>
-                      <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
+                      <Badge className={getStatusColor(workOrder.status)}>
+                        {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1).replace('_', ' ')}
+                      </Badge>
+                      <Badge className={getPriorityColor(workOrder.priority)} variant="outline">
+                        {workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1)}
+                      </Badge>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {workOrder.assignedTo ? `Tech: ${workOrder.assignedTo}` : "Unassigned"}
+                      </p>
                     </div>
                   </div>
+                </div>
+              ))}
+              
+              {/* Show message if no work orders */}
+              {(!workOrders || workOrders.length === 0) && (
+                <div className="text-center py-8 text-slate-500">
+                  <Clock className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                  <p>No work orders found</p>
+                  <p className="text-sm">Work orders will appear here when created</p>
                 </div>
               )}
 
-              {(jobFilter === "all" || jobFilter === "in_progress") && (
-                <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <Clock className="text-amber-600" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">Repairs - Unit 205</p>
-                        <p className="text-sm text-slate-600">Kitchen faucet and cabinet door fix</p>
-                        <p className="text-xs text-amber-600 mt-1">Started: 1:30 PM • 1.5 hrs elapsed</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className="bg-amber-100 text-amber-800">In Progress</Badge>
-                      <p className="text-xs text-slate-500 mt-1">Tech: Sarah Wilson</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 bg-white/60 rounded p-2">
-                    <div className="flex items-center justify-between text-xs text-slate-600">
-                      <span>Phase: Installing new faucet</span>
-                      <span>65%</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                      <div className="bg-amber-500 h-2 rounded-full" style={{width: '65%'}}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {(jobFilter === "all" || jobFilter === "in_progress") && (
-                <div className="p-4 border border-purple-200 bg-purple-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Clock className="text-purple-600" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">Paint - Unit 301</p>
-                        <p className="text-sm text-slate-600">Living room and bedroom walls</p>
-                        <p className="text-xs text-purple-600 mt-1">Started: 9:00 AM • 5 hrs elapsed</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className="bg-purple-100 text-purple-800">In Progress</Badge>
-                      <p className="text-xs text-slate-500 mt-1">Tech: Mike Johnson</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 bg-white/60 rounded p-2">
-                    <div className="flex items-center justify-between text-xs text-slate-600">
-                      <span>Phase: Second coat application</span>
-                      <span>80%</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{width: '80%'}}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(jobFilter === "all" || jobFilter === "completed") && (
-                <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="text-green-600" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">Clean - Unit 402</p>
-                        <p className="text-sm text-slate-600">Deep clean after renovation</p>
-                        <p className="text-xs text-green-600 mt-1">Completed: Today 2:30 PM • 6.5 hrs total</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                      <p className="text-xs text-slate-500 mt-1">Tech: David Lee</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(jobFilter === "all" || jobFilter === "completed") && (
-                <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="text-green-600" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">Carpet - Unit 150</p>
-                        <p className="text-sm text-slate-600">Bedroom and hallway installation</p>
-                        <p className="text-xs text-green-600 mt-1">Completed: Yesterday 4:30 PM • 6 hrs total</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                      <p className="text-xs text-slate-500 mt-1">Tech: Alex Chen</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </CardContent>
@@ -1287,6 +1278,69 @@ export default function PropertyManagerDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Work Order Assignment Modal */}
+      <Dialog open={isWorkOrderModalOpen} onOpenChange={setIsWorkOrderModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Assign Work Order</DialogTitle>
+          </DialogHeader>
+          {selectedWorkOrder && (
+            <div className="space-y-4">
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h3 className="font-medium text-slate-800 mb-2">{selectedWorkOrder.title}</h3>
+                <p className="text-sm text-slate-600 mb-2">{selectedWorkOrder.description}</p>
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Unit: {selectedWorkOrder.unitNumber}</span>
+                  <span>Priority: {selectedWorkOrder.priority}</span>
+                  <span>Est: {selectedWorkOrder.estimatedHours}h</span>
+                </div>
+                {selectedWorkOrder.scheduledDate && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Scheduled: {new Date(selectedWorkOrder.scheduledDate).toLocaleDateString()} {new Date(selectedWorkOrder.scheduledDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <Label>Assign to Technician</Label>
+                <div className="grid gap-2">
+                  {technicians?.length > 0 ? technicians.map((tech: any) => (
+                    <Button
+                      key={tech.id}
+                      variant="outline"
+                      className="justify-start h-auto p-3"
+                      onClick={() => handleAssignTechnician(selectedWorkOrder.id, tech.id)}
+                      data-testid={`assign-tech-${tech.id}`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <UserCheck className="text-blue-600" size={14} />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-medium text-slate-800">{tech.name}</p>
+                          <p className="text-xs text-slate-600">{tech.role} • {tech.activeJobs || 0} active jobs</p>
+                        </div>
+                      </div>
+                    </Button>
+                  )) : (
+                    <div className="text-center py-4 text-slate-500">
+                      <UserCheck className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                      <p className="text-sm">No technicians available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setIsWorkOrderModalOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
