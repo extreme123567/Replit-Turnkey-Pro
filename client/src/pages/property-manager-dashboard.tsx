@@ -265,10 +265,10 @@ export default function PropertyManagerDashboard() {
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="unit-number">Unit Number</Label>
+                    <Label htmlFor="unit-number">Unit Number / Common Area Space</Label>
                     <Input
                       id="unit-number"
-                      placeholder="e.g., 205"
+                      placeholder="e.g., 205, Lobby, Pool Area, Gym"
                       value={quoteRequestForm.unitNumber}
                       onChange={(e) => setQuoteRequestForm({...quoteRequestForm, unitNumber: e.target.value})}
                     />

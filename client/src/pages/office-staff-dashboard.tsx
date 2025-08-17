@@ -178,10 +178,10 @@ function RequestQuoteButton() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="unit-number">Unit Number</Label>
+              <Label htmlFor="unit-number">Unit Number / Common Area Space</Label>
               <Input
                 id="unit-number"
-                placeholder="e.g., 205"
+                placeholder="e.g., 205, Lobby, Pool Area, Gym"
                 value={unitNumber}
                 onChange={(e) => setUnitNumber(e.target.value)}
                 data-testid="input-quote-unit-number"
