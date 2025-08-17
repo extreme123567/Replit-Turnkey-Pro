@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await AuthService.login(validatedData);
       
       if (!result) {
-        return res.status(401).json({ message: "Invalid email or password" });
+        return res.status(401).json({ message: "Invalid phone number or password" });
       }
 
       res.json({
