@@ -2093,8 +2093,7 @@ function StaffManagementSection() {
     lastName: '',
     email: '',
     role: 'technician',
-    phone: '',
-    hourlyRate: ''
+    phone: ''
   });
   const [isAddingStaff, setIsAddingStaff] = useState(false);
 
@@ -2130,8 +2129,7 @@ function StaffManagementSection() {
         lastName: '',
         email: '',
         role: 'technician',
-        phone: '',
-        hourlyRate: ''
+        phone: ''
       });
       setIsAddingStaff(false);
       refetchStaff();
@@ -2156,10 +2154,7 @@ function StaffManagementSection() {
       return;
     }
 
-    addStaffMutation.mutate({
-      ...newStaffForm,
-      hourlyRate: newStaffForm.hourlyRate ? parseFloat(newStaffForm.hourlyRate) : null
-    });
+    addStaffMutation.mutate(newStaffForm);
   };
 
   if (staffLoading) {
@@ -2238,7 +2233,7 @@ function StaffManagementSection() {
                   data-testid="input-staff-phone"
                 />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-1">Role</label>
                 <select
                   value={newStaffForm.role}
@@ -2251,17 +2246,6 @@ function StaffManagementSection() {
                   <option value="office_staff">Office Staff</option>
                   <option value="property_manager">Property Manager</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Hourly Rate ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newStaffForm.hourlyRate}
-                  onChange={(e) => setNewStaffForm({...newStaffForm, hourlyRate: e.target.value})}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  data-testid="input-staff-hourly-rate"
-                />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
@@ -2345,12 +2329,6 @@ function StaffManagementSection() {
                         <div className="flex items-center">
                           <Phone className="mr-1 h-4 w-4" />
                           {member.phone}
-                        </div>
-                      )}
-                      {member.hourlyRate && (
-                        <div className="flex items-center">
-                          <DollarSign className="mr-1 h-4 w-4" />
-                          ${member.hourlyRate}/hr
                         </div>
                       )}
                     </div>
