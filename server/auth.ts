@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { storage } from "./storage";
+import { databaseAuth } from "./database-storage";
 import type { User, LoginRequest, CreateUserRequest } from "@shared/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -51,7 +51,7 @@ export class AuthService {
   // Login user
   static async login(loginData: LoginRequest): Promise<{ user: User; token: string } | null> {
     try {
-      const user = await storage.getUserByEmail(loginData.email.toLowerCase().trim());
+      const user = await databaseAuth.getUserByEmail(loginData.email.toLowerCase().trim());
       if (!user) {
         return null;
       }
@@ -62,7 +62,7 @@ export class AuthService {
       }
 
       // Update last login
-      await storage.updateUserLastLogin(user.id);
+      await databaseAuth.updateUserLastLogin(user.id);
 
       const token = this.generateToken(user);
       
@@ -81,7 +81,7 @@ export class AuthService {
     try {
       const hashedPassword = await this.hashPassword(userData.password);
       
-      const newUser = await storage.createUser({
+      const newUser = await databaseAuth.createUser({
         ...userData,
         password: hashedPassword,
       });
@@ -112,7 +112,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     // Get fresh user data from database
-    const user = await storage.getUserById(decoded.id);
+    const user = await databaseAuth.getUserById(decoded.id);
     if (!user || user.status !== "active") {
       return res.status(401).json({ message: "User not found or inactive" });
     }
