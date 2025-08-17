@@ -1137,6 +1137,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Staff metrics for enhanced dashboard
+  app.get("/api/staff/metrics", async (req, res) => {
+    try {
+      const staff = await storage.getStaff();
+      const staffMetrics = await Promise.all(staff.map(async (member) => {
+        // Get payroll data for this staff member
+        const payrollEntries = await storage.getStaffPayroll(member.id);
+        const yearToDateEarnings = payrollEntries
+          .filter(entry => entry.payStatus !== 'deducted')
+          .reduce((sum, entry) => sum + parseFloat(entry.currentPayAmount), 0);
+        
+        // Get job completion data
+        const completedJobs = payrollEntries.length;
+        
+        // Get callback data (mock for demo)
+        const pendingCallbacks = Math.floor(Math.random() * 3); // 0-2 pending callbacks
+        const resolvedCallbacks = Math.floor(Math.random() * 8) + 2; // 2-10 resolved
+        
+        // Calculate efficiency (mock calculation)
+        const totalCallbacks = pendingCallbacks + resolvedCallbacks;
+        const efficiency = totalCallbacks > 0 ? (resolvedCallbacks / totalCallbacks) * 100 : 95;
+        
+        // Calculate average job value
+        const averageJobValue = completedJobs > 0 ? yearToDateEarnings / completedJobs : 0;
+        
+        return {
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          role: member.role,
+          status: member.status,
+          yearToDateEarnings,
+          completedJobs,
+          pendingCallbacks,
+          resolvedCallbacks,
+          efficiency,
+          averageJobValue,
+          monthlyEarnings: [] // Could be populated with historical data
+        };
+      }));
+      
+      res.json(staffMetrics);
+    } catch (error) {
+      console.error("Error fetching staff metrics:", error);
+      res.status(500).json({ error: "Failed to fetch staff metrics" });
+    }
+  });
+
+  // Invoice metrics for enhanced dashboard
+  app.get("/api/invoices/metrics", async (req, res) => {
+    try {
+      // Get all completed jobs
+      const jobs = await storage.getJobs();
+      const completedJobs = jobs.filter(job => job.status === 'completed');
+      
+      // Mock invoice data (in real implementation, would query invoices table)
+      const totalJobs = completedJobs.length;
+      const invoicedJobs = Math.floor(totalJobs * 0.85); // 85% invoiced
+      const uninvoicedJobs = totalJobs - invoicedJobs;
+      
+      const pendingInvoices = Math.floor(invoicedJobs * 0.3); // 30% pending
+      const paidInvoices = invoicedJobs - pendingInvoices;
+      const overdueInvoices = Math.floor(pendingInvoices * 0.2); // 20% of pending are overdue
+      
+      // Calculate amounts (using average job values)
+      const averageJobValue = 485; // Average paint/clean job value
+      const totalInvoicedAmount = invoicedJobs * averageJobValue;
+      const totalPaidAmount = paidInvoices * averageJobValue;
+      const averageInvoiceValue = averageJobValue;
+      
+      const invoiceMetrics = {
+        totalJobs,
+        invoicedJobs,
+        uninvoicedJobs,
+        pendingInvoices,
+        paidInvoices,
+        overdueInvoices,
+        totalInvoicedAmount,
+        totalPaidAmount,
+        averageInvoiceValue
+      };
+      
+      res.json(invoiceMetrics);
+    } catch (error) {
+      console.error("Error fetching invoice metrics:", error);
+      res.status(500).json({ error: "Failed to fetch invoice metrics" });
+    }
+  });
+
   // Users routes
   app.get("/api/users", async (req, res) => {
     try {

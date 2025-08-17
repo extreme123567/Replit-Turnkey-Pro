@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -112,7 +114,7 @@ export default function AdminDashboard() {
   });
 
   // Filter staff for technicians
-  const technicians = staff?.filter((member: any) => member.role === 'technician') || [];
+  const technicians = (staff || []).filter((member: any) => member.role === 'technician');
 
   // Job scheduling form
   const jobForm = useForm<JobScheduleFormData>({
@@ -176,6 +178,12 @@ export default function AdminDashboard() {
             <p className="text-sm text-slate-600">ServicePro Management</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Link href="/staff/enhanced">
+              <Button variant="outline" size="sm" className="text-xs">
+                <UserCheck className="mr-1" size={12} />
+                Staff Analytics
+              </Button>
+            </Link>
             <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs px-2 py-1">
               <Shield className="mr-1" size={10} />
               Admin

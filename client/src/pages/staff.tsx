@@ -18,8 +18,8 @@ export default function Staff() {
     queryKey: ["/api/staff"],
   });
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
   };
 
   const getInitialsColor = (name: string) => {
@@ -133,11 +133,11 @@ export default function Staff() {
           staff?.map((member) => (
             <Card key={member.id} className="servicepro-card p-6" data-testid={`card-staff-${member.id}`}>
               <div className="flex items-center space-x-4 mb-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getInitialsColor(member.name)}`}>
-                  <span className="font-bold">{getInitials(member.name)}</span>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getInitialsColor(member.firstName + ' ' + member.lastName)}`}>
+                  <span className="font-bold">{getInitials(member.firstName, member.lastName)}</span>
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-800">{member.name}</h4>
+                  <h4 className="font-bold text-slate-800">{member.firstName} {member.lastName}</h4>
                   <p className="text-sm text-slate-600">{getRoleDisplay(member.role)}</p>
                 </div>
               </div>
@@ -211,10 +211,10 @@ export default function Staff() {
                     <TableRow key={member.id} data-testid={`schedule-row-${member.id}`}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getInitialsColor(member.name)}`}>
-                            <span className="font-medium text-xs">{getInitials(member.name)}</span>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getInitialsColor(member.firstName + ' ' + member.lastName)}`}>
+                            <span className="font-medium text-xs">{getInitials(member.firstName, member.lastName)}</span>
                           </div>
-                          <span className="font-medium text-slate-800">{member.name}</span>
+                          <span className="font-medium text-slate-800">{member.firstName} {member.lastName}</span>
                         </div>
                       </TableCell>
                       {dayNames.map((day, dayIndex) => {

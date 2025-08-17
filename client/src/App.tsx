@@ -20,6 +20,7 @@ import Staff from "@/pages/staff";
 import Messaging from "@/pages/messaging";
 import Payroll from "@/pages/payroll";
 import Invoices from "@/pages/invoices";
+import EnhancedStaffDashboard from "@/pages/enhanced-staff-dashboard";
 
 // Protected route wrapper
 function ProtectedRoute({ component: Component, allowedRoles }: { 
@@ -110,6 +111,10 @@ function Router() {
       
       <Route path="/staff">
         <ProtectedRoute component={Staff} allowedRoles={["admin", "office_staff"]} />
+      </Route>
+      
+      <Route path="/staff/enhanced">
+        <ProtectedRoute component={EnhancedStaffDashboard} allowedRoles={["admin"]} />
       </Route>
       
       <Route path="/messaging">
