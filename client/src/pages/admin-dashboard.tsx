@@ -34,6 +34,12 @@ interface AdminStats {
   netProfit: number;
   activeJobs: number;
   totalProperties: number;
+  activeProperties: number;
+  propertiesAcquiredYTD: number;
+  propertiesLostYTD: number;
+  turnoverRate: number;
+  propertyRetentionRate: number;
+  averageRevenuePerProperty: number;
   totalStaff: number;
   totalTenants: number;
   monthlyGrowth: number;
@@ -162,6 +168,99 @@ export default function AdminDashboard() {
               </div>
             </div>
             <p className="text-sm text-amber-600 mt-2">Jobs in progress</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Property Portfolio Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Building className="text-slate-600" size={20} />
+              Property Portfolio
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Total Properties</span>
+                <span className="font-semibold text-slate-900" data-testid="total-properties">
+                  {stats?.totalProperties || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Active Properties</span>
+                <span className="font-semibold text-green-600" data-testid="active-properties">
+                  {stats?.activeProperties || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Avg Revenue/Property</span>
+                <span className="font-semibold text-blue-600" data-testid="avg-revenue-property">
+                  ${stats?.averageRevenuePerProperty?.toLocaleString() || '0'}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="text-green-600" size={20} />
+              YTD Growth
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Properties Acquired</span>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200" data-testid="properties-acquired">
+                  +{stats?.propertiesAcquiredYTD || 0}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Properties Lost</span>
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200" data-testid="properties-lost">
+                  -{stats?.propertiesLostYTD || 0}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Net Growth</span>
+                <span className="font-semibold text-green-600" data-testid="net-growth">
+                  +{(stats?.propertiesAcquiredYTD || 0) - (stats?.propertiesLostYTD || 0)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calculator className="text-blue-600" size={20} />
+              Retention Metrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Turnover Rate</span>
+                <span className={`font-semibold ${(stats?.turnoverRate || 0) < 10 ? 'text-green-600' : 'text-amber-600'}`} data-testid="turnover-rate">
+                  {stats?.turnoverRate || 0}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Retention Rate</span>
+                <span className="font-semibold text-green-600" data-testid="retention-rate">
+                  {stats?.propertyRetentionRate || 0}%
+                </span>
+              </div>
+              <div className="text-xs text-slate-500 mt-2">
+                Target: {"<10%"} turnover annually
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

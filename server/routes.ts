@@ -471,15 +471,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin dashboard endpoint - FULL ACCESS including financials
   app.get("/api/dashboard/admin", async (req, res) => {
     try {
+      const properties = await storage.getProperties();
+      const currentDate = new Date();
+      const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+      
+      // Calculate property metrics
+      const totalProperties = properties.length;
+      const activeProperties = properties.filter(p => p.status === 'active').length;
+      
+      // Property turnover analytics (in real app, this would track property history)
+      const propertiesAcquiredYTD = 3; // New properties added this year
+      const propertiesLostYTD = 1; // Properties lost this year
+      const turnoverRate = totalProperties > 0 ? ((propertiesLostYTD / totalProperties) * 100) : 0;
+      
+      // Property performance metrics
+      const averageRevenuePerProperty = totalProperties > 0 ? (124750 / totalProperties) : 0;
+      const propertyRetentionRate = 100 - turnoverRate;
+      
       const adminStats = {
+        // Financial metrics
         totalRevenue: 124750,
         totalPayouts: 67200,
         netProfit: 57550,
+        monthlyGrowth: 12,
+        
+        // Property tracking and turnover metrics
+        totalProperties: totalProperties,
+        activeProperties: activeProperties,
+        propertiesAcquiredYTD: propertiesAcquiredYTD,
+        propertiesLostYTD: propertiesLostYTD,
+        turnoverRate: Math.round(turnoverRate * 10) / 10, // Round to 1 decimal
+        propertyRetentionRate: Math.round(propertyRetentionRate * 10) / 10,
+        averageRevenuePerProperty: Math.round(averageRevenuePerProperty),
+        
+        // Operational metrics
         activeJobs: 12,
-        totalProperties: 2,
         totalStaff: 6,
-        totalTenants: 56,
-        monthlyGrowth: 12
+        totalTenants: 56
       };
       res.json(adminStats);
     } catch (error) {
