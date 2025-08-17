@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import GeneralDashboard from "@/pages/general-dashboard";
 import PropertyManagerDashboard from "@/pages/property-manager-dashboard";
 import OfficeStaffDashboard from "@/pages/office-staff-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 import TechnicianDashboard from "@/pages/technician-dashboard";
 import InspectorDashboard from "@/pages/inspector-dashboard";
 import Scheduling from "@/pages/scheduling";
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/general" component={GeneralDashboard} />
       <Route path="/property-manager" component={PropertyManagerDashboard} />
       <Route path="/office-staff" component={OfficeStaffDashboard} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route path="/technician" component={TechnicianDashboard} />
       <Route path="/inspector" component={InspectorDashboard} />
       <Route path="/scheduling" component={Scheduling} />

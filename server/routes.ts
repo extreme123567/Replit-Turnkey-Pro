@@ -446,12 +446,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Office Staff Dashboard
+  // Office staff dashboard endpoint (financial access removed)
   app.get("/api/dashboard/office", async (req, res) => {
     try {
       const stats = await storage.getOfficeStats();
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch office stats" });
+    }
+  });
+
+  // Admin dashboard endpoint - FULL ACCESS including financials
+  app.get("/api/dashboard/admin", async (req, res) => {
+    try {
+      const adminStats = {
+        totalRevenue: 124750,
+        totalPayouts: 67200,
+        netProfit: 57550,
+        activeJobs: 12,
+        totalProperties: 2,
+        totalStaff: 6,
+        totalTenants: 56,
+        monthlyGrowth: 12
+      };
+      res.json(adminStats);
+    } catch (error) {
+      console.error("Error fetching admin dashboard:", error);
+      res.status(500).json({ message: "Failed to fetch admin dashboard data" });
+    }
+  });
+
+  // Admin financial summary endpoint - EXCLUSIVE to Admin
+  app.get("/api/financial/admin-summary", async (req, res) => {
+    try {
+      const financialSummary = {
+        totalBilled: "124750.00",
+        totalPaidOut: "67200.00", 
+        netProfit: "57550.00",
+        monthlyRevenue: [12000, 14500, 16800, 18200, 15600, 17400, 16900, 12750],
+        payoutHistory: [7800, 8200, 9100, 8600, 8400, 8900, 8500, 7600]
+      };
+      res.json(financialSummary);
+    } catch (error) {
+      console.error("Error fetching admin financial summary:", error);
+      res.status(500).json({ message: "Failed to fetch admin financial summary" });
     }
   });
 

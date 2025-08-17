@@ -1,0 +1,566 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  DollarSign,
+  TrendingUp,
+  Users,
+  Building,
+  Calendar,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  CreditCard,
+  Wallet,
+  Calculator,
+  FileText,
+  Settings,
+  Shield,
+  Eye,
+  UserCheck,
+  MapPin,
+  Phone,
+  Mail,
+  Wrench,
+  Home
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface AdminStats {
+  totalRevenue: number;
+  totalPayouts: number;
+  netProfit: number;
+  activeJobs: number;
+  totalProperties: number;
+  totalStaff: number;
+  totalTenants: number;
+  monthlyGrowth: number;
+}
+
+interface FinancialSummary {
+  totalBilled: string;
+  totalPaidOut: string;
+  netProfit: string;
+  monthlyRevenue: number[];
+  payoutHistory: number[];
+}
+
+export default function AdminDashboard() {
+  // Fetch admin stats
+  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
+    queryKey: ["/api/dashboard/admin"],
+  });
+
+  // Fetch financial summary
+  const { data: financial, isLoading: financialLoading } = useQuery<FinancialSummary>({
+    queryKey: ["/api/financial/admin-summary"],
+  });
+
+  // Fetch all properties for admin overview
+  const { data: properties, isLoading: propertiesLoading } = useQuery({
+    queryKey: ["/api/properties"],
+  });
+
+  // Fetch all staff for management
+  const { data: staff, isLoading: staffLoading } = useQuery({
+    queryKey: ["/api/staff"],
+  });
+
+  if (statsLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+          <p className="text-slate-600 mt-1">Complete business oversight and financial control</p>
+        </div>
+        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+          <Shield className="mr-1" size={12} />
+          Admin Access
+        </Badge>
+      </div>
+
+      {/* Financial Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-600 text-sm font-medium">Total Revenue (YTD)</p>
+                <p className="text-2xl font-bold text-green-700 mt-1" data-testid="stat-total-revenue">
+                  ${stats?.totalRevenue?.toLocaleString() || "124,750"}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
+                <DollarSign className="text-green-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-green-600 mt-2">+12% from last month</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-medium">Total Payouts (YTD)</p>
+                <p className="text-2xl font-bold text-blue-700 mt-1" data-testid="stat-total-payouts">
+                  ${stats?.totalPayouts?.toLocaleString() || "67,200"}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
+                <Wallet className="text-blue-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-blue-600 mt-2">Technician payments</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-600 text-sm font-medium">Net Profit (YTD)</p>
+                <p className="text-2xl font-bold text-purple-700 mt-1" data-testid="stat-net-profit">
+                  ${stats?.netProfit?.toLocaleString() || "57,550"}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
+                <TrendingUp className="text-purple-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-purple-600 mt-2">46% profit margin</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-amber-600 text-sm font-medium">Active Operations</p>
+                <p className="text-2xl font-bold text-amber-700 mt-1" data-testid="stat-active-operations">
+                  {stats?.activeJobs || 12}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center">
+                <Wrench className="text-amber-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-amber-600 mt-2">Jobs in progress</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Admin Tabs */}
+      <Tabs defaultValue="financial" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="financial" data-testid="tab-financial">Financial</TabsTrigger>
+          <TabsTrigger value="properties" data-testid="tab-properties">Properties</TabsTrigger>
+          <TabsTrigger value="staff" data-testid="tab-staff">Staff Management</TabsTrigger>
+          <TabsTrigger value="operations" data-testid="tab-operations">Operations</TabsTrigger>
+          <TabsTrigger value="reports" data-testid="tab-reports">Reports</TabsTrigger>
+          <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
+        </TabsList>
+
+        {/* Financial Tab */}
+        <TabsContent value="financial" className="space-y-6">
+          {/* Financial Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Revenue & Profit Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calculator className="text-green-600" size={20} />
+                  <span>Financial Performance</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                    <div>
+                      <p className="text-sm text-green-600 font-medium">Total Revenue (YTD)</p>
+                      <p className="text-xl font-bold text-green-700">$124,750</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-green-600">Monthly Avg</p>
+                      <p className="text-lg font-semibold text-green-700">$15,594</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                    <div>
+                      <p className="text-sm text-blue-600 font-medium">Total Payouts (YTD)</p>
+                      <p className="text-xl font-bold text-blue-700">$67,200</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-blue-600">Monthly Avg</p>
+                      <p className="text-lg font-semibold text-blue-700">$8,400</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Net Profit (YTD)</p>
+                      <p className="text-xl font-bold text-purple-700">$57,550</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-purple-600">Profit Margin</p>
+                      <p className="text-lg font-semibold text-purple-700">46%</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Property Revenue Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Building className="text-blue-600" size={20} />
+                  <span>Property Revenue Breakdown</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="space-y-4">
+                  <div className="p-4 border border-slate-100 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-slate-800">Sunset Gardens Apartments</p>
+                        <p className="text-sm text-slate-600">142 jobs completed</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-green-600">$67,400</p>
+                        <p className="text-sm text-slate-500">54% of total</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 border border-slate-100 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-slate-800">Oak Ridge Complex</p>
+                        <p className="text-sm text-slate-600">118 jobs completed</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-green-600">$57,350</p>
+                        <p className="text-sm text-slate-500">46% of total</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-slate-100">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-600">Portfolio Performance</span>
+                      <span className="font-semibold text-green-700">Excellent</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      <span className="text-slate-600">Average Job Value</span>
+                      <span className="font-semibold text-blue-700">$480</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Properties Tab */}
+        <TabsContent value="properties" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Building className="text-blue-600" size={20} />
+                  <span>All Properties - Admin View</span>
+                  <Badge variant="secondary">2</Badge>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Settings className="mr-2" size={16} />
+                  Manage Properties
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="space-y-4">
+                {propertiesLoading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <Skeleton key={i} className="h-24" />
+                  ))
+                ) : (
+                  <>
+                    <div className="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <Building className="text-blue-600" size={20} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">Sunset Gardens Apartments</p>
+                            <p className="text-sm text-slate-600 flex items-center">
+                              <MapPin className="mr-1" size={12} />
+                              1234 Sunset Blvd, Charlotte, NC 28217
+                            </p>
+                            <p className="text-sm text-slate-500">24 units • Multi-family • Built 1985</p>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <div>
+                            <p className="text-sm text-slate-500">YTD Work Revenue</p>
+                            <p className="text-lg font-bold text-green-600">$67,400</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                              <p className="text-slate-500">Jobs</p>
+                              <p className="font-semibold">142</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500">Avg Value</p>
+                              <p className="font-semibold">$474</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <Building className="text-emerald-600" size={20} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">Oak Ridge Complex</p>
+                            <p className="text-sm text-slate-600 flex items-center">
+                              <MapPin className="mr-1" size={12} />
+                              456 Oak Avenue, Charlotte, NC 28217
+                            </p>
+                            <p className="text-sm text-slate-500">36 units • Multi-family • Built 2010</p>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <div>
+                            <p className="text-sm text-slate-500">YTD Work Revenue</p>
+                            <p className="text-lg font-bold text-green-600">$57,350</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                              <p className="text-slate-500">Jobs</p>
+                              <p className="font-semibold">118</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500">Avg Value</p>
+                              <p className="font-semibold">$486</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Staff Management Tab */}
+        <TabsContent value="staff" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Users className="text-blue-600" size={20} />
+                  <span>Staff Overview</span>
+                  <Badge variant="secondary">{stats?.totalStaff || 6}</Badge>
+                </div>
+                <Button variant="outline" size="sm">
+                  <UserCheck className="mr-2" size={16} />
+                  Manage Permissions
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Property Managers */}
+                <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-blue-200 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <Home className="text-blue-600" size={20} />
+                    </div>
+                    <p className="font-medium text-blue-800">Property Managers</p>
+                    <p className="text-2xl font-bold text-blue-900">2</p>
+                    <p className="text-xs text-blue-600 mt-1">View & monitor jobs</p>
+                  </div>
+                </div>
+
+                {/* Office Staff */}
+                <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-green-200 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <FileText className="text-green-600" size={20} />
+                    </div>
+                    <p className="font-medium text-green-800">Office Staff</p>
+                    <p className="text-2xl font-bold text-green-900">2</p>
+                    <p className="text-xs text-green-600 mt-1">Assign jobs & operations</p>
+                  </div>
+                </div>
+
+                {/* Technicians */}
+                <div className="p-4 border border-amber-200 rounded-lg bg-amber-50">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-amber-200 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <Wrench className="text-amber-600" size={20} />
+                    </div>
+                    <p className="font-medium text-amber-800">Technicians</p>
+                    <p className="text-2xl font-bold text-amber-900">8</p>
+                    <p className="text-xs text-amber-600 mt-1">Execute work orders</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Operations Tab */}
+        <TabsContent value="operations" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="text-amber-600" size={20} />
+                  <span>Current Operations</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span className="font-medium text-blue-800">Jobs Scheduled</span>
+                    <Badge className="bg-blue-200 text-blue-800">15</Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                    <span className="font-medium text-amber-800">Jobs In Progress</span>
+                    <Badge className="bg-amber-200 text-amber-800">12</Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span className="font-medium text-green-800">Jobs Completed Today</span>
+                    <Badge className="bg-green-200 text-green-800">8</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <AlertTriangle className="text-red-600" size={20} />
+                  <span>Attention Required</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                    <span className="font-medium text-red-800">High Priority Jobs</span>
+                    <Badge className="bg-red-200 text-red-800">3</Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                    <span className="font-medium text-yellow-800">Pending Approvals</span>
+                    <Badge className="bg-yellow-200 text-yellow-800">5</Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span className="font-medium text-purple-800">Photo Requirements</span>
+                    <Badge className="bg-purple-200 text-purple-800">2</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Reports Tab */}
+        <TabsContent value="reports" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="text-green-600" size={20} />
+                <span>Business Reports</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button variant="outline" className="p-4 h-auto justify-start">
+                  <div className="text-left">
+                    <p className="font-medium">Monthly Financial Report</p>
+                    <p className="text-sm text-slate-600">Revenue, expenses, and profit analysis</p>
+                  </div>
+                </Button>
+                <Button variant="outline" className="p-4 h-auto justify-start">
+                  <div className="text-left">
+                    <p className="font-medium">Property Performance Report</p>
+                    <p className="text-sm text-slate-600">Job completion and revenue by property</p>
+                  </div>
+                </Button>
+                <Button variant="outline" className="p-4 h-auto justify-start">
+                  <div className="text-left">
+                    <p className="font-medium">Technician Performance Report</p>
+                    <p className="text-sm text-slate-600">Individual productivity and payouts</p>
+                  </div>
+                </Button>
+                <Button variant="outline" className="p-4 h-auto justify-start">
+                  <div className="text-left">
+                    <p className="font-medium">Year-to-Date Summary</p>
+                    <p className="text-sm text-slate-600">Complete business overview</p>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="text-gray-600" size={20} />
+                <span>System Settings</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="space-y-4">
+                <div className="p-4 border border-slate-200 rounded-lg">
+                  <h3 className="font-medium text-slate-800 mb-2">User Role Management</h3>
+                  <p className="text-sm text-slate-600 mb-3">Configure access permissions for different user roles</p>
+                  <Button variant="outline" size="sm">Configure Roles</Button>
+                </div>
+                <div className="p-4 border border-slate-200 rounded-lg">
+                  <h3 className="font-medium text-slate-800 mb-2">Financial Settings</h3>
+                  <p className="text-sm text-slate-600 mb-3">Manage pricing, payouts, and billing configurations</p>
+                  <Button variant="outline" size="sm">Financial Config</Button>
+                </div>
+                <div className="p-4 border border-slate-200 rounded-lg">
+                  <h3 className="font-medium text-slate-800 mb-2">Integration Settings</h3>
+                  <p className="text-sm text-slate-600 mb-3">QuickBooks, payment processing, and third-party integrations</p>
+                  <Button variant="outline" size="sm">Manage Integrations</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

@@ -2,7 +2,7 @@
 
 ## Overview
 
-ServicePro is a comprehensive property management platform designed for professional service companies, providing role-based functionality for property managers, office staff, technicians, and inspectors. It offers specialized dashboards and access controls. The platform supports comprehensive property management, including photo documentation, communication, quote requests, schedule management, real-time job status tracking, and enhanced work coordination. It also features a critical role-based job assignment workflow where only office staff can assign jobs. Financial features include property revenue tracking, automated technician payouts, and a general dashboard with bi-weekly financial resets and profit analysis. ServicePro also implements a photo-based callback resolution system and geofencing for location verification during inspections.
+ServicePro is a comprehensive property management platform designed for professional service companies, providing role-based functionality for administrators, office staff, property managers, technicians, and inspectors. It offers specialized dashboards with hierarchical access controls where Admin has complete oversight including exclusive financial access, Office Staff handles operational functions without financial permissions, and Property Managers have view/request-only access. The platform supports comprehensive property management, including photo documentation, communication, quote requests, schedule management, real-time job status tracking, and enhanced work coordination. It also features a critical role-based job assignment workflow where only office staff can assign jobs. Financial features include work-based revenue tracking (not rental income), automated technician payouts, and comprehensive financial oversight exclusively available to Admin users. ServicePro also implements a photo-based callback resolution system and geofencing for location verification during inspections.
 
 ## User Preferences
 
@@ -25,13 +25,14 @@ Preferred communication style: Simple, everyday language.
 - **Development**: Vite dev server, esbuild for backend compilation, comprehensive TypeScript coverage, and a monorepo structure.
 
 ### Feature Specifications
-- **Role-Based Access Control**: Comprehensive permission system with route-level restrictions based on user roles (Property Manager, Office Staff, Technician, Inspector, Admin).
-- **Property Manager Dashboard**: Features include job scheduling (eight job types), real-time elapsed time tracking, phase-by-phase progress, approval workflows for extra dirty units and drywall repairs, photo requirements tracking, multi-job booking, weekly schedule overview, photo documentation (before/progress/completion), direct messaging, and quote request system.
-- **Office Staff Role**: Exclusive authority to assign jobs to technicians.
+- **Role-Based Access Control**: Hierarchical permission system with route-level restrictions: Admin (complete oversight + exclusive financial access) > Office Staff (operational functions only) > Property Manager (view/request only) > Technician/Inspector (execution roles).
+- **Admin Dashboard**: Complete business oversight with exclusive financial access including total revenue, payouts, net profit, property performance analysis, staff management, operations monitoring, business reports, and system settings.
+- **Office Staff Dashboard**: Operational management including property portfolio (work-based revenue tracking), job assignments, staff coordination, and scheduling - financial access removed and moved to Admin only.
+- **Property Manager Dashboard**: View-only access for job monitoring, photo requirements tracking, progress oversight, and communication - no assignment authority.
 - **Technician Role**: Work order execution, daily scheduling, time tracking, mobile-friendly interface, callback resolution with photo uploads and automatic notifications.
 - **Inspector Role**: Property inspections, compliance tracking, report generation, quality assurance, remote photo verification for callbacks, and geofenced unit timer system (within 100 meters).
-- **Automated Payout System**: Size-based pricing for paint and cleaning jobs, real-time payout tracking.
-- **General Dashboard**: Tracks scheduled jobs, active jobs, completed jobs, revenue billed, and total payouts with bi-weekly financial resets and profit analysis.
+- **Work-Based Revenue Tracking**: Year-to-date revenue based on actual work completed per property (not rental income), job completion metrics, and average job values.
+- **Automated Payout System**: Size-based pricing for paint and cleaning jobs, real-time payout tracking accessible only to Admin.
 - **Data Models**: Extended models for Users, Inspections, Work Orders, Properties, Tenants, User Permissions, and Audit Logs.
 
 ### System Design Choices

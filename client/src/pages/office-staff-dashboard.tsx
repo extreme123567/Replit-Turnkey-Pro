@@ -477,14 +477,7 @@ export default function OfficeStaffDashboard() {
     },
   });
 
-  const { data: financialSummary, isLoading: financialLoading } = useQuery({
-    queryKey: ["/api/financial/summary"],
-    queryFn: async () => {
-      const response = await fetch('/api/financial/summary');
-      if (!response.ok) throw new Error('Failed to fetch financial summary');
-      return response.json();
-    },
-  });
+  // Financial access removed for Office Staff - Admin only
 
   const { data: scheduledCallbacks, isLoading: callbacksLoading } = useQuery({
     queryKey: ["/api/callbacks/scheduled"],
