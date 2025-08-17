@@ -15,6 +15,12 @@ ServicePro is a comprehensive property management platform designed for professi
 - **Enhanced Work Coordination**: Direct communication with technicians, photo verification, and progress monitoring
 - **Visual Dashboard Controls**: Property managers can schedule work, manage photos, request quotes, send messages, view schedules, make changes, and track all job phases
 
+### **CRITICAL - Role-Based Job Assignment Workflow (August 2025)**
+- **Property Manager Role**: Can VIEW and MONITOR work orders but CANNOT assign jobs to technicians
+- **Office Staff Role**: EXCLUSIVE authority to ASSIGN jobs to technicians - only role with assignment permissions
+- **Correct Workflow**: Property Managers REQUEST quotes → Office Staff ASSIGNS jobs and SENDS quotes
+- **Permission Enforcement**: Job assignment functionality removed from Property Manager Dashboard to prevent unauthorized assignments
+
 ### Automated Payout System for Technicians
 - **Paint Job Payouts**: Size-based pricing structure:
   - Studio & 1-Bedroom: $175 per unit
@@ -70,8 +76,9 @@ ServicePro is a comprehensive property management platform designed for professi
 - **Enhanced Features**: Comprehensive job tracking with eight specific job types (punch, repairs, paint, clean, carpet, inspected, unit trash out, onsite bulk trash), real-time elapsed time tracking for each job, detailed phase-by-phase progress indicators with percentages, focused approval workflow for extra dirty units and extra drywall repairs with technician → office staff → property manager workflow, photo requirements tracking for trash jobs (2 photos required to office), comprehensive job scheduling system for unit preparation with multi-job booking, move-in dates, and completion targets, weekly schedule overview with progress tracking, complete photo documentation workflow (before/progress/completion photos), direct messaging to office staff with message history and status tracking, quote request system with detailed project specifications and budget management, visual weekly calendar with drag-and-drop schedule editing capabilities
 
 #### Office Staff Role  
-- **Responsibilities**: Administrative tasks, lease processing, application management, coordination
-- **Access**: Tenant management, lease processing, basic reporting, messaging, invoice processing
+- **Responsibilities**: Administrative tasks, lease processing, application management, coordination, JOB ASSIGNMENT TO TECHNICIANS
+- **Access**: Tenant management, lease processing, basic reporting, messaging, invoice processing, **EXCLUSIVE JOB ASSIGNMENT AUTHORITY**
+- **Enhanced Features**: Complete job assignment workflow with technician selection, workload balancing, and assignment tracking
 - **Restrictions**: Limited property management, cannot approve high-value expenses
 
 #### Technician Role

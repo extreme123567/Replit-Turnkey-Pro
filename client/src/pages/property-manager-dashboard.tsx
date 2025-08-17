@@ -63,8 +63,6 @@ export default function PropertyManagerDashboard() {
   // Modal states
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
-  const [isWorkOrderModalOpen, setIsWorkOrderModalOpen] = useState(false);
-  const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   
   // Filter state for jobs
   const [jobFilter, setJobFilter] = useState("all"); // all, scheduled, in_progress, completed
@@ -122,40 +120,7 @@ export default function PropertyManagerDashboard() {
     }
   };
 
-  const handleWorkOrderClick = (workOrder: any) => {
-    setSelectedWorkOrder(workOrder);
-    setIsWorkOrderModalOpen(true);
-  };
 
-  const handleAssignTechnician = async (workOrderId: string, technicianId: string) => {
-    try {
-      const response = await fetch(`/api/work-orders/${workOrderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          assignedTo: technicianId,
-          status: 'assigned'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to assign technician');
-      }
-
-      setIsWorkOrderModalOpen(false);
-      setSelectedWorkOrder(null);
-      
-      // Refresh work orders
-      window.location.reload();
-      
-      alert('Technician assigned successfully!');
-    } catch (error) {
-      console.error('Error assigning technician:', error);
-      alert('Failed to assign technician. Please try again.');
-    }
-  };
 
   const [quoteForm, setQuoteForm] = useState({
     title: '',
@@ -206,16 +171,7 @@ export default function PropertyManagerDashboard() {
     },
   });
 
-  const { data: technicians, isLoading: techniciansLoading } = useQuery({
-    queryKey: ["/api/staff/technicians"],
-    queryFn: async () => {
-      const response = await fetch('/api/staff?role=technician');
-      if (!response.ok) throw new Error('Failed to fetch technicians');
-      return response.json();
-    },
-  });
-
-  const isLoading = statsLoading || propertiesLoading || jobsLoading || workOrdersLoading || techniciansLoading;
+  const isLoading = statsLoading || propertiesLoading || jobsLoading || workOrdersLoading;
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -575,17 +531,16 @@ export default function PropertyManagerDashboard() {
             {/* Job Status Display */}
             <div className="space-y-3">
               {/* Show actual work orders */}
-              {workOrders?.filter(wo => jobFilter === "all" || wo.status === jobFilter || 
-                (jobFilter === "scheduled" && wo.status === "scheduled")).map((workOrder) => (
+              {workOrders?.filter((wo: any) => jobFilter === "all" || wo.status === jobFilter || 
+                (jobFilter === "scheduled" && wo.status === "scheduled")).map((workOrder: any) => (
                 <div 
                   key={workOrder.id} 
-                  className={`p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${
+                  className={`p-4 border rounded-lg ${
                     workOrder.status === "scheduled" ? "border-blue-200 bg-blue-50" :
                     workOrder.status === "assigned" ? "border-purple-200 bg-purple-50" :
                     workOrder.status === "in_progress" ? "border-amber-200 bg-amber-50" :
                     "border-green-200 bg-green-50"
                   }`}
-                  onClick={() => handleWorkOrderClick(workOrder)}
                   data-testid={`work-order-${workOrder.id}`}
                 >
                   <div className="flex items-center justify-between">
@@ -625,7 +580,7 @@ export default function PropertyManagerDashboard() {
                         {workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1)}
                       </Badge>
                       <p className="text-xs text-slate-500 mt-1">
-                        {workOrder.assignedTo ? `Tech: ${workOrder.assignedTo}` : "Unassigned"}
+                        {workOrder.assignedTo ? `Tech: ${workOrder.assignedTo}` : "Pending Office Assignment"}
                       </p>
                     </div>
                   </div>
@@ -1279,68 +1234,7 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Work Order Assignment Modal */}
-      <Dialog open={isWorkOrderModalOpen} onOpenChange={setIsWorkOrderModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Assign Work Order</DialogTitle>
-          </DialogHeader>
-          {selectedWorkOrder && (
-            <div className="space-y-4">
-              <div className="border border-slate-200 rounded-lg p-4">
-                <h3 className="font-medium text-slate-800 mb-2">{selectedWorkOrder.title}</h3>
-                <p className="text-sm text-slate-600 mb-2">{selectedWorkOrder.description}</p>
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Unit: {selectedWorkOrder.unitNumber}</span>
-                  <span>Priority: {selectedWorkOrder.priority}</span>
-                  <span>Est: {selectedWorkOrder.estimatedHours}h</span>
-                </div>
-                {selectedWorkOrder.scheduledDate && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    Scheduled: {new Date(selectedWorkOrder.scheduledDate).toLocaleDateString()} {new Date(selectedWorkOrder.scheduledDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  </p>
-                )}
-              </div>
 
-              <div className="space-y-3">
-                <Label>Assign to Technician</Label>
-                <div className="grid gap-2">
-                  {technicians?.length > 0 ? technicians.map((tech: any) => (
-                    <Button
-                      key={tech.id}
-                      variant="outline"
-                      className="justify-start h-auto p-3"
-                      onClick={() => handleAssignTechnician(selectedWorkOrder.id, tech.id)}
-                      data-testid={`assign-tech-${tech.id}`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <UserCheck className="text-blue-600" size={14} />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-medium text-slate-800">{tech.name}</p>
-                          <p className="text-xs text-slate-600">{tech.role} • {tech.activeJobs || 0} active jobs</p>
-                        </div>
-                      </div>
-                    </Button>
-                  )) : (
-                    <div className="text-center py-4 text-slate-500">
-                      <UserCheck className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-                      <p className="text-sm">No technicians available</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setIsWorkOrderModalOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
     </div>
   );
