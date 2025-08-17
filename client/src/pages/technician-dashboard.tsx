@@ -297,6 +297,39 @@ export default function TechnicianDashboard() {
     );
   };
 
+  // Handle start job functionality
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const startJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      return await apiRequest(`/api/work-orders/${jobId}/start`, "PUT", {
+        status: 'in_progress',
+        startedAt: new Date().toISOString(),
+        technicianId: technicianId
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Started",
+        description: "Office and property management teams have been notified.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders/technician", technicianId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/technician", technicianId] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to start job. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStartJob = (jobId: string) => {
+    startJobMutation.mutate(jobId);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -322,12 +355,7 @@ export default function TechnicianDashboard() {
           <h2 className="text-3xl font-bold text-slate-800">Technician Dashboard</h2>
           <p className="text-slate-600">Your work orders and daily schedule</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button className="servicepro-btn-primary" data-testid="button-clock-in">
-            <Timer className="mr-2 h-4 w-4" />
-            Clock In
-          </Button>
-        </div>
+
       </div>
 
       {/* Key Metrics */}
@@ -534,9 +562,17 @@ export default function TechnicianDashboard() {
                         {order.status}
                       </Badge>
                       <div className="flex space-x-1">
-                        <Button size="sm" variant="outline" className="px-2">
-                          <Timer size={12} />
-                        </Button>
+                        {order.status === 'assigned' && (
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700 text-white px-3"
+                            onClick={() => handleStartJob(order.id)}
+                            data-testid={`button-start-job-${order.id}`}
+                          >
+                            <Timer size={12} className="mr-1" />
+                            Start Job
+                          </Button>
+                        )}
                         <Button size="sm" variant="outline" className="px-2">
                           <FileText size={12} />
                         </Button>

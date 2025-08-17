@@ -577,6 +577,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Start a work order (technician starts working on assigned job)
+  app.put("/api/work-orders/:id/start", async (req, res) => {
+    try {
+      const { status, startedAt, technicianId } = req.body;
+      const workOrder = await storage.getWorkOrder(req.params.id);
+      
+      if (!workOrder) {
+        return res.status(404).json({ error: "Work order not found" });
+      }
+
+      // Update work order status to in_progress
+      const updatedWorkOrder = await storage.updateWorkOrder(req.params.id, {
+        status: 'in_progress',
+        startedAt: startedAt,
+        assignedTo: technicianId
+      });
+
+      console.log(`Work order ${req.params.id} started by technician ${technicianId}`);
+      console.log("Office and property management teams notified of job start");
+
+      res.json({
+        message: "Work order started successfully",
+        workOrder: updatedWorkOrder
+      });
+    } catch (error) {
+      console.error("Error starting work order:", error);
+      res.status(500).json({ error: "Failed to start work order" });
+    }
+  });
+
   // Properties routes
   app.get("/api/properties", async (req, res) => {
     try {
