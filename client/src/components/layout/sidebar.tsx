@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
 import { 
-  LayoutDashboard, 
   Calendar, 
   Users, 
   UserCheck, 
@@ -18,7 +17,6 @@ import { cn } from "@/lib/utils";
 
 const dashboards = [
   { name: "Admin Dashboard", href: "/admin", icon: Shield },
-  { name: "General Dashboard", href: "/general", icon: LayoutDashboard },
   { name: "Property Manager", href: "/property-manager", icon: Building },
   { name: "Office Staff", href: "/office-staff", icon: ClipboardList },
   { name: "Technician", href: "/technician", icon: HardHat },

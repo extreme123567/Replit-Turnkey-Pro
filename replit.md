@@ -6,7 +6,8 @@ ServicePro is a comprehensive property management platform designed for professi
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- Preferred communication style: Simple, everyday language
+- Dashboard preference: Direct role-based routing without general dashboard (implemented August 2025)
 
 ## System Architecture
 
@@ -16,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - Visual weekly schedule overview.
 - Color-coded profitability indicators for financial analysis.
 - Role-based dashboards tailored for Property Managers, Office Staff, Technicians, and Inspectors.
+- Direct role selection interface - no general dashboard (users go straight to role-specific dashboards).
 
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Wouter for routing, TanStack Query for state management, shadcn/ui for UI components, React Hook Form with Zod for forms, and Tailwind CSS for styling.
