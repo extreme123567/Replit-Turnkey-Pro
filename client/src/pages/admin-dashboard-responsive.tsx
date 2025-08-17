@@ -318,21 +318,33 @@ export default function AdminDashboard() {
       <div className="p-6">
         <Tabs defaultValue="overview" className="w-full">
           {/* Desktop Tab Navigation */}
-          <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-white rounded-xl border border-gray-200 p-1 mb-8">
-            <TabsTrigger value="overview" className="flex items-center gap-2 px-6 py-3">
-              <BarChart3 size={18} />
+          <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1 text-muted-foreground mb-8 gap-1">
+            <TabsTrigger 
+              value="overview" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2 min-w-fit"
+            >
+              <BarChart3 size={16} />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="schedule" className="flex items-center gap-2 px-6 py-3">
-              <Calendar size={18} />
+            <TabsTrigger 
+              value="schedule" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2 min-w-fit"
+            >
+              <Calendar size={16} />
               Job Scheduling
             </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-2 px-6 py-3">
-              <Users size={18} />
+            <TabsTrigger 
+              value="staff" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2 min-w-fit"
+            >
+              <Users size={16} />
               Staff Management
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2 px-6 py-3">
-              <Settings size={18} />
+            <TabsTrigger 
+              value="settings" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2 min-w-fit"
+            >
+              <Settings size={16} />
               Settings
             </TabsTrigger>
           </TabsList>
