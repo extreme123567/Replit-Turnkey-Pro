@@ -804,6 +804,12 @@ export default function OfficeStaffDashboard() {
             Units Turned
             <Badge variant="secondary" className="ml-2">147</Badge>
           </Button>
+
+          <Button variant="outline" className="flex items-center space-x-2" data-testid="button-track-callbacks">
+            <AlertTriangle className="mr-2 h-4 w-4" />
+            Track Callbacks
+            <Badge variant="secondary" className="ml-2">12</Badge>
+          </Button>
         </div>
       </div>
 
