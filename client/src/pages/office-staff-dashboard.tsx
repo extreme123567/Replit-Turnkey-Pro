@@ -825,16 +825,70 @@ export default function OfficeStaffDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9">
-          <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-          <TabsTrigger value="quotes" data-testid="tab-quotes">Quotes</TabsTrigger>
-          <TabsTrigger value="jobs" data-testid="tab-jobs">Job Approvals</TabsTrigger>
-          <TabsTrigger value="staff" data-testid="tab-staff">Staff Management</TabsTrigger>
-          <TabsTrigger value="messaging" data-testid="tab-messaging">Messaging</TabsTrigger>
-          <TabsTrigger value="callbacks" data-testid="tab-callbacks">Callbacks</TabsTrigger>
-          <TabsTrigger value="billing" data-testid="tab-billing">Billing</TabsTrigger>
-          <TabsTrigger value="accounts" data-testid="tab-accounts">Accounts</TabsTrigger>
-          <TabsTrigger value="payroll" data-testid="tab-payroll">Payroll</TabsTrigger>
+        <TabsList className="inline-flex h-12 items-center justify-start rounded-xl bg-gray-100 p-1 text-muted-foreground mb-8 gap-1 w-full overflow-x-auto">
+          <TabsTrigger 
+            value="overview" 
+            data-testid="tab-overview"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger 
+            value="quotes" 
+            data-testid="tab-quotes"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Quotes
+          </TabsTrigger>
+          <TabsTrigger 
+            value="jobs" 
+            data-testid="tab-jobs"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Job Approvals
+          </TabsTrigger>
+          <TabsTrigger 
+            value="staff" 
+            data-testid="tab-staff"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Staff Management
+          </TabsTrigger>
+          <TabsTrigger 
+            value="messaging" 
+            data-testid="tab-messaging"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Messaging
+          </TabsTrigger>
+          <TabsTrigger 
+            value="callbacks" 
+            data-testid="tab-callbacks"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Callbacks
+          </TabsTrigger>
+          <TabsTrigger 
+            value="billing" 
+            data-testid="tab-billing"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Billing
+          </TabsTrigger>
+          <TabsTrigger 
+            value="accounts" 
+            data-testid="tab-accounts"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Accounts
+          </TabsTrigger>
+          <TabsTrigger 
+            value="payroll" 
+            data-testid="tab-payroll"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
+          >
+            Payroll
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
