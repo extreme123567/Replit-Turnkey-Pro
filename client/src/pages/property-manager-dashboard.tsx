@@ -67,6 +67,8 @@ export default function PropertyManagerDashboard() {
   // Modal states
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
+  const [selectedJobForCallback, setSelectedJobForCallback] = useState<any>(null);
   
   // Filter state for jobs
   const [jobFilter, setJobFilter] = useState("all"); // all, scheduled, in_progress, completed
@@ -85,6 +87,13 @@ export default function PropertyManagerDashboard() {
     unitNumber: '',
     category: 'apartment-turn',
     priority: 'medium'
+  });
+
+  const [callbackRequestForm, setCallbackRequestForm] = useState({
+    reason: '',
+    description: '',
+    priority: 'medium',
+    photos: false
   });
 
   const handleQuoteRequest = async () => {
@@ -122,6 +131,63 @@ export default function PropertyManagerDashboard() {
       console.error('Error submitting quote request:', error);
       alert('Failed to submit quote request. Please try again.');
     }
+  };
+
+  const handleCallbackRequest = async () => {
+    if (!selectedJobForCallback) return;
+    
+    try {
+      const response = await fetch('/api/work-orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: `Callback - ${selectedJobForCallback.title}`,
+          description: `Callback requested for completed job: ${callbackRequestForm.description}`,
+          propertyId: selectedJobForCallback.propertyId,
+          category: 'callback',
+          priority: callbackRequestForm.priority,
+          assignedTechnicianId: selectedJobForCallback.assignedTechnicianId,
+          requestedBy: propertyManagerId,
+          originalJobId: selectedJobForCallback.id,
+          callbackReason: callbackRequestForm.reason,
+          photosRequired: callbackRequestForm.photos,
+          status: 'scheduled',
+          createdAt: new Date().toISOString()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit callback request');
+      }
+
+      // Reset form and close modal
+      setCallbackRequestForm({
+        reason: '',
+        description: '',
+        priority: 'medium',
+        photos: false
+      });
+      setIsCallbackModalOpen(false);
+      setSelectedJobForCallback(null);
+      
+      alert('Callback request submitted successfully! The technician will be notified.');
+    } catch (error) {
+      console.error('Error submitting callback request:', error);
+      alert('Failed to submit callback request. Please try again.');
+    }
+  };
+
+  const openCallbackModal = (workOrder: any) => {
+    setSelectedJobForCallback(workOrder);
+    setCallbackRequestForm({
+      reason: '',
+      description: '',
+      priority: 'medium',
+      photos: false
+    });
+    setIsCallbackModalOpen(true);
   };
 
 
@@ -577,15 +643,29 @@ export default function PropertyManagerDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <Badge className={getStatusColor(workOrder.status)}>
-                        {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1).replace('_', ' ')}
-                      </Badge>
-                      <Badge className={getPriorityColor(workOrder.priority)} variant="outline">
-                        {workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1)}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge className={getStatusColor(workOrder.status)}>
+                          {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1).replace('_', ' ')}
+                        </Badge>
+                        <Badge className={getPriorityColor(workOrder.priority)} variant="outline">
+                          {workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1)}
+                        </Badge>
+                      </div>
                       <p className="text-xs text-slate-500 mt-1">
                         {workOrder.assignedTo ? `Tech: ${workOrder.assignedTo}` : "Pending Office Assignment"}
                       </p>
+                      {workOrder.status === 'completed' && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="mt-2 text-xs"
+                          onClick={() => openCallbackModal(workOrder)}
+                          data-testid={`button-callback-${workOrder.id}`}
+                        >
+                          <AlertTriangle className="mr-1 h-3 w-3" />
+                          Request Callback
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1191,7 +1271,96 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
+      {/* Callback Request Modal */}
+      <Dialog open={isCallbackModalOpen} onOpenChange={setIsCallbackModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request Callback</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedJobForCallback && (
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <p className="font-medium text-sm">{selectedJobForCallback.title}</p>
+                <p className="text-xs text-slate-600">Completed Job #{selectedJobForCallback.id?.slice(0, 8)}</p>
+              </div>
+            )}
+            
+            <div>
+              <Label htmlFor="callback-reason">Reason for Callback *</Label>
+              <Select 
+                value={callbackRequestForm.reason} 
+                onValueChange={(value) => setCallbackRequestForm({...callbackRequestForm, reason: value})}
+              >
+                <SelectTrigger data-testid="select-callback-reason">
+                  <SelectValue placeholder="Select reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quality-issue">Quality Issue</SelectItem>
+                  <SelectItem value="incomplete-work">Incomplete Work</SelectItem>
+                  <SelectItem value="damage-found">Damage Found</SelectItem>
+                  <SelectItem value="missed-area">Missed Area</SelectItem>
+                  <SelectItem value="touch-up-needed">Touch-up Needed</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
+            <div>
+              <Label htmlFor="callback-description">Description *</Label>
+              <Textarea
+                id="callback-description"
+                placeholder="Describe the issue requiring a callback..."
+                value={callbackRequestForm.description}
+                onChange={(e) => setCallbackRequestForm({...callbackRequestForm, description: e.target.value})}
+                data-testid="textarea-callback-description"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="callback-priority">Priority</Label>
+              <Select 
+                value={callbackRequestForm.priority} 
+                onValueChange={(value) => setCallbackRequestForm({...callbackRequestForm, priority: value})}
+              >
+                <SelectTrigger data-testid="select-callback-priority">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id="callback-photos"
+                checked={callbackRequestForm.photos}
+                onChange={(e) => setCallbackRequestForm({...callbackRequestForm, photos: e.target.checked})}
+                className="h-4 w-4"
+                data-testid="checkbox-callback-photos"
+              />
+              <Label htmlFor="callback-photos" className="text-sm">Request photos for documentation</Label>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsCallbackModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCallbackRequest}
+                disabled={!callbackRequestForm.reason || !callbackRequestForm.description}
+                data-testid="button-submit-callback"
+              >
+                Submit Callback Request
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
