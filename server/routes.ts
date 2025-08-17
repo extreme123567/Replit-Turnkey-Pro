@@ -472,42 +472,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/admin", async (req, res) => {
     try {
       const properties = await storage.getProperties();
-      const currentDate = new Date();
-      const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+      const workOrders = await storage.getWorkOrders();
+      const staff = await storage.getStaff();
+      const quoteRequests = await storage.getQuoteRequests();
       
       // Calculate property metrics
       const totalProperties = properties.length;
       const activeProperties = properties.filter(p => p.status === 'active').length;
       
-      // Property turnover analytics (in real app, this would track property history)
-      const propertiesAcquiredYTD = 3; // New properties added this year
-      const propertiesLostYTD = 1; // Properties lost this year
+      // Calculate revenue from completed work orders
+      const completedWorkOrders = workOrders.filter(wo => wo.status === 'completed');
+      const totalRevenue = completedWorkOrders.reduce((sum, wo) => {
+        return sum + (parseFloat(wo.estimatedCost || '0'));
+      }, 0);
+      
+      // Calculate payouts (assume 60% of revenue goes to payouts)
+      const totalPayouts = Math.round(totalRevenue * 0.6);
+      const netProfit = totalRevenue - totalPayouts;
+      
+      // Property turnover analytics - start at 0 for new system
+      const propertiesAcquiredYTD = 0; // Will be updated when properties are added
+      const propertiesLostYTD = 0; // Will be updated when properties are removed
       const turnoverRate = totalProperties > 0 ? ((propertiesLostYTD / totalProperties) * 100) : 0;
       
       // Property performance metrics
-      const averageRevenuePerProperty = totalProperties > 0 ? (124750 / totalProperties) : 0;
+      const averageRevenuePerProperty = totalProperties > 0 ? Math.round(totalRevenue / totalProperties) : 0;
       const propertyRetentionRate = 100 - turnoverRate;
       
+      // Operational metrics
+      const activeJobs = workOrders.filter(wo => wo.status === 'in_progress' || wo.status === 'scheduled').length;
+      const totalStaff = staff.length;
+      
       const adminStats = {
-        // Financial metrics
-        totalRevenue: 124750,
-        totalPayouts: 67200,
-        netProfit: 57550,
-        monthlyGrowth: 12,
+        // Financial metrics - calculated from actual data
+        totalRevenue: Math.round(totalRevenue),
+        totalPayouts: totalPayouts,
+        netProfit: Math.round(netProfit),
+        monthlyGrowth: 0, // Will calculate based on historical data when available
         
         // Property tracking and turnover metrics
         totalProperties: totalProperties,
         activeProperties: activeProperties,
         propertiesAcquiredYTD: propertiesAcquiredYTD,
         propertiesLostYTD: propertiesLostYTD,
-        turnoverRate: Math.round(turnoverRate * 10) / 10, // Round to 1 decimal
+        turnoverRate: Math.round(turnoverRate * 10) / 10,
         propertyRetentionRate: Math.round(propertyRetentionRate * 10) / 10,
-        averageRevenuePerProperty: Math.round(averageRevenuePerProperty),
+        averageRevenuePerProperty: averageRevenuePerProperty,
         
-        // Operational metrics
-        activeJobs: 12,
-        totalStaff: 6,
-        totalTenants: 56
+        // Operational metrics - calculated from actual data
+        activeJobs: activeJobs,
+        totalStaff: totalStaff,
+        totalTenants: 0, // Will be calculated when tenant data is added
+        pendingQuoteRequests: quoteRequests.filter(q => q.status === 'pending_office_approval').length
       };
       res.json(adminStats);
     } catch (error) {
@@ -516,15 +532,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin financial summary endpoint - EXCLUSIVE to Admin
+  // Admin financial summary endpoint - EXCLUSIVE to Admin - calculated from actual data
   app.get("/api/financial/admin-summary", async (req, res) => {
     try {
+      const workOrders = await storage.getWorkOrders();
+      
+      // Calculate revenue from completed work orders
+      const completedWorkOrders = workOrders.filter(wo => wo.status === 'completed');
+      const totalBilled = completedWorkOrders.reduce((sum, wo) => {
+        return sum + (parseFloat(wo.estimatedCost || '0'));
+      }, 0);
+      
+      // Calculate payouts (assume 60% of revenue goes to payouts)
+      const totalPaidOut = totalBilled * 0.6;
+      const netProfit = totalBilled - totalPaidOut;
+      
+      // Initialize monthly arrays with zeros (will populate as data comes in)
+      const monthlyRevenue = new Array(12).fill(0);
+      const payoutHistory = new Array(12).fill(0);
+      
       const financialSummary = {
-        totalBilled: "124750.00",
-        totalPaidOut: "67200.00", 
-        netProfit: "57550.00",
-        monthlyRevenue: [12000, 14500, 16800, 18200, 15600, 17400, 16900, 12750],
-        payoutHistory: [7800, 8200, 9100, 8600, 8400, 8900, 8500, 7600]
+        totalBilled: totalBilled.toFixed(2),
+        totalPaidOut: totalPaidOut.toFixed(2), 
+        netProfit: netProfit.toFixed(2),
+        monthlyRevenue: monthlyRevenue,
+        payoutHistory: payoutHistory
       };
       res.json(financialSummary);
     } catch (error) {

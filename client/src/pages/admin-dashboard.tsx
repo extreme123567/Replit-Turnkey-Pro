@@ -43,6 +43,7 @@ interface AdminStats {
   totalStaff: number;
   totalTenants: number;
   monthlyGrowth: number;
+  pendingQuoteRequests: number;
 }
 
 interface FinancialSummary {
@@ -109,14 +110,16 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-green-600 text-sm font-medium">Total Revenue (YTD)</p>
                 <p className="text-2xl font-bold text-green-700 mt-1" data-testid="stat-total-revenue">
-                  ${stats?.totalRevenue?.toLocaleString() || "124,750"}
+                  ${stats?.totalRevenue?.toLocaleString() || "0"}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
                 <DollarSign className="text-green-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-green-600 mt-2">+12% from last month</p>
+            <p className="text-sm text-green-600 mt-2">
+              {stats?.monthlyGrowth ? `+${stats.monthlyGrowth}% from last month` : 'Ready for your first revenue'}
+            </p>
           </CardContent>
         </Card>
 
@@ -126,7 +129,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-blue-600 text-sm font-medium">Total Payouts (YTD)</p>
                 <p className="text-2xl font-bold text-blue-700 mt-1" data-testid="stat-total-payouts">
-                  ${stats?.totalPayouts?.toLocaleString() || "67,200"}
+                  ${stats?.totalPayouts?.toLocaleString() || "0"}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
@@ -143,14 +146,19 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-purple-600 text-sm font-medium">Net Profit (YTD)</p>
                 <p className="text-2xl font-bold text-purple-700 mt-1" data-testid="stat-net-profit">
-                  ${stats?.netProfit?.toLocaleString() || "57,550"}
+                  ${stats?.netProfit?.toLocaleString() || "0"}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
                 <TrendingUp className="text-purple-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-purple-600 mt-2">46% profit margin</p>
+            <p className="text-sm text-purple-600 mt-2">
+              {stats?.totalRevenue && stats.totalRevenue > 0 
+                ? `${Math.round((stats.netProfit / stats.totalRevenue) * 100)}% profit margin`
+                : 'Profit tracking ready'
+              }
+            </p>
           </CardContent>
         </Card>
 
@@ -160,14 +168,16 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-amber-600 text-sm font-medium">Active Operations</p>
                 <p className="text-2xl font-bold text-amber-700 mt-1" data-testid="stat-active-operations">
-                  {stats?.activeJobs || 12}
+                  {stats?.activeJobs || 0}
                 </p>
               </div>
               <div className="w-12 h-12 bg-amber-200 rounded-lg flex items-center justify-center">
                 <Wrench className="text-amber-600" size={20} />
               </div>
             </div>
-            <p className="text-sm text-amber-600 mt-2">Jobs in progress</p>
+            <p className="text-sm text-amber-600 mt-2">
+              {stats?.activeJobs ? 'Jobs in progress' : 'Ready for job assignments'}
+            </p>
           </CardContent>
         </Card>
       </div>
