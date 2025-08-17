@@ -298,7 +298,7 @@ export class MemStorage implements IStorage {
       this.staff.set(id, staff);
     });
 
-    // Create sample properties with realistic revenue data
+    // Create sample properties with work-based revenue tracking
     const sampleProperties: InsertProperty[] = [
       {
         name: "Sunset Gardens Apartments",
@@ -312,7 +312,7 @@ export class MemStorage implements IStorage {
         squareFootage: 18000,
         managerId: "pm-1",
         status: "active",
-        monthlyRent: "28800.00" // $1200/unit avg * 24 units
+        monthlyRent: "67400.00" // YTD work revenue completed
       },
       {
         name: "Oak Ridge Complex",
@@ -326,7 +326,7 @@ export class MemStorage implements IStorage {
         squareFootage: 28000,
         managerId: "pm-1",
         status: "active",
-        monthlyRent: "46800.00" // $1300/unit avg * 36 units
+        monthlyRent: "57350.00" // YTD work revenue completed
       }
     ];
 

@@ -916,9 +916,9 @@ export default function OfficeStaffDashboard() {
                   </Badge>
                 </div>
                 <div className="text-right text-sm">
-                  <p className="text-slate-600">Total Revenue</p>
+                  <p className="text-slate-600">Total Work Revenue (YTD)</p>
                   <p className="text-lg font-bold text-green-600">
-                    $75,600/mo
+                    $124,750
                   </p>
                 </div>
               </CardTitle>
@@ -944,15 +944,15 @@ export default function OfficeStaffDashboard() {
                     <div className="text-right space-y-1">
                       <div className="flex items-center space-x-3">
                         <div className="text-center">
-                          <p className="text-xs text-slate-500">Revenue</p>
+                          <p className="text-xs text-slate-500">Work Revenue (YTD)</p>
                           <p className="text-sm font-bold text-green-600">
-                            $28,800
+                            $67,400
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-xs text-slate-500">Per Unit</p>
+                          <p className="text-xs text-slate-500">Jobs Completed</p>
                           <p className="text-sm font-medium text-blue-600">
-                            $1,200
+                            142
                           </p>
                         </div>
                       </div>
@@ -960,10 +960,10 @@ export default function OfficeStaffDashboard() {
                         <div className="flex-1 bg-slate-200 rounded-full h-1.5 w-16">
                           <div 
                             className="bg-green-500 h-1.5 rounded-full" 
-                            style={{width: "92%"}}
+                            style={{width: "74%"}}
                           />
                         </div>
-                        <span className="text-xs text-slate-600">92%</span>
+                        <span className="text-xs text-slate-600 font-medium">$474 avg</span>
                       </div>
                     </div>
                   </div>
@@ -988,15 +988,15 @@ export default function OfficeStaffDashboard() {
                     <div className="text-right space-y-1">
                       <div className="flex items-center space-x-3">
                         <div className="text-center">
-                          <p className="text-xs text-slate-500">Revenue</p>
+                          <p className="text-xs text-slate-500">Work Revenue (YTD)</p>
                           <p className="text-sm font-bold text-green-600">
-                            $46,800
+                            $57,350
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-xs text-slate-500">Per Unit</p>
+                          <p className="text-xs text-slate-500">Jobs Completed</p>
                           <p className="text-sm font-medium text-blue-600">
-                            $1,300
+                            118
                           </p>
                         </div>
                       </div>
@@ -1004,10 +1004,10 @@ export default function OfficeStaffDashboard() {
                         <div className="flex-1 bg-slate-200 rounded-full h-1.5 w-16">
                           <div 
                             className="bg-emerald-500 h-1.5 rounded-full" 
-                            style={{width: "94%"}}
+                            style={{width: "62%"}}
                           />
                         </div>
-                        <span className="text-xs text-slate-600">94%</span>
+                        <span className="text-xs text-slate-600 font-medium">$486 avg</span>
                       </div>
                     </div>
                   </div>
@@ -1017,16 +1017,16 @@ export default function OfficeStaffDashboard() {
                 <div className="pt-3 border-t border-slate-100">
                   <div className="grid grid-cols-3 gap-4 text-center text-xs">
                     <div>
-                      <p className="text-slate-500">Avg Occupancy</p>
-                      <p className="font-semibold text-green-700">93%</p>
+                      <p className="text-slate-500">Total Jobs</p>
+                      <p className="font-semibold text-blue-700">260</p>
                     </div>
                     <div>
-                      <p className="text-slate-500">Total Units</p>
-                      <p className="font-semibold text-blue-700">60</p>
+                      <p className="text-slate-500">Avg Job Value</p>
+                      <p className="font-semibold text-green-700">$480</p>
                     </div>
                     <div>
-                      <p className="text-slate-500">YTD Revenue</p>
-                      <p className="font-semibold text-green-700">$604,800</p>
+                      <p className="text-slate-500">YTD Work Revenue</p>
+                      <p className="font-semibold text-green-700">$124,750</p>
                     </div>
                   </div>
                 </div>
