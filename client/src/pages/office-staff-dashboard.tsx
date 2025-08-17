@@ -652,7 +652,7 @@ export default function OfficeStaffDashboard() {
           <h2 className="text-3xl font-bold text-slate-800" data-testid="text-office-dashboard-title">
             Office Staff Dashboard
           </h2>
-          <p className="text-slate-600">Welcome back, John Smith - Comprehensive Business Management</p>
+          <p className="text-slate-600">Welcome back, John Smith</p>
         </div>
         <div className="flex items-center space-x-3">
           <RequestQuoteButton />
