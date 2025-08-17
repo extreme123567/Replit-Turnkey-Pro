@@ -303,7 +303,7 @@ export default function TechnicianDashboard() {
 
   const startJobMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      return await apiRequest(`/api/work-orders/${jobId}/start`, "PUT", {
+      return await apiRequest(`/api/work-orders/${jobId}/start`, "POST", {
         status: 'in_progress',
         startedAt: new Date().toISOString(),
         technicianId: technicianId

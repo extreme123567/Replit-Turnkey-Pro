@@ -578,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Start a work order (technician starts working on assigned job)
-  app.put("/api/work-orders/:id/start", async (req, res) => {
+  app.post("/api/work-orders/:id/start", async (req, res) => {
     try {
       const { status, startedAt, technicianId } = req.body;
       const workOrder = await storage.getWorkOrder(req.params.id);
