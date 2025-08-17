@@ -397,38 +397,69 @@ function MessageStaffButton() {
   );
 }
 
-// Units Completed Widget - Shows total units turned
+// Units Completed Widget - Shows total units turned and callbacks scheduled
 function UnitsCompletedWidget() {
   const [unitsCompleted, setUnitsCompleted] = useState(147); // Example starting count
+  const [callbacksScheduled, setCallbacksScheduled] = useState(23); // Example starting count
   
   const incrementUnits = () => {
     setUnitsCompleted(prev => prev + 1);
   };
 
+  const incrementCallbacks = () => {
+    setCallbacksScheduled(prev => prev + 1);
+  };
+
   return (
-    <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 min-w-[200px]">
+    <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 min-w-[280px]">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-emerald-600 text-sm font-medium">Units Turned</p>
-            <p className="text-3xl font-bold text-emerald-700 mt-1" data-testid="units-completed-count">
-              {unitsCompleted}
-            </p>
-            <p className="text-xs text-emerald-600 mt-1">Total completed</p>
-          </div>
-          <div className="flex flex-col items-center space-y-2">
-            <div className="w-10 h-10 bg-emerald-200 rounded-lg flex items-center justify-center">
-              <Home className="text-emerald-600" size={18} />
+        <div className="space-y-4">
+          {/* Units Turned Section */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-emerald-600 text-sm font-medium">Units Turned</p>
+              <p className="text-2xl font-bold text-emerald-700 mt-1" data-testid="units-completed-count">
+                {unitsCompleted}
+              </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={incrementUnits}
-              className="text-xs px-2 py-1 h-6 bg-emerald-50 border-emerald-300 hover:bg-emerald-100"
-              data-testid="button-add-completed-unit"
-            >
-              +1
-            </Button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-emerald-200 rounded-lg flex items-center justify-center">
+                <Home className="text-emerald-600" size={14} />
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={incrementUnits}
+                className="text-xs px-2 py-1 h-6 bg-emerald-50 border-emerald-300 hover:bg-emerald-100"
+                data-testid="button-add-completed-unit"
+              >
+                +1
+              </Button>
+            </div>
+          </div>
+          
+          {/* Callbacks Scheduled Section */}
+          <div className="flex items-center justify-between border-t border-emerald-200 pt-3">
+            <div>
+              <p className="text-emerald-600 text-sm font-medium">Callbacks Scheduled</p>
+              <p className="text-2xl font-bold text-emerald-700 mt-1" data-testid="callbacks-scheduled-count">
+                {callbacksScheduled}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-emerald-200 rounded-lg flex items-center justify-center">
+                <ArrowRight className="text-emerald-600" size={14} />
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={incrementCallbacks}
+                className="text-xs px-2 py-1 h-6 bg-emerald-50 border-emerald-300 hover:bg-emerald-100"
+                data-testid="button-add-scheduled-callback"
+              >
+                +1
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
