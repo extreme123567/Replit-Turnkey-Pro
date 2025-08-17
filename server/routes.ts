@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { QuickBooksService, type QuickBooksTokens, type CreateInvoiceRequest } from "./quickbooksService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema, insertQuoteRequestSchema } from "@shared/schema";
+import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema, insertQuoteRequestSchema, loginSchema, createUserSchema } from "@shared/schema";
+import { AuthService, authenticate, requireAdmin, requireOfficeStaff, requirePropertyManager, requireTechnician, requireInspector, type AuthRequest } from "./auth";
 
 // Initialize QuickBooks service
 const qbConfig = {
@@ -19,6 +20,57 @@ const quickBooksService = new QuickBooksService(qbConfig);
 let qbTokens: QuickBooksTokens | null = null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // ==============================
+  // Authentication Routes
+  // ==============================
+  
+  // Login endpoint
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      const result = await AuthService.login(validatedData);
+      
+      if (!result) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      res.json({
+        message: "Login successful",
+        user: result.user,
+        token: result.token,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(400).json({ message: "Invalid login data" });
+    }
+  });
+
+  // Get current user (requires authentication)
+  app.get("/api/auth/me", authenticate, async (req: AuthRequest, res) => {
+    res.json(req.user);
+  });
+
+  // Create user endpoint (admin only)
+  app.post("/api/auth/users", authenticate, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = createUserSchema.parse(req.body);
+      const user = await AuthService.createUser(validatedData);
+      
+      if (!user) {
+        return res.status(400).json({ message: "Failed to create user" });
+      }
+
+      res.status(201).json({
+        message: "User created successfully",
+        user,
+      });
+    } catch (error) {
+      console.error("Create user error:", error);
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  });
+
+  // ==============================
   // Client routes
   app.get("/api/clients", async (req, res) => {
     try {

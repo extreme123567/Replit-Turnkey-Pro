@@ -103,7 +103,9 @@ export const messages = pgTable("messages", {
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
-  name: text("name").notNull(),
+  password: text("password").notNull(), // Hashed password
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   role: text("role").notNull(), // admin, office_staff, technician, property_manager, inspector
   department: text("department"), // operations, maintenance, leasing, accounting, inspection
   status: text("status").notNull().default("active"), // active, inactive
@@ -111,6 +113,15 @@ export const users = pgTable("users", {
   assignedRegions: text("assigned_regions").array(), // Geographic regions or property groups
   lastLogin: timestamp("last_login"),
   preferences: text("preferences"), // JSON string for dashboard preferences
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Session management table
+export const sessions = pgTable("sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -630,3 +641,24 @@ export const insertFinancialPeriodSchema = createInsertSchema(financialPeriods).
 
 export type FinancialPeriod = typeof financialPeriods.$inferSelect;
 export type InsertFinancialPeriod = z.infer<typeof insertFinancialPeriodSchema>;
+
+// User and Session types
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = typeof sessions.$inferInsert;
+
+// Auth schemas
+export const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const createUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  lastLogin: true,
+});
+
+export type LoginRequest = z.infer<typeof loginSchema>;
+export type CreateUserRequest = z.infer<typeof createUserSchema>;

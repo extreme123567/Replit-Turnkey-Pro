@@ -11,9 +11,13 @@ import {
   ClipboardList,
   HardHat,
   Search,
-  Shield
+  Shield,
+  LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth, logout } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const dashboards = [
   { name: "Admin Dashboard", href: "/admin", icon: Shield },
@@ -34,6 +38,7 @@ const navigation = [
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
 
   return (
     <aside className="w-64 bg-white shadow-lg border-r border-slate-200 flex-shrink-0">
@@ -112,6 +117,36 @@ export function Sidebar() {
           </div>
         </div>
       </nav>
+      
+      {/* User Profile and Logout */}
+      <div className="p-4 border-t border-slate-200 mt-auto">
+        {user && (
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-800 truncate">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-xs text-slate-500 truncate capitalize">
+                {user.role.replace('_', ' ')}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+          onClick={logout}
+          data-testid="button-logout"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
     </aside>
   );
 }

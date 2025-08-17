@@ -74,6 +74,12 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: string): Promise<Notification>;
 
+  // Authentication
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUserLastLogin(id: string): Promise<boolean>;
+
   // Users
   getUsers(): Promise<User[]>;
   getUser(id: string): Promise<User | undefined>;
@@ -212,8 +218,94 @@ export class MemStorage implements IStorage {
   private invoiceCounter = 1;
 
   constructor() {
-    // Fresh system - no demo data
-    // Ready for your first real data
+    // Initialize system with default users for testing
+    this.initializeDefaultUsers();
+  }
+
+  private async initializeDefaultUsers() {
+    // Create demo users for each role (for testing - in production, admin creates these)
+    const defaultUsers = [
+      {
+        id: "admin-1",
+        email: "admin@servicepro.com",
+        password: "$2b$12$2AnEdtdy55ZbofRd8l7eC.8N30.9IQeQIwxQ0WTALoLJELIY21GDy", // "admin123"
+        firstName: "System",
+        lastName: "Administrator",
+        role: "admin",
+        department: "Administration",
+        status: "active" as const,
+        permissions: ["all"],
+        assignedRegions: null,
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "office-1",
+        email: "office@servicepro.com", 
+        password: "$2b$12$eJrpiYXZhsMV8CCxaxXO6ewSkuX20yrrc1XUR8Xy0soDoNo0VfQX2", // "office123"
+        firstName: "Leslie",
+        lastName: "Rodriguez",
+        role: "office_staff",
+        department: "Operations",
+        status: "active" as const,
+        permissions: ["assign_jobs", "schedule", "approve_quotes"],
+        assignedRegions: ["New Bern"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "pm-1",
+        email: "manager@servicepro.com",
+        password: "$2b$12$l5S0VJo//V7MEWo9Zs2npOhqCvMT/0ADfOD6g6gHK3imEzbHQ7jK2", // "manager123"
+        firstName: "Property",
+        lastName: "Manager",
+        role: "property_manager",
+        department: "Property Management",
+        status: "active" as const,
+        permissions: ["view_properties", "request_approvals"],
+        assignedRegions: ["New Bern"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "tech-1",
+        email: "tech@servicepro.com",
+        password: "$2b$12$p42Hg4b2EdHvhMX0lkghuuyPE6pfQpP4P6CQQq2r0eb/W27IYXw5q", // "tech123"
+        firstName: "Mark",
+        lastName: "Kebets",
+        role: "technician", 
+        department: "Maintenance",
+        status: "active" as const,
+        permissions: ["complete_jobs", "upload_photos"],
+        assignedRegions: ["New Bern"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "inspector-1",
+        email: "inspector@servicepro.com",
+        password: "$2b$12$n97VaIruHdAawozIdzg17OwbfpRQcVYkQNySHo6qiWWFEckU67U9u", // "inspector123"
+        firstName: "Quality",
+        lastName: "Inspector",
+        role: "inspector",
+        department: "Quality Assurance", 
+        status: "active" as const,
+        permissions: ["conduct_inspections", "verify_quality"],
+        assignedRegions: ["New Bern"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+    ];
+
+    // Add demo users to storage
+    for (const user of defaultUsers) {
+      this.users.set(user.id, user as User);
+    }
   }
 
   // Clients
@@ -744,6 +836,40 @@ export class MemStorage implements IStorage {
   }
   async getInspectorStats(inspectorId: string): Promise<any> {
     return { todaysInspections: 0, pendingReports: 0, monthlyInspections: 0, averageScore: 0 };
+  }
+
+  // Authentication methods
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = randomUUID();
+    const user: User = {
+      ...insertUser,
+      id,
+      createdAt: new Date(),
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUserLastLogin(id: string): Promise<boolean> {
+    const user = this.users.get(id);
+    if (!user) return false;
+
+    const updatedUser = { ...user, lastLogin: new Date() };
+    this.users.set(id, updatedUser);
+    return true;
   }
 }
 
