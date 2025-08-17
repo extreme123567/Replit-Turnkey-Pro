@@ -578,6 +578,33 @@ function UnitsCompletedWidget() {
 }
 
 export default function OfficeStaffDashboard() {
+  // Modal states
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  
+  // Form states
+  const [quoteForm, setQuoteForm] = useState({
+    title: '',
+    description: '',
+    property: '',
+    unitNumber: ''
+  });
+  
+  const [messageForm, setMessageForm] = useState({
+    recipient: '',
+    subject: '',
+    message: ''
+  });
+  
+  const [jobForm, setJobForm] = useState({
+    title: '',
+    description: '',
+    poNumber: '',
+    priority: '',
+    estimatedHours: ''
+  });
+
   const { data: stats, isLoading: statsLoading } = useQuery<OfficeStats>({
     queryKey: ["/api/dashboard/office"],
     queryFn: async () => {
@@ -857,6 +884,12 @@ export default function OfficeStaffDashboard() {
               </div>
             </DialogContent>
           </Dialog>
+          
+          <Button variant="outline" className="flex items-center space-x-2">
+            <CheckCircle className="mr-2 h-4 w-4" />
+            Units Turned
+            <Badge variant="secondary" className="ml-2">147</Badge>
+          </Button>
         </div>
       </div>
 
