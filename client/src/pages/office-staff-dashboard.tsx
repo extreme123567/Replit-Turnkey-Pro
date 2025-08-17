@@ -71,7 +71,7 @@ function RequestQuoteButton() {
 
   const submitQuoteMutation = useMutation({
     mutationFn: async (quoteData: any) => {
-      return apiRequest("POST", "/api/quote-requests", quoteData);
+      return apiRequest("/api/quote-requests", "POST", quoteData);
     },
     onSuccess: () => {
       toast({
