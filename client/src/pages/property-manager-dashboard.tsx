@@ -93,7 +93,8 @@ export default function PropertyManagerDashboard() {
     reason: '',
     description: '',
     priority: 'medium',
-    photos: false
+    photos: [],
+    photoNotes: ['', '', '']
   });
 
   const handleQuoteRequest = async () => {
@@ -152,7 +153,8 @@ export default function PropertyManagerDashboard() {
           requestedBy: propertyManagerId,
           originalJobId: selectedJobForCallback.id,
           callbackReason: callbackRequestForm.reason,
-          photosRequired: callbackRequestForm.photos,
+          callbackPhotos: callbackRequestForm.photos,
+          photoNotes: callbackRequestForm.photoNotes.filter(note => note.trim() !== ''),
           status: 'scheduled',
           createdAt: new Date().toISOString()
         }),
@@ -167,7 +169,8 @@ export default function PropertyManagerDashboard() {
         reason: '',
         description: '',
         priority: 'medium',
-        photos: false
+        photos: [],
+        photoNotes: ['', '', '']
       });
       setIsCallbackModalOpen(false);
       setSelectedJobForCallback(null);
@@ -185,7 +188,8 @@ export default function PropertyManagerDashboard() {
       reason: '',
       description: '',
       priority: 'medium',
-      photos: false
+      photos: [],
+      photoNotes: ['', '', '']
     });
     setIsCallbackModalOpen(true);
   };
@@ -1334,16 +1338,65 @@ export default function PropertyManagerDashboard() {
               </Select>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <input 
-                type="checkbox" 
-                id="callback-photos"
-                checked={callbackRequestForm.photos}
-                onChange={(e) => setCallbackRequestForm({...callbackRequestForm, photos: e.target.checked})}
-                className="h-4 w-4"
-                data-testid="checkbox-callback-photos"
-              />
-              <Label htmlFor="callback-photos" className="text-sm">Request photos for documentation</Label>
+            <div>
+              <Label className="text-sm font-medium">Photo Evidence Required *</Label>
+              <p className="text-xs text-slate-600 mb-3">Upload 2-3 photos showing the quality issue with detailed notes</p>
+              
+              <div className="space-y-4">
+                {[0, 1, 2].map((index) => (
+                  <div key={index} className="border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Photo {index + 1} {index < 2 ? '*' : '(Optional)'}</Label>
+                      {callbackRequestForm.photos[index] && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            const newPhotos = [...callbackRequestForm.photos];
+                            const newNotes = [...callbackRequestForm.photoNotes];
+                            newPhotos[index] = null;
+                            newNotes[index] = '';
+                            setCallbackRequestForm({...callbackRequestForm, photos: newPhotos, photoNotes: newNotes});
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const newPhotos = [...callbackRequestForm.photos];
+                            newPhotos[index] = file;
+                            setCallbackRequestForm({...callbackRequestForm, photos: newPhotos});
+                          }
+                        }}
+                        className="w-full text-sm"
+                        data-testid={`input-callback-photo-${index}`}
+                      />
+                      
+                      <Textarea
+                        placeholder="Describe what this photo shows and why it requires a callback..."
+                        value={callbackRequestForm.photoNotes[index]}
+                        onChange={(e) => {
+                          const newNotes = [...callbackRequestForm.photoNotes];
+                          newNotes[index] = e.target.value;
+                          setCallbackRequestForm({...callbackRequestForm, photoNotes: newNotes});
+                        }}
+                        rows={2}
+                        className="text-sm"
+                        data-testid={`textarea-callback-note-${index}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2">
@@ -1352,7 +1405,14 @@ export default function PropertyManagerDashboard() {
               </Button>
               <Button 
                 onClick={handleCallbackRequest}
-                disabled={!callbackRequestForm.reason || !callbackRequestForm.description}
+                disabled={
+                  !callbackRequestForm.reason || 
+                  !callbackRequestForm.description ||
+                  !callbackRequestForm.photos[0] ||
+                  !callbackRequestForm.photos[1] ||
+                  !callbackRequestForm.photoNotes[0].trim() ||
+                  !callbackRequestForm.photoNotes[1].trim()
+                }
                 data-testid="button-submit-callback"
               >
                 Submit Callback Request

@@ -54,6 +54,8 @@ export default function InspectorDashboard() {
   const [inspectionNotes, setInspectionNotes] = useState("");
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [callbackNotes, setCallbackNotes] = useState("");
+  const [callbackPhotos, setCallbackPhotos] = useState<File[]>([]);
+  const [callbackPhotoNotes, setCallbackPhotoNotes] = useState<string[]>(['', '', '']);
   const [activeTimers, setActiveTimers] = useState<{[jobId: string]: {startTime: Date, elapsedSeconds: number}}>({});
   const [timerIntervals, setTimerIntervals] = useState<{[jobId: string]: NodeJS.Timeout}>({});
   const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
@@ -302,6 +304,8 @@ export default function InspectorDashboard() {
     setInspectionNotes("");
     setCallbackNotes("");
     setUploadedPhotos([]);
+    setCallbackPhotos([]);
+    setCallbackPhotoNotes(['', '', '']);
   };
 
   const handleGetUploadParameters = async () => {
@@ -329,13 +333,33 @@ export default function InspectorDashboard() {
   const handleSubmitInspection = () => {
     if (!selectedJob || !inspectionStatus) return;
     
-    if (inspectionStatus === "callback" && !callbackNotes.trim()) {
-      toast({
-        title: "Callback Notes Required",
-        description: "Please provide notes explaining why this job needs a callback.",
-        variant: "destructive",
-      });
-      return;
+    if (inspectionStatus === "callback") {
+      if (!callbackNotes.trim()) {
+        toast({
+          title: "Callback Notes Required",
+          description: "Please provide notes explaining why this job needs a callback.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!callbackPhotos[0] || !callbackPhotos[1]) {
+        toast({
+          title: "Photos Required",
+          description: "Please upload at least 2 photos showing the quality issues.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!callbackPhotoNotes[0].trim() || !callbackPhotoNotes[1].trim()) {
+        toast({
+          title: "Photo Notes Required",
+          description: "Please provide detailed notes for each photo explaining the issue.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     completeInspectionMutation.mutate({
@@ -344,6 +368,8 @@ export default function InspectorDashboard() {
       notes: inspectionNotes,
       photos: uploadedPhotos,
       callbackNotes: inspectionStatus === "callback" ? callbackNotes : undefined,
+      callbackPhotos: inspectionStatus === "callback" ? callbackPhotos : undefined,
+      callbackPhotoNotes: inspectionStatus === "callback" ? callbackPhotoNotes.filter(note => note.trim() !== '') : undefined,
     });
   };
 
@@ -961,6 +987,68 @@ export default function InspectorDashboard() {
                       />
                     </div>
                     
+                    <div>
+                      <Label className="font-medium text-amber-800">Photo Evidence Required *</Label>
+                      <p className="text-sm text-amber-700 mb-3">Upload 2-3 photos showing the quality issues with detailed notes</p>
+                      
+                      <div className="space-y-4">
+                        {[0, 1, 2].map((index) => (
+                          <div key={index} className="border border-amber-200 rounded-lg p-3 bg-white">
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-sm font-medium">Photo {index + 1} {index < 2 ? '*' : '(Optional)'}</Label>
+                              {callbackPhotos[index] && (
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    const newPhotos = [...callbackPhotos];
+                                    const newNotes = [...callbackPhotoNotes];
+                                    newPhotos[index] = null as any;
+                                    newNotes[index] = '';
+                                    setCallbackPhotos(newPhotos);
+                                    setCallbackPhotoNotes(newNotes);
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const newPhotos = [...callbackPhotos];
+                                    newPhotos[index] = file;
+                                    setCallbackPhotos(newPhotos);
+                                  }
+                                }}
+                                className="w-full text-sm"
+                                data-testid={`input-inspector-callback-photo-${index}`}
+                              />
+                              
+                              <Textarea
+                                placeholder="Describe what this photo shows and why it requires a callback..."
+                                value={callbackPhotoNotes[index]}
+                                onChange={(e) => {
+                                  const newNotes = [...callbackPhotoNotes];
+                                  newNotes[index] = e.target.value;
+                                  setCallbackPhotoNotes(newNotes);
+                                }}
+                                rows={2}
+                                className="text-sm border-amber-200"
+                                data-testid={`textarea-inspector-callback-note-${index}`}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="bg-amber-100 p-3 rounded border border-amber-200">
                       <p className="text-sm font-medium text-amber-800 mb-1">
                         Callback Process:
