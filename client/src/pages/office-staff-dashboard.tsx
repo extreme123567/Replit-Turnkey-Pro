@@ -646,21 +646,18 @@ export default function OfficeStaffDashboard() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800" data-testid="text-office-dashboard-title">
+          <h2 className="text-3xl font-bold text-slate-800" data-testid="text-office-dashboard-title">
             Office Staff Dashboard
-          </h1>
+          </h2>
           <p className="text-slate-600">Welcome back, John Smith - Comprehensive Business Management</p>
         </div>
         <div className="flex items-center space-x-3">
           <RequestQuoteButton />
           <UnitsCompletedWidget />
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <UserCheck className="w-4 h-4 mr-1" />
-            Office Staff
-          </Badge>
+          <MessageStaffButton />
         </div>
       </div>
 
@@ -738,10 +735,6 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Secondary Action Buttons */}
-          <div className="flex items-center space-x-3">
-            <MessageStaffButton />
-          </div>
 
           {/* Job Scheduling Section */}
           <ScheduleJobsSection />
