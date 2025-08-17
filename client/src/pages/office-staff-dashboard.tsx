@@ -647,15 +647,27 @@ export default function OfficeStaffDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900" data-testid="text-office-dashboard-title">
-          Office Staff Dashboard
-        </h1>
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <UserCheck className="w-4 h-4 mr-1" />
-            Office Staff
-          </Badge>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="text-office-dashboard-title">
+            Office Staff Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">Comprehensive Business Management</p>
+        </div>
+        <div className="flex flex-col items-end space-y-3">
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <UserCheck className="w-4 h-4 mr-1" />
+              Office Staff
+            </Badge>
+          </div>
+          <div className="text-right">
+            <p className="text-gray-700 font-medium">John Smith</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <RequestQuoteButton />
+            <UnitsCompletedWidget />
+          </div>
         </div>
       </div>
 
@@ -733,18 +745,6 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Header with User Info and Action Widgets */}
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold">Office Staff Dashboard</h2>
-              <p className="text-gray-600 mt-1">Welcome back, John Smith</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <RequestQuoteButton />
-              <UnitsCompletedWidget />
-            </div>
-          </div>
-
           {/* Secondary Action Buttons */}
           <div className="flex items-center space-x-3">
             <MessageStaffButton />
