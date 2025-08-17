@@ -710,6 +710,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.estimatedCost = parseFloat(updateData.estimatedCost);
       }
 
+      // Handle "unassigned" value for technician assignment
+      if (updateData.assignedTechnicianId === "unassigned") {
+        updateData.assignedTechnicianId = null;
+      }
+
       const updatedWorkOrder = await storage.updateWorkOrder(id, updateData);
       if (!updatedWorkOrder) {
         return res.status(404).json({ error: "Work order not found" });

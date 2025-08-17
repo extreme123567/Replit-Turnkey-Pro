@@ -105,7 +105,7 @@ function EditJobDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () => vo
       description: job?.description || "",
       priority: job?.priority || "medium",
       scheduledDate: job?.scheduledDate ? new Date(job.scheduledDate).toISOString().split('T')[0] : "",
-      assignedTechnicianId: job?.assignedTechnicianId || "",
+      assignedTechnicianId: job?.assignedTechnicianId || "unassigned",
       propertyId: job?.propertyId || "",
       unitNumber: job?.unitNumber || "",
       estimatedCost: job?.estimatedCost || "",
@@ -322,7 +322,7 @@ function EditJobDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () => vo
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       {(staff as any[])?.filter(member => member.role === 'technician').map((technician: any) => (
                         <SelectItem key={technician.id} value={technician.id}>
                           {technician.firstName} {technician.lastName}
@@ -360,7 +360,7 @@ function AssignTeamDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () =>
   const assignForm = useForm<AssignTeamFormData>({
     resolver: zodResolver(assignTeamSchema),
     defaultValues: {
-      assignedTechnicianId: job?.assignedTechnicianId || "",
+      assignedTechnicianId: job?.assignedTechnicianId || "unassigned",
       scheduledDate: job?.scheduledDate ? new Date(job.scheduledDate).toISOString().split('T')[0] : "",
       notes: "",
     },
