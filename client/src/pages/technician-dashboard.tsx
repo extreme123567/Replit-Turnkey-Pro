@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { 
   Wrench, 
@@ -54,12 +56,15 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
   const completeJobWithPayout = useMutation({
     mutationFn: async (data: any) => {
       // Create the payout first
-      await apiRequest("/api/payroll/create-payout", "POST", {
+      await apiRequest("/api/payroll/create-payout", {
+        method: "POST",
+        body: JSON.stringify({
         jobId: `demo-${jobType}-job-${Date.now()}`,
         staffId: technicianId,
         jobType: data.jobType,
         unitCount: data.unitCount,
-        unitType: data.unitType
+          unitType: data.unitType
+        }),
       });
       return data;
     },
@@ -225,7 +230,11 @@ export default function TechnicianDashboard() {
 
     const createExtraDirtyRequest = useMutation({
       mutationFn: async (data: any) => {
-        return await apiRequest("/api/extra-dirty-requests", "POST", data);
+        const response = await apiRequest("/api/extra-dirty-requests", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+        return response.json();
       },
       onSuccess: () => {
         toast({
@@ -303,11 +312,15 @@ export default function TechnicianDashboard() {
 
   const startJobMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      return await apiRequest(`/api/work-orders/${jobId}/start`, "POST", {
-        status: 'in_progress',
-        startedAt: new Date().toISOString(),
-        technicianId: technicianId
+      const response = await apiRequest(`/api/work-orders/${jobId}/start`, {
+        method: "POST",
+        body: JSON.stringify({
+          status: 'in_progress',
+          startedAt: new Date().toISOString(),
+          technicianId: technicianId
+        }),
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({
