@@ -604,14 +604,22 @@ export default function PropertyManagerDashboard() {
 
       {/* Properties Overview and Work Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Properties List */}
+        {/* Properties List with Revenue Tracking */}
         <Card className="servicepro-card">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>My Properties</span>
-              <Button variant="ghost" size="sm" className="text-blue-600">
-                View All
-              </Button>
+              <div className="flex items-center space-x-2">
+                <span>My Properties</span>
+                <Badge variant="secondary" className="ml-2">
+                  {properties?.length || 0}
+                </Badge>
+              </div>
+              <div className="text-right text-sm">
+                <p className="text-slate-600">Total Revenue</p>
+                <p className="text-lg font-bold text-green-600">
+                  ${properties?.reduce((sum: number, p: any) => sum + (p.monthlyRevenue || p.monthlyRent || 0), 0).toLocaleString()}
+                </p>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-0">
@@ -623,26 +631,78 @@ export default function PropertyManagerDashboard() {
                   <p className="text-sm">Properties will appear here when assigned to you</p>
                 </div>
               ) : (
-                properties?.slice(0, 5).map((property) => (
-                  <div key={property.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Building className="text-blue-600 text-sm" size={16} />
+                properties?.slice(0, 5).map((property: any) => (
+                  <div key={property.id} className="p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" data-testid={`property-${property.id}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Building className="text-blue-600 text-sm" size={16} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">{property.name}</p>
+                          <p className="text-sm text-slate-600 flex items-center">
+                            <MapPin className="mr-1" size={12} />
+                            {property.city}, {property.state}
+                          </p>
+                          <p className="text-xs text-slate-500">{property.units} units • {property.occupiedUnits || property.units} occupied</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-slate-800">{property.name}</p>
-                        <p className="text-sm text-slate-600 flex items-center">
-                          <MapPin className="mr-1" size={12} />
-                          {property.city}, {property.state}
-                        </p>
+                      <div className="text-right space-y-1">
+                        <div className="flex items-center space-x-3">
+                          <div className="text-center">
+                            <p className="text-xs text-slate-500">Revenue</p>
+                            <p className="text-sm font-bold text-green-600">
+                              ${(property.monthlyRevenue || property.monthlyRent || 0).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-slate-500">Per Unit</p>
+                            <p className="text-sm font-medium text-blue-600">
+                              ${Math.round((property.monthlyRevenue || property.monthlyRent || 0) / property.units).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 bg-slate-200 rounded-full h-1.5 w-16">
+                            <div 
+                              className="bg-green-500 h-1.5 rounded-full" 
+                              style={{width: `${((property.occupiedUnits || property.units) / property.units) * 100}%`}}
+                            />
+                          </div>
+                          <span className="text-xs text-slate-600">
+                            {Math.round(((property.occupiedUnits || property.units) / property.units) * 100)}%
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-slate-800">{property.units} units</p>
-                      <p className="text-sm text-slate-600">${property.monthlyRent}/mo</p>
                     </div>
                   </div>
                 ))
+              )}
+              
+              {/* Revenue Summary */}
+              {properties?.length > 0 && (
+                <div className="pt-3 border-t border-slate-100">
+                  <div className="grid grid-cols-3 gap-4 text-center text-xs">
+                    <div>
+                      <p className="text-slate-500">Avg Occupancy</p>
+                      <p className="font-semibold text-green-700">
+                        {Math.round(properties.reduce((sum: number, p: any) => sum + ((p.occupiedUnits || p.units) / p.units), 0) / properties.length * 100)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Total Units</p>
+                      <p className="font-semibold text-blue-700">
+                        {properties.reduce((sum: number, p: any) => sum + p.units, 0)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">YTD Revenue</p>
+                      <p className="font-semibold text-green-700">
+                        ${(properties.reduce((sum: number, p: any) => sum + (p.monthlyRevenue || p.monthlyRent || 0), 0) * 8).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </CardContent>

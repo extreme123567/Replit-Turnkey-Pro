@@ -298,35 +298,35 @@ export class MemStorage implements IStorage {
       this.staff.set(id, staff);
     });
 
-    // Create sample properties
+    // Create sample properties with realistic revenue data
     const sampleProperties: InsertProperty[] = [
       {
         name: "Sunset Gardens Apartments",
         address: "1234 Sunset Blvd",
-        city: "Los Angeles",
-        state: "CA",
-        zipCode: "90028",
+        city: "Charlotte",
+        state: "NC",
+        zipCode: "28217",
         propertyType: "multi_family",
         units: 24,
         yearBuilt: 1985,
         squareFootage: 18000,
         managerId: "pm-1",
         status: "active",
-        monthlyRent: "2400.00"
+        monthlyRent: "28800.00" // $1200/unit avg * 24 units
       },
       {
-        name: "Oak Street Townhomes",
-        address: "567 Oak Street",
-        city: "San Diego",
-        state: "CA", 
-        zipCode: "92101",
-        propertyType: "single_family",
-        units: 8,
+        name: "Oak Ridge Complex",
+        address: "456 Oak Avenue",
+        city: "Charlotte",
+        state: "NC", 
+        zipCode: "28217",
+        propertyType: "multi_family",
+        units: 36,
         yearBuilt: 2010,
-        squareFootage: 12000,
+        squareFootage: 28000,
         managerId: "pm-1",
         status: "active",
-        monthlyRent: "3200.00"
+        monthlyRent: "46800.00" // $1300/unit avg * 36 units
       }
     ];
 

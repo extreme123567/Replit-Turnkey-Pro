@@ -2,110 +2,7 @@
 
 ## Overview
 
-ServicePro is a comprehensive property management platform designed for professional service companies. The application provides role-based functionality for property managers, office staff, technicians, and inspectors with specialized dashboards and access controls. Built as a full-stack web application, it features a React frontend with a Node.js/Express backend, using PostgreSQL for data persistence and a modern component-based UI built with shadcn/ui and Tailwind CSS.
-
-## Recent Changes (August 2025)
-
-### Enhanced Property Manager Dashboard with Comprehensive Management Features (Latest)
-- **Photo Documentation System**: Complete photo management for before, progress, and completion photos with visual status tracking
-- **Communication Center**: Direct messaging to office staff with message history, quote requests, and technician updates
-- **Quote Request System**: Detailed quote requests with project descriptions, budgets, timelines, and category selection
-- **Schedule Management**: Visual weekly schedule overview with job tracking, editing capabilities, and calendar integration
-- **Real-Time Job Status Tracking**: Comprehensive tracking of pending, in-progress, and completed jobs with filtering options
-- **Enhanced Work Coordination**: Direct communication with technicians, photo verification, and progress monitoring
-- **Visual Dashboard Controls**: Property managers can schedule work, manage photos, request quotes, send messages, view schedules, make changes, and track all job phases
-
-### **CRITICAL - Role-Based Job Assignment Workflow (August 2025)**
-- **Property Manager Role**: Can VIEW and MONITOR work orders but CANNOT assign jobs to technicians
-- **Office Staff Role**: EXCLUSIVE authority to ASSIGN jobs to technicians - only role with assignment permissions
-- **Correct Workflow**: Property Managers REQUEST quotes → Office Staff ASSIGNS jobs and SENDS quotes
-- **Permission Enforcement**: Job assignment functionality removed from Property Manager Dashboard to prevent unauthorized assignments
-
-### Automated Payout System for Technicians
-- **Paint Job Payouts**: Size-based pricing structure:
-  - Studio & 1-Bedroom: $175 per unit
-  - 2-Bedroom: $200 per unit
-  - 3-Bedroom: $225 per unit
-- **Cleaning Job Payouts**: Size-based pricing structure:
-  - Studio & 1-Bedroom: $80 per unit
-  - 2-Bedroom: $95 per unit  
-  - 3-Bedroom: $105 per unit
-- **Quick Action Completion**: Technicians can complete jobs directly from dashboard with unit count input and apartment size selection
-- **Real-Time Payout Tracking**: Instant payout confirmation with automatic integration to payroll system and general dashboard
-- **Unit Count Support**: Multi-unit job completion with automatic rate multiplication
-
-### General Dashboard with Bi-Weekly Financial Reset
-- **Comprehensive Metrics Tracking**: Real-time monitoring of scheduled jobs, active jobs, jobs completed & inspected, revenue billed, and total payout
-- **Bi-Weekly Reset Cycles**: Automatic financial period management that resets every 2 weeks with countdown timer showing days remaining
-- **Profit Analysis**: Real-time net profit calculation with color-coded profitability indicators (green ≥30%, yellow ≥15%, red <15%)
-- **Financial Accountability**: Live tracking of revenue vs. payout with per-day averages and margin calculations
-- **Period Management**: Automated creation of new financial periods with complete audit trail of business performance
-
-### Photo-Based Callback Resolution System
-- **Efficient Callback Workflow**: When inspections fail, technicians receive callback notifications and can fix issues without requiring inspector return visits
-- **Photo Upload System**: Technicians upload before/after photos of completed callback work with detailed resolution notes
-- **Remote Verification**: Inspectors review photos remotely and approve/reject work without physical site visits
-- **Automated Notifications**: Complete messaging workflow - technician completes work → photos uploaded → inspector and office automatically notified
-- **Time Tracking**: Full accountability with time tracking for callback resolution work
-- **Status Management**: Complete audit trail from callback creation to photo verification to final approval
-
-### Geofencing and Location Verification
-- **100-Meter Radius Verification**: Inspectors must be within 100 meters of property before starting unit timers
-- **Unit-Specific Timers**: Individual timer tracking for each unit inspection with start/stop functionality
-- **Location-Based Controls**: Timer controls only activate when inspector is physically on-site
-
-### Role-Based Dashboard System
-- **Property Manager Dashboard**: Property oversight, work order management, occupancy tracking, revenue monitoring, job scheduling and progress tracking with real-time status updates
-- **Office Staff Dashboard**: Lease management, approval workflows, tenant coordination, administrative tasks
-- **Technician Dashboard**: Work order execution, daily scheduling, time tracking, mobile-friendly interface, callback resolution with photo uploads
-- **Inspector Dashboard**: Property inspections, compliance tracking, report generation, quality assurance, remote photo verification for callbacks, geofenced timer system
-- **General Dashboard**: Overview metrics accessible to all roles with appropriate data filtering
-
-### Access Control Implementation
-- Comprehensive permission system with role-based access controls
-- User permissions stored in database with expiration and audit capabilities
-- Route-level access restrictions based on user roles and permissions
-- Dedicated API endpoints for permission checking and management
-
-### Role-Specific Features and Access
-
-#### Property Manager Role
-- **Responsibilities**: Property oversight, tenant relations, work order approval, revenue tracking, job scheduling and progress monitoring, photo documentation, communication coordination
-- **Access**: Properties, tenants, work orders, inspections, revenue reports, job scheduling interface, real-time progress tracking, approval queue for repairs and extra dirty units, photo management system, communication center, quote request system
-- **Restrictions**: Cannot complete work orders or inspections directly, limited staff management
-- **Enhanced Features**: Comprehensive job tracking with eight specific job types (punch, repairs, paint, clean, carpet, inspected, unit trash out, onsite bulk trash), real-time elapsed time tracking for each job, detailed phase-by-phase progress indicators with percentages, focused approval workflow for extra dirty units and extra drywall repairs with technician → office staff → property manager workflow, photo requirements tracking for trash jobs (2 photos required to office), comprehensive job scheduling system for unit preparation with multi-job booking, move-in dates, and completion targets, weekly schedule overview with progress tracking, complete photo documentation workflow (before/progress/completion photos), direct messaging to office staff with message history and status tracking, quote request system with detailed project specifications and budget management, visual weekly calendar with drag-and-drop schedule editing capabilities
-
-#### Office Staff Role  
-- **Responsibilities**: Administrative tasks, lease processing, application management, coordination, JOB ASSIGNMENT TO TECHNICIANS
-- **Access**: Tenant management, lease processing, basic reporting, messaging, invoice processing, **EXCLUSIVE JOB ASSIGNMENT AUTHORITY**
-- **Enhanced Features**: Complete job assignment workflow with technician selection, workload balancing, and assignment tracking
-- **Restrictions**: Limited property management, cannot approve high-value expenses
-
-#### Technician Role
-- **Responsibilities**: Work order execution, field operations, time tracking, equipment maintenance, callback resolution work
-- **Access**: Assigned work orders, scheduling, messaging, mobile-optimized interface, callback notifications, photo upload system for callback completion
-- **Restrictions**: Cannot create or assign work orders, limited reporting access
-- **Enhanced Features**: Complete callback resolution workflow with photo documentation, automatic notification system when callback work is completed
-
-#### Inspector Role
-- **Responsibilities**: Property inspections, compliance monitoring, quality assurance, reporting, remote callback verification
-- **Access**: Inspection scheduling, report generation, property access, compliance tracking, geofenced timer system, photo-based callback approval
-- **Restrictions**: Cannot manage properties or tenants directly, focused on inspection workflows
-- **Enhanced Features**: Unit-specific timer tracking with geofencing verification, remote photo verification for callback work eliminating need for return site visits
-
-#### Admin Role
-- **Responsibilities**: System administration, user management, full oversight
-- **Access**: All system functions, user management, system configuration, audit logs
-- **Restrictions**: None - full system access
-
-### Data Models Extended
-- **Users**: Enhanced with role-based permissions and regional assignments
-- **Inspections**: Complete inspection workflow with findings, ratings, and compliance tracking
-- **Work Orders**: Property-specific work orders with technician assignment and approval workflows
-- **Properties**: Comprehensive property management with units, occupancy, and manager assignment
-- **Tenants**: Lease management with expiration tracking and contact information
-- **User Permissions**: Granular permission system with resource-level access control
-- **Audit Log**: Complete action tracking for compliance and security monitoring
+ServicePro is a comprehensive property management platform designed for professional service companies, providing role-based functionality for property managers, office staff, technicians, and inspectors. It offers specialized dashboards and access controls. The platform supports comprehensive property management, including photo documentation, communication, quote requests, schedule management, real-time job status tracking, and enhanced work coordination. It also features a critical role-based job assignment workflow where only office staff can assign jobs. Financial features include property revenue tracking, automated technician payouts, and a general dashboard with bi-weekly financial resets and profit analysis. ServicePro also implements a photo-based callback resolution system and geofencing for location verification during inspections.
 
 ## User Preferences
 
@@ -113,68 +10,66 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript, using Vite as the build tool and development server
-- **Routing**: Client-side routing implemented with Wouter for lightweight navigation
-- **State Management**: TanStack Query (React Query) for server state management and data fetching
-- **UI Framework**: shadcn/ui component library built on Radix UI primitives with Tailwind CSS for styling
-- **Forms**: React Hook Form with Zod validation for type-safe form handling
-- **Styling**: Tailwind CSS with custom ServicePro design tokens and CSS variables for theming
+### UI/UX Decisions
+- Modern component-based UI built with shadcn/ui and Tailwind CSS.
+- Visual status tracking for photo documentation.
+- Visual weekly schedule overview.
+- Color-coded profitability indicators for financial analysis.
+- Role-based dashboards tailored for Property Managers, Office Staff, Technicians, and Inspectors.
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js web framework
-- **Language**: TypeScript with ESM modules for modern JavaScript features
-- **API Design**: RESTful API structure with dedicated routes for each resource (clients, staff, jobs, etc.)
-- **Validation**: Shared Zod schemas between frontend and backend for consistent data validation
-- **Error Handling**: Centralized error handling middleware with structured error responses
+### Technical Implementations
+- **Frontend**: React 18 with TypeScript, Vite, Wouter for routing, TanStack Query for state management, shadcn/ui for UI components, React Hook Form with Zod for forms, and Tailwind CSS for styling.
+- **Backend**: Node.js with Express.js, TypeScript with ESM modules, RESTful API design, shared Zod schemas for validation, and centralized error handling.
+- **Data Storage**: PostgreSQL with Drizzle ORM for type-safe operations, Drizzle Kit for migrations, and Neon Database for cloud hosting.
+- **Component Architecture**: Reusable form and UI components, feature-specific pages, and a layout system with sidebar navigation and headers.
+- **Development**: Vite dev server, esbuild for backend compilation, comprehensive TypeScript coverage, and a monorepo structure.
 
-### Data Storage
-- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
-- **Schema Management**: Drizzle Kit for database migrations and schema management
-- **Connection**: Neon Database serverless PostgreSQL for cloud hosting
-- **Data Models**: Strongly typed schemas with relationships between clients, staff, jobs, time entries, invoices, and messages
+### Feature Specifications
+- **Role-Based Access Control**: Comprehensive permission system with route-level restrictions based on user roles (Property Manager, Office Staff, Technician, Inspector, Admin).
+- **Property Manager Dashboard**: Features include job scheduling (eight job types), real-time elapsed time tracking, phase-by-phase progress, approval workflows for extra dirty units and drywall repairs, photo requirements tracking, multi-job booking, weekly schedule overview, photo documentation (before/progress/completion), direct messaging, and quote request system.
+- **Office Staff Role**: Exclusive authority to assign jobs to technicians.
+- **Technician Role**: Work order execution, daily scheduling, time tracking, mobile-friendly interface, callback resolution with photo uploads and automatic notifications.
+- **Inspector Role**: Property inspections, compliance tracking, report generation, quality assurance, remote photo verification for callbacks, and geofenced unit timer system (within 100 meters).
+- **Automated Payout System**: Size-based pricing for paint and cleaning jobs, real-time payout tracking.
+- **General Dashboard**: Tracks scheduled jobs, active jobs, completed jobs, revenue billed, and total payouts with bi-weekly financial resets and profit analysis.
+- **Data Models**: Extended models for Users, Inspections, Work Orders, Properties, Tenants, User Permissions, and Audit Logs.
 
-### Component Architecture
-- **Layout System**: App layout with sidebar navigation and header components
-- **Form Components**: Reusable form components for each entity (ClientForm, StaffForm, JobForm, etc.)
-- **UI Components**: Comprehensive set of accessible UI components from shadcn/ui including tables, dialogs, cards, and form controls
-- **Page Components**: Feature-specific pages for dashboard, scheduling, clients, staff, messaging, payroll, and invoices
-
-### Development and Build
-- **Development**: Vite dev server with hot module replacement and TypeScript checking
-- **Build Process**: Vite for frontend bundling, esbuild for backend compilation
-- **Type Safety**: Comprehensive TypeScript coverage across frontend, backend, and shared code
-- **Code Organization**: Monorepo structure with shared schemas and clear separation between client and server code
+### System Design Choices
+- Full-stack web application with React frontend and Node.js/Express backend.
+- PostgreSQL for data persistence.
+- Component-based UI for modularity and reusability.
+- Shared Zod schemas for consistent data validation across frontend and backend.
+- Monorepo structure for code organization.
 
 ## External Dependencies
 
 ### Database and ORM
-- **@neondatabase/serverless**: Serverless PostgreSQL connection for Neon Database
-- **drizzle-orm**: Type-safe ORM for database operations and query building
-- **drizzle-zod**: Integration between Drizzle schemas and Zod validation
+- `@neondatabase/serverless`
+- `drizzle-orm`
+- `drizzle-zod`
 
 ### UI and Styling
-- **@radix-ui/react-***: Comprehensive set of accessible, unstyled UI primitives for components
-- **tailwindcss**: Utility-first CSS framework for responsive design and styling
-- **class-variance-authority**: For creating consistent component variants
-- **clsx**: Utility for constructing className strings conditionally
+- `@radix-ui/react-*`
+- `tailwindcss`
+- `class-variance-authority`
+- `clsx`
 
 ### State Management and Data Fetching
-- **@tanstack/react-query**: Powerful data synchronization and server state management
-- **@hookform/resolvers**: Validation resolvers for React Hook Form integration with Zod
+- `@tanstack/react-query`
+- `@hookform/resolvers`
 
 ### Form Handling and Validation
-- **react-hook-form**: Performant forms with easy validation and minimal re-renders
-- **zod**: TypeScript-first schema declaration and validation library
+- `react-hook-form`
+- `zod`
 
 ### Date and Time Management
-- **date-fns**: Modern JavaScript date utility library for date manipulation and formatting
+- `date-fns`
 
 ### Development Tools
-- **@replit/vite-plugin-runtime-error-modal**: Development error overlay for better debugging experience
-- **@replit/vite-plugin-cartographer**: Development tooling for Replit environment integration
+- `@replit/vite-plugin-runtime-error-modal`
+- `@replit/vite-plugin-cartographer`
 
 ### Additional Utilities
-- **cmdk**: Command palette component for enhanced user interactions
-- **embla-carousel-react**: Carousel component for content navigation
-- **lucide-react**: Icon library with consistent design and wide variety of icons
+- `cmdk`
+- `embla-carousel-react`
+- `lucide-react`
