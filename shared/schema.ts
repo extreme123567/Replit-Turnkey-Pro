@@ -102,7 +102,7 @@ export const messages = pgTable("messages", {
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
+  phoneNumber: text("phone_number").notNull().unique(),
   password: text("password").notNull(), // Hashed password
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
@@ -650,7 +650,7 @@ export type InsertSession = typeof sessions.$inferInsert;
 
 // Auth schemas
 export const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  phoneNumber: z.string().min(10, "Please enter a valid phone number").regex(/^\+?[\d\s\-\(\)]+$/, "Please enter a valid phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 

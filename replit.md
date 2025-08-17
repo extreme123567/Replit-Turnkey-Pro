@@ -8,6 +8,7 @@ ServicePro is a comprehensive property management platform designed for professi
 
 - Preferred communication style: Simple, everyday language
 - Dashboard preference: Direct role-based routing without general dashboard (implemented August 2025)
+- Authentication method: Phone number login instead of email (implemented August 2025)
 
 ## System Architecture
 
@@ -27,6 +28,7 @@ ServicePro is a comprehensive property management platform designed for professi
 - **Development**: Vite dev server, esbuild for backend compilation, comprehensive TypeScript coverage, and a monorepo structure.
 
 ### Feature Specifications
+- **Authentication System**: Phone number-based login with JWT tokens, bcrypt password hashing, and role-based access control. Supports individual user accounts with secure session management.
 - **Role-Based Access Control**: Hierarchical permission system with route-level restrictions: Admin (complete oversight + exclusive financial access) > Office Staff (operational functions only) > Property Manager (view/request only) > Technician/Inspector (execution roles).
 - **Admin Dashboard**: Complete business oversight with exclusive financial access including total revenue, payouts, net profit, property performance analysis, staff management, operations monitoring, business reports, and system settings.
 - **Office Staff Dashboard**: Operational management including property portfolio (work-based revenue tracking), job assignments, staff coordination, and scheduling - financial access removed and moved to Admin only.
