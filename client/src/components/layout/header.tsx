@@ -25,13 +25,6 @@ export function Header() {
           <p className="text-slate-600">{pageInfo.subtitle}</p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button 
-            className="servicepro-btn-primary"
-            data-testid="button-new-job"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Job
-          </Button>
           <div className="relative">
             <Button 
               variant="ghost" 

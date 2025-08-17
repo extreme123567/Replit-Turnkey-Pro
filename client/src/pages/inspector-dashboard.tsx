@@ -405,12 +405,7 @@ export default function InspectorDashboard() {
           <h2 className="text-3xl font-bold text-slate-800">Inspector Dashboard</h2>
           <p className="text-slate-600">Manage property inspections and compliance oversight</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button className="servicepro-btn-primary" data-testid="button-new-inspection">
-            <Plus className="mr-2 h-4 w-4" />
-            Schedule Inspection
-          </Button>
-        </div>
+
       </div>
 
       {/* Key Metrics */}
