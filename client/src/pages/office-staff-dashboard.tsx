@@ -397,6 +397,98 @@ function MessageStaffButton() {
   );
 }
 
+// Schedule Job Button Component
+function ScheduleJobButton() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [jobForm, setJobForm] = useState({
+    title: '',
+    description: '',
+    priority: 'medium',
+    estimatedHours: '',
+    poNumber: ''
+  });
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="servicepro-btn-primary" data-testid="button-schedule-job">
+          <Calendar className="mr-2 h-4 w-4" />
+          Schedule Job
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Schedule New Job</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="job-title">Job Title</Label>
+            <Input
+              id="job-title"
+              placeholder="e.g., Repair leaky faucet"
+              value={jobForm.title}
+              onChange={(e) => setJobForm({...jobForm, title: e.target.value})}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="job-description">Description</Label>
+            <Textarea
+              id="job-description"
+              placeholder="Describe the work needed..."
+              value={jobForm.description}
+              onChange={(e) => setJobForm({...jobForm, description: e.target.value})}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="po-number">PO# (Purchase Order Number)</Label>
+            <Input
+              id="po-number"
+              placeholder="e.g., PO-2024-001"
+              value={jobForm.poNumber}
+              onChange={(e) => setJobForm({...jobForm, poNumber: e.target.value})}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={jobForm.priority} onValueChange={(value) => setJobForm({...jobForm, priority: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="emergency">Emergency</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="estimated-hours">Estimated Hours</Label>
+              <Input
+                id="estimated-hours"
+                type="number"
+                placeholder="2.5"
+                value={jobForm.estimatedHours}
+                onChange={(e) => setJobForm({...jobForm, estimatedHours: e.target.value})}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="servicepro-btn-primary">
+              <Calendar className="mr-2 h-4 w-4" />
+              Schedule Job
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Units Completed Widget - Shows total units turned and callbacks scheduled
 function UnitsCompletedWidget() {
   const [unitsCompleted, setUnitsCompleted] = useState(147); // Example starting count
@@ -651,15 +743,19 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Action Buttons */}
+          {/* Top Action Section - Quote, Callbacks, and Units */}
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Office Staff Dashboard</h2>
             <div className="flex items-center space-x-3">
               <RequestQuoteButton />
-              <MessageStaffButton />
-              <ScheduleJobButton />
               <UnitsCompletedWidget />
             </div>
+          </div>
+
+          {/* Secondary Action Buttons */}
+          <div className="flex items-center space-x-3">
+            <MessageStaffButton />
+            <ScheduleJobButton />
           </div>
 
           {/* Job Status Overview */}
