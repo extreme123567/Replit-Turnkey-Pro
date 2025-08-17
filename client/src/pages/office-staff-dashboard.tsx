@@ -445,7 +445,20 @@ function ScheduleJobButton() {
   });
 
   const handleScheduleJob = () => {
+    console.log("Schedule job clicked with data:", {
+      property,
+      unitNumber,
+      bedroomSize,
+      selectedJobs,
+      jobLocation,
+      scheduledDate,
+      notes,
+      assignedTechnician,
+      priority
+    });
+
     if (!property || !unitNumber || !bedroomSize || selectedJobs.length === 0 || !jobLocation || !scheduledDate) {
+      console.log("Validation failed - missing required fields");
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields and select at least one job type.",
@@ -453,6 +466,20 @@ function ScheduleJobButton() {
       });
       return;
     }
+
+    console.log("Submitting job with data:", {
+      property,
+      unitNumber,
+      bedroomSize,
+      jobTypes: selectedJobs,
+      location: jobLocation,
+      scheduledDate,
+      notes,
+      assignedTechnician: assignedTechnician || null,
+      priority,
+      status: "scheduled",
+      scheduledBy: "office-staff"
+    });
 
     scheduleJobMutation.mutate({
       property,
