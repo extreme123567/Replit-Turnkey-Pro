@@ -480,14 +480,14 @@ function ScheduleJobButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button data-testid="button-schedule-new-job">
+        <Button data-testid="button-schedule-job">
           <Plus size={16} className="mr-2" />
-          Schedule New Job
+          Schedule Job
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Schedule New Job</DialogTitle>
+          <DialogTitle>Schedule Job</DialogTitle>
           <DialogDescription>
             Create multiple job assignments for a unit.
           </DialogDescription>
