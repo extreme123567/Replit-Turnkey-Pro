@@ -34,7 +34,8 @@ import {
   X,
   Wrench,
   Mail,
-  Home
+  Home,
+  Trash2
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -397,95 +398,251 @@ function MessageStaffButton() {
   );
 }
 
-// Schedule Job Button Component
-function ScheduleJobButton() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [jobForm, setJobForm] = useState({
-    title: '',
-    description: '',
+// Multi-Job Scheduling Component
+function ScheduleJobsSection() {
+  const [jobs, setJobs] = useState([
+    {
+      id: 1,
+      type: 'Paint',
+      property: 'Sunset Gardens Apt 102B',
+      unit: '102B',
+      scheduledDate: '2024-08-18',
+      completionDate: '2024-08-20',
+      priority: 'medium',
+      status: 'scheduled',
+      poNumber: 'PO-2024-001'
+    },
+    {
+      id: 2,
+      type: 'Clean',
+      property: 'Oak Ridge Complex 205A',
+      unit: '205A',
+      scheduledDate: '2024-08-19',
+      completionDate: '2024-08-19',
+      priority: 'high',
+      status: 'in_progress',
+      poNumber: 'PO-2024-002'
+    }
+  ]);
+
+  const [isAddJobOpen, setIsAddJobOpen] = useState(false);
+  const [newJobForm, setNewJobForm] = useState({
+    type: '',
+    property: '',
+    unit: '',
+    scheduledDate: '',
+    completionDate: '',
     priority: 'medium',
-    estimatedHours: '',
     poNumber: ''
   });
 
+  const addJob = () => {
+    if (newJobForm.type && newJobForm.property && newJobForm.unit && newJobForm.scheduledDate) {
+      const newJob = {
+        id: Math.max(...jobs.map(j => j.id)) + 1,
+        ...newJobForm,
+        status: 'scheduled'
+      };
+      setJobs([...jobs, newJob]);
+      setNewJobForm({
+        type: '',
+        property: '',
+        unit: '',
+        scheduledDate: '',
+        completionDate: '',
+        priority: 'medium',
+        poNumber: ''
+      });
+      setIsAddJobOpen(false);
+    }
+  };
+
+  const removeJob = (jobId: number) => {
+    setJobs(jobs.filter(job => job.id !== jobId));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'text-blue-600 bg-blue-100';
+      case 'in_progress': return 'text-amber-600 bg-amber-100';
+      case 'completed': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-600 bg-red-100';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'low': return 'text-green-600 bg-green-100';
+      case 'emergency': return 'text-red-800 bg-red-200';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="servicepro-btn-primary" data-testid="button-schedule-job">
-          <Calendar className="mr-2 h-4 w-4" />
-          Schedule Job
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Schedule New Job</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="job-title">Job Title</Label>
-            <Input
-              id="job-title"
-              placeholder="e.g., Repair leaky faucet"
-              value={jobForm.title}
-              onChange={(e) => setJobForm({...jobForm, title: e.target.value})}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="job-description">Description</Label>
-            <Textarea
-              id="job-description"
-              placeholder="Describe the work needed..."
-              value={jobForm.description}
-              onChange={(e) => setJobForm({...jobForm, description: e.target.value})}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="po-number">PO# (Purchase Order Number)</Label>
-            <Input
-              id="po-number"
-              placeholder="e.g., PO-2024-001"
-              value={jobForm.poNumber}
-              onChange={(e) => setJobForm({...jobForm, poNumber: e.target.value})}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={jobForm.priority} onValueChange={(value) => setJobForm({...jobForm, priority: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="emergency">Emergency</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="estimated-hours">Estimated Hours</Label>
-              <Input
-                id="estimated-hours"
-                type="number"
-                placeholder="2.5"
-                value={jobForm.estimatedHours}
-                onChange={(e) => setJobForm({...jobForm, estimatedHours: e.target.value})}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button className="servicepro-btn-primary">
-              <Calendar className="mr-2 h-4 w-4" />
-              Schedule Job
-            </Button>
-          </div>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Scheduled Jobs</CardTitle>
+          <Dialog open={isAddJobOpen} onOpenChange={setIsAddJobOpen}>
+            <DialogTrigger asChild>
+              <Button className="servicepro-btn-primary" data-testid="button-add-scheduled-job">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Schedule New Job</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="job-type">Job Type</Label>
+                    <Select value={newJobForm.type} onValueChange={(value) => setNewJobForm({...newJobForm, type: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select job type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Paint">Paint</SelectItem>
+                        <SelectItem value="Clean">Clean</SelectItem>
+                        <SelectItem value="Repair">Repair</SelectItem>
+                        <SelectItem value="Inspection">Inspection</SelectItem>
+                        <SelectItem value="Maintenance">Maintenance</SelectItem>
+                        <SelectItem value="Carpet">Carpet</SelectItem>
+                        <SelectItem value="Punch">Punch List</SelectItem>
+                        <SelectItem value="Trash">Trash Out</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="unit-number">Unit Number</Label>
+                    <Input
+                      id="unit-number"
+                      placeholder="e.g., 102B"
+                      value={newJobForm.unit}
+                      onChange={(e) => setNewJobForm({...newJobForm, unit: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="property-name">Property</Label>
+                  <Input
+                    id="property-name"
+                    placeholder="e.g., Sunset Gardens Complex"
+                    value={newJobForm.property}
+                    onChange={(e) => setNewJobForm({...newJobForm, property: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="po-number">PO# (Purchase Order Number)</Label>
+                  <Input
+                    id="po-number"
+                    placeholder="e.g., PO-2024-001"
+                    value={newJobForm.poNumber}
+                    onChange={(e) => setNewJobForm({...newJobForm, poNumber: e.target.value})}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="scheduled-date">Scheduled Date</Label>
+                    <Input
+                      id="scheduled-date"
+                      type="date"
+                      value={newJobForm.scheduledDate}
+                      onChange={(e) => setNewJobForm({...newJobForm, scheduledDate: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="completion-date">Target Completion</Label>
+                    <Input
+                      id="completion-date"
+                      type="date"
+                      value={newJobForm.completionDate}
+                      onChange={(e) => setNewJobForm({...newJobForm, completionDate: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select value={newJobForm.priority} onValueChange={(value) => setNewJobForm({...newJobForm, priority: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="emergency">Emergency</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsAddJobOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={addJob} className="servicepro-btn-primary">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Schedule Job
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-      </DialogContent>
-    </Dialog>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {jobs.map((job) => (
+            <div key={job.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center space-x-3">
+                  <span className="font-semibold text-lg">{job.type} - {job.property}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
+                    {job.status.replace('_', ' ').toUpperCase()}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(job.priority)}`}>
+                    {job.priority.toUpperCase()}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-4 text-sm text-gray-600">
+                  <div>
+                    <span className="font-medium">Unit:</span> {job.unit}
+                  </div>
+                  <div>
+                    <span className="font-medium">Scheduled:</span> {job.scheduledDate}
+                  </div>
+                  <div>
+                    <span className="font-medium">Target:</span> {job.completionDate || 'TBD'}
+                  </div>
+                  <div>
+                    <span className="font-medium">PO#:</span> {job.poNumber || 'N/A'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeJob(job.id)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  data-testid={`button-remove-job-${job.id}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          {jobs.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Calendar className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <p>No jobs scheduled. Click "Add Job" to get started.</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -755,8 +912,10 @@ export default function OfficeStaffDashboard() {
           {/* Secondary Action Buttons */}
           <div className="flex items-center space-x-3">
             <MessageStaffButton />
-            <ScheduleJobButton />
           </div>
+
+          {/* Job Scheduling Section */}
+          <ScheduleJobsSection />
 
           {/* Job Status Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
