@@ -381,16 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // General Dashboard with bi-weekly reset
-  app.get("/api/dashboard/general-stats", async (req, res) => {
-    try {
-      const stats = await storage.getGeneralDashboardStats();
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching general dashboard stats:", error);
-      res.status(500).json({ error: "Failed to fetch general dashboard stats" });
-    }
-  });
+  // Removed general dashboard - users go directly to role-specific dashboards
 
   // Get payout rates for paint and clean jobs
   app.get("/api/payroll/rates", async (req, res) => {

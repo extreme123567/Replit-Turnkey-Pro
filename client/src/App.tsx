@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/app-layout";
 import Dashboard from "@/pages/dashboard";
-import GeneralDashboard from "@/pages/general-dashboard";
+// Removed general dashboard - users go directly to role-specific dashboards
 import PropertyManagerDashboard from "@/pages/property-manager-dashboard";
 import OfficeStaffDashboard from "@/pages/office-staff-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -24,7 +24,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/general" component={GeneralDashboard} />
+      {/* Removed general dashboard route */}
       <Route path="/property-manager" component={PropertyManagerDashboard} />
       <Route path="/office-staff" component={OfficeStaffDashboard} />
       <Route path="/admin" component={AdminDashboard} />

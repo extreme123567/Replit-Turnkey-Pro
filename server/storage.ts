@@ -255,7 +255,9 @@ export class MemStorage implements IStorage {
 
   // Staff
   async getStaff(): Promise<Staff[]> {
-    return Array.from(this.staff.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(this.staff.values()).sort((a, b) => 
+      `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+    );
   }
 
   async getStaffMember(id: string): Promise<Staff | undefined> {
