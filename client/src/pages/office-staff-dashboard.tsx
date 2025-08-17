@@ -67,7 +67,7 @@ function RequestQuoteButton() {
 
   const submitQuoteMutation = useMutation({
     mutationFn: async (quoteData: any) => {
-      return apiRequest("/api/quote-requests", "POST", quoteData);
+      return apiRequest("POST", "/api/quote-requests", quoteData);
     },
     onSuccess: () => {
       toast({
@@ -281,7 +281,7 @@ function MessageStaffButton() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      return apiRequest("/api/messages", "POST", messageData);
+      return apiRequest("POST", "/api/messages", messageData);
     },
     onSuccess: () => {
       toast({
@@ -414,7 +414,7 @@ function ScheduleJobButton() {
 
   const scheduleJobMutation = useMutation({
     mutationFn: async (jobData: any) => {
-      return apiRequest("/api/jobs/schedule", "POST", jobData);
+      return apiRequest("POST", "/api/jobs/schedule", jobData);
     },
     onSuccess: () => {
       toast({
@@ -1187,7 +1187,7 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
   const { toast } = useToast();
 
   const approveMutation = useMutation({
-    mutationFn: (jobId: string) => apiRequest(`/api/jobs/${jobId}/approve`, "PUT", { 
+    mutationFn: (jobId: string) => apiRequest("PUT", `/api/jobs/${jobId}/approve`, { 
       approvedBy: "office-staff-1" 
     }),
     onSuccess: () => {
@@ -1211,7 +1211,7 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
 
   const rejectMutation = useMutation({
     mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => 
-      apiRequest(`/api/jobs/${jobId}/reject`, "PUT", { 
+      apiRequest("PUT", `/api/jobs/${jobId}/reject`, { 
         reason,
         rejectedBy: "office-staff-1" 
       }),
