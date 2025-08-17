@@ -21,15 +21,21 @@ export const clients = pgTable("clients", {
 
 export const staff = pgTable("staff", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
-  role: text("role").notNull(), // lead_technician, technician, apprentice
-  hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }).notNull(),
-  status: text("status").notNull().default("available"), // available, on_job, sick_leave, vacation
+  role: text("role").notNull(), // admin, office_staff, property_manager, technician, inspector
+  department: text("department"), // Operations, Administration, Maintenance, Leasing, Inspection
+  hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }),
+  status: text("status").notNull().default("active"), // active, inactive, vacation, sick_leave
   hoursThisWeek: decimal("hours_this_week", { precision: 5, scale: 2 }).default("0.00"),
   activeJobs: integer("active_jobs").default(0),
+  permissions: text("permissions").array(), // Array of permission strings
+  assignedRegions: text("assigned_regions").array(), // Geographic regions or property groups
+  lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const jobs = pgTable("jobs", {
@@ -385,7 +391,9 @@ export const insertStaffSchema = createInsertSchema(staff).omit({
   id: true,
   hoursThisWeek: true,
   activeJobs: true,
+  lastLogin: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertJobSchema = createInsertSchema(jobs).omit({
