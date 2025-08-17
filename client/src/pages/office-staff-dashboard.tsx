@@ -33,7 +33,8 @@ import {
   Check,
   X,
   Wrench,
-  Mail
+  Mail,
+  Home
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -396,119 +397,42 @@ function MessageStaffButton() {
   );
 }
 
-// Schedule Job Button Component
-function ScheduleJobButton() {
-  const [open, setOpen] = useState(false);
-  const [jobForm, setJobForm] = useState({
-    title: '',
-    description: '',
-    property: '',
-    priority: 'medium',
-    scheduledDate: '',
-    estimatedHours: ''
-  });
+// Units Completed Widget - Shows total units turned
+function UnitsCompletedWidget() {
+  const [unitsCompleted, setUnitsCompleted] = useState(147); // Example starting count
   
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const handleSubmit = () => {
-    if (!jobForm.title || !jobForm.description) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in job title and description.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // For demo purposes, we'll show a success message
-    toast({
-      title: "Job Scheduled",
-      description: "New job has been successfully scheduled.",
-    });
-    
-    setOpen(false);
-    // Reset form
-    setJobForm({
-      title: '',
-      description: '',
-      property: '',
-      priority: 'medium',
-      scheduledDate: '',
-      estimatedHours: ''
-    });
+  const incrementUnits = () => {
+    setUnitsCompleted(prev => prev + 1);
   };
 
-
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button data-testid="button-schedule-job">
-          <Plus size={16} className="mr-2" />
-          Schedule Job
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Schedule New Job</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="job-title">Job Title</Label>
-            <Input
-              id="job-title"
-              placeholder="e.g., Repair leaky faucet"
-              value={jobForm.title}
-              onChange={(e) => setJobForm({...jobForm, title: e.target.value})}
-            />
+    <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 min-w-[200px]">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-emerald-600 text-sm font-medium">Units Turned</p>
+            <p className="text-3xl font-bold text-emerald-700 mt-1" data-testid="units-completed-count">
+              {unitsCompleted}
+            </p>
+            <p className="text-xs text-emerald-600 mt-1">Total completed</p>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="job-description">Description</Label>
-            <Textarea
-              id="job-description"
-              placeholder="Describe the work needed..."
-              value={jobForm.description}
-              onChange={(e) => setJobForm({...jobForm, description: e.target.value})}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={jobForm.priority} onValueChange={(value) => setJobForm({...jobForm, priority: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="emergency">Emergency</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-10 h-10 bg-emerald-200 rounded-lg flex items-center justify-center">
+              <Home className="text-emerald-600" size={18} />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="estimated-hours">Estimated Hours</Label>
-              <Input
-                id="estimated-hours"
-                type="number"
-                placeholder="2.5"
-                value={jobForm.estimatedHours}
-                onChange={(e) => setJobForm({...jobForm, estimatedHours: e.target.value})}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit}>
-              Schedule Job
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={incrementUnits}
+              className="text-xs px-2 py-1 h-6 bg-emerald-50 border-emerald-300 hover:bg-emerald-100"
+              data-testid="button-add-completed-unit"
+            >
+              +1
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -702,7 +626,7 @@ export default function OfficeStaffDashboard() {
             <div className="flex items-center space-x-3">
               <RequestQuoteButton />
               <MessageStaffButton />
-              <ScheduleJobButton />
+              <UnitsCompletedWidget />
             </div>
           </div>
 
