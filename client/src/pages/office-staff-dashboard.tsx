@@ -464,7 +464,7 @@ export default function OfficeStaffDashboard() {
     description: '',
     propertyId: '',
     unitNumber: '',
-    category: 'maintenance',
+    category: 'apartment-turn',
     priority: 'medium'
   });
 
@@ -561,7 +561,7 @@ export default function OfficeStaffDashboard() {
         description: '',
         propertyId: '',
         unitNumber: '',
-        category: 'maintenance',
+        category: 'apartment-turn',
         priority: 'medium'
       });
       setIsQuoteModalOpen(false);
@@ -606,93 +606,151 @@ export default function OfficeStaffDashboard() {
                 Request Quote
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Request Quote from Office</DialogTitle>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader className="pb-6">
+                <div className="text-center border-b pb-4">
+                  <h1 className="text-2xl font-bold text-blue-900">QC APARTMENT TURNS</h1>
+                  <p className="text-sm text-gray-600 mt-1">4321 Stuart Andrew Blvd Ste D, Charlotte, NC 28217</p>
+                  <DialogTitle className="text-xl font-semibold mt-4 text-gray-800">Service Quote Request</DialogTitle>
+                </div>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="quote-title">Service Title</Label>
-                  <Input
-                    id="quote-title"
-                    placeholder="e.g., Kitchen renovation - Unit 205"
-                    value={quoteForm.title}
-                    onChange={(e) => setQuoteForm({...quoteForm, title: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="quote-description">Detailed Description</Label>
-                  <Textarea
-                    id="quote-description"
-                    placeholder="Describe the work needed in detail..."
-                    rows={3}
-                    value={quoteForm.description}
-                    onChange={(e) => setQuoteForm({...quoteForm, description: e.target.value})}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="property">Property</Label>
-                    <Select value={quoteForm.propertyId} onValueChange={(value) => setQuoteForm({...quoteForm, propertyId: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select property" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="maple-gardens">Maple Gardens</SelectItem>
-                        <SelectItem value="oak-village">Oak Village</SelectItem>
-                        <SelectItem value="pine-heights">Pine Heights</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="unit-number">Unit Number</Label>
-                    <Input
-                      id="unit-number"
-                      placeholder="e.g., 205"
-                      value={quoteForm.unitNumber}
-                      onChange={(e) => setQuoteForm({...quoteForm, unitNumber: e.target.value})}
-                    />
+              
+              <div className="grid gap-6 py-4">
+                {/* Customer Information Section */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">Customer Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="property">Property/Customer Name</Label>
+                      <Select value={quoteForm.propertyId} onValueChange={(value) => setQuoteForm({...quoteForm, propertyId: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select property" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="maple-gardens">Maple Gardens</SelectItem>
+                          <SelectItem value="oak-village">Oak Village</SelectItem>
+                          <SelectItem value="pine-heights">Pine Heights</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="unit-number">Unit Number</Label>
+                      <Input
+                        id="unit-number"
+                        placeholder="e.g., 205"
+                        value={quoteForm.unitNumber}
+                        onChange={(e) => setQuoteForm({...quoteForm, unitNumber: e.target.value})}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={quoteForm.category} onValueChange={(value) => setQuoteForm({...quoteForm, category: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                        <SelectItem value="repair">Repair</SelectItem>
-                        <SelectItem value="renovation">Renovation</SelectItem>
-                        <SelectItem value="cleaning">Cleaning</SelectItem>
-                        <SelectItem value="painting">Painting</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="priority">Priority</Label>
-                    <Select value={quoteForm.priority} onValueChange={(value) => setQuoteForm({...quoteForm, priority: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="emergency">Emergency</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                {/* Service Details Section */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">Service Details</h3>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="quote-title">Service Title</Label>
+                      <Input
+                        id="quote-title"
+                        placeholder="e.g., Kitchen renovation - Unit 205"
+                        value={quoteForm.title}
+                        onChange={(e) => setQuoteForm({...quoteForm, title: e.target.value})}
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="quote-description">Detailed Description of Work Needed</Label>
+                      <Textarea
+                        id="quote-description"
+                        placeholder="Please provide a detailed description of the work required, including materials, labor, timeline expectations, and any special requirements..."
+                        rows={4}
+                        value={quoteForm.description}
+                        onChange={(e) => setQuoteForm({...quoteForm, description: e.target.value})}
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="category">Service Category</Label>
+                        <Select value={quoteForm.category} onValueChange={(value) => setQuoteForm({...quoteForm, category: value})}>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="apartment-turn">Apartment Turn</SelectItem>
+                            <SelectItem value="painting">Painting</SelectItem>
+                            <SelectItem value="cleaning">Deep Cleaning</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="repair">Repair</SelectItem>
+                            <SelectItem value="renovation">Renovation</SelectItem>
+                            <SelectItem value="flooring">Flooring</SelectItem>
+                            <SelectItem value="plumbing">Plumbing</SelectItem>
+                            <SelectItem value="electrical">Electrical</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="priority">Priority Level</Label>
+                        <Select value={quoteForm.priority} onValueChange={(value) => setQuoteForm({...quoteForm, priority: value})}>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low - Routine Work</SelectItem>
+                            <SelectItem value="medium">Medium - Standard Timeline</SelectItem>
+                            <SelectItem value="high">High - Urgent</SelectItem>
+                            <SelectItem value="emergency">Emergency - ASAP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsQuoteModalOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button className="servicepro-btn-primary" onClick={handleSubmitQuote}>
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    Submit Quote Request
-                  </Button>
+
+                {/* Additional Information */}
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Additional Information</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    We specialize in apartment turns, painting, cleaning, and maintenance services. Our team provides professional, efficient service with competitive pricing.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <strong>Services Include:</strong>
+                      <ul className="list-disc list-inside mt-1 text-gray-600">
+                        <li>Complete apartment turns</li>
+                        <li>Interior/exterior painting</li>
+                        <li>Deep cleaning services</li>
+                        <li>Maintenance and repairs</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>Contact Information:</strong>
+                      <p className="text-gray-600 mt-1">
+                        4321 Stuart Andrew Blvd Ste D<br/>
+                        Charlotte, NC 28217
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="text-sm text-gray-500">
+                    All quote requests will be reviewed within 24 hours
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button variant="outline" onClick={() => setIsQuoteModalOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6" 
+                      onClick={handleSubmitQuote}
+                    >
+                      <DollarSign className="mr-2 h-4 w-4" />
+                      Submit Quote Request
+                    </Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
