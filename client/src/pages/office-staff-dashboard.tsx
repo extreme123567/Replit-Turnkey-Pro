@@ -475,7 +475,7 @@ function ScheduleJobButton() {
       location: jobLocation,
       scheduledDate,
       notes,
-      assignedTechnician: assignedTechnician || null,
+      assignedTechnician: assignedTechnician === "unassigned" ? null : assignedTechnician,
       priority,
       status: "scheduled",
       scheduledBy: "office-staff"
@@ -489,7 +489,7 @@ function ScheduleJobButton() {
       location: jobLocation,
       scheduledDate,
       notes,
-      assignedTechnician: assignedTechnician || null,
+      assignedTechnician: assignedTechnician === "unassigned" ? null : assignedTechnician,
       priority,
       status: "scheduled",
       scheduledBy: "office-staff"
@@ -638,7 +638,7 @@ function ScheduleJobButton() {
                 <SelectValue placeholder="Select technician (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 <SelectItem value="tech-1">John Smith</SelectItem>
                 <SelectItem value="tech-2">Mike Johnson</SelectItem>
                 <SelectItem value="tech-3">Sarah Williams</SelectItem>
