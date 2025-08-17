@@ -647,27 +647,20 @@ export default function OfficeStaffDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="text-office-dashboard-title">
+          <h1 className="text-3xl font-bold text-slate-800" data-testid="text-office-dashboard-title">
             Office Staff Dashboard
           </h1>
-          <p className="text-gray-600 mt-1">Comprehensive Business Management</p>
+          <p className="text-slate-600">Welcome back, John Smith - Comprehensive Business Management</p>
         </div>
-        <div className="flex flex-col items-end space-y-3">
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              <UserCheck className="w-4 h-4 mr-1" />
-              Office Staff
-            </Badge>
-          </div>
-          <div className="text-right">
-            <p className="text-gray-700 font-medium">John Smith</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <RequestQuoteButton />
-            <UnitsCompletedWidget />
-          </div>
+        <div className="flex items-center space-x-3">
+          <RequestQuoteButton />
+          <UnitsCompletedWidget />
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <UserCheck className="w-4 h-4 mr-1" />
+            Office Staff
+          </Badge>
         </div>
       </div>
 
