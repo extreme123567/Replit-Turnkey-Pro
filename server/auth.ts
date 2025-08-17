@@ -53,12 +53,17 @@ export class AuthService {
     try {
       // Normalize phone number by removing all non-digits
       const normalizedPhone = loginData.phoneNumber.replace(/\D/g, '');
+      console.log('Login attempt:', { originalPhone: loginData.phoneNumber, normalizedPhone });
+      
       const user = await storage.getUserByPhoneNumber(normalizedPhone);
+      console.log('User found:', user ? 'Yes' : 'No');
+      
       if (!user) {
         return null;
       }
 
       const isPasswordValid = await this.verifyPassword(loginData.password, user.password);
+      console.log('Password valid:', isPasswordValid);
       if (!isPasswordValid) {
         return null;
       }
