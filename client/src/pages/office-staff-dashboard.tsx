@@ -425,38 +425,6 @@ function ScheduleJobsSection() {
     }
   ]);
 
-  const [isAddJobOpen, setIsAddJobOpen] = useState(false);
-  const [newJobForm, setNewJobForm] = useState({
-    type: '',
-    property: '',
-    unit: '',
-    scheduledDate: '',
-    completionDate: '',
-    priority: 'medium',
-    poNumber: ''
-  });
-
-  const addJob = () => {
-    if (newJobForm.type && newJobForm.property && newJobForm.unit && newJobForm.scheduledDate) {
-      const newJob = {
-        id: Math.max(...jobs.map(j => j.id)) + 1,
-        ...newJobForm,
-        status: 'scheduled'
-      };
-      setJobs([...jobs, newJob]);
-      setNewJobForm({
-        type: '',
-        property: '',
-        unit: '',
-        scheduledDate: '',
-        completionDate: '',
-        priority: 'medium',
-        poNumber: ''
-      });
-      setIsAddJobOpen(false);
-    }
-  };
-
   const removeJob = (jobId: number) => {
     setJobs(jobs.filter(job => job.id !== jobId));
   };
@@ -483,114 +451,7 @@ function ScheduleJobsSection() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Scheduled Jobs</CardTitle>
-          <Dialog open={isAddJobOpen} onOpenChange={setIsAddJobOpen}>
-            <DialogTrigger asChild>
-              <Button className="servicepro-btn-primary" data-testid="button-add-scheduled-job">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Job
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Schedule New Job</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="job-type">Job Type</Label>
-                    <Select value={newJobForm.type} onValueChange={(value) => setNewJobForm({...newJobForm, type: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select job type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Paint">Paint</SelectItem>
-                        <SelectItem value="Clean">Clean</SelectItem>
-                        <SelectItem value="Repair">Repair</SelectItem>
-                        <SelectItem value="Inspection">Inspection</SelectItem>
-                        <SelectItem value="Maintenance">Maintenance</SelectItem>
-                        <SelectItem value="Carpet">Carpet</SelectItem>
-                        <SelectItem value="Punch">Punch List</SelectItem>
-                        <SelectItem value="Trash">Trash Out</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="unit-number">Unit Number</Label>
-                    <Input
-                      id="unit-number"
-                      placeholder="e.g., 102B"
-                      value={newJobForm.unit}
-                      onChange={(e) => setNewJobForm({...newJobForm, unit: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="property-name">Property</Label>
-                  <Input
-                    id="property-name"
-                    placeholder="e.g., Sunset Gardens Complex"
-                    value={newJobForm.property}
-                    onChange={(e) => setNewJobForm({...newJobForm, property: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="po-number">PO# (Purchase Order Number)</Label>
-                  <Input
-                    id="po-number"
-                    placeholder="e.g., PO-2024-001"
-                    value={newJobForm.poNumber}
-                    onChange={(e) => setNewJobForm({...newJobForm, poNumber: e.target.value})}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="scheduled-date">Scheduled Date</Label>
-                    <Input
-                      id="scheduled-date"
-                      type="date"
-                      value={newJobForm.scheduledDate}
-                      onChange={(e) => setNewJobForm({...newJobForm, scheduledDate: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="completion-date">Target Completion</Label>
-                    <Input
-                      id="completion-date"
-                      type="date"
-                      value={newJobForm.completionDate}
-                      onChange={(e) => setNewJobForm({...newJobForm, completionDate: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select value={newJobForm.priority} onValueChange={(value) => setNewJobForm({...newJobForm, priority: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="emergency">Emergency</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsAddJobOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={addJob} className="servicepro-btn-primary">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Schedule Job
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <CardTitle>Scheduled Jobs</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -637,7 +498,7 @@ function ScheduleJobsSection() {
           {jobs.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <Calendar className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-              <p>No jobs scheduled. Click "Add Job" to get started.</p>
+              <p>No jobs scheduled.</p>
             </div>
           )}
         </div>
@@ -799,7 +660,7 @@ export default function OfficeStaffDashboard() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -824,20 +685,6 @@ export default function OfficeStaffDashboard() {
                 </p>
               </div>
               <Clock className="text-orange-500" size={24} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-600 text-sm font-medium" data-testid="text-lease-expiring-label">Lease Expiring</p>
-                <p className="text-2xl font-bold text-yellow-700" data-testid="text-lease-expiring-count">
-                  {stats?.leaseExpirations || 0}
-                </p>
-              </div>
-              <Calendar className="text-yellow-500" size={24} />
             </div>
           </CardContent>
         </Card>
@@ -869,20 +716,6 @@ export default function OfficeStaffDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 text-sm font-medium" data-testid="text-total-tenants-label">Tenants</p>
-                <p className="text-2xl font-bold text-purple-700" data-testid="text-total-tenants-count">
-                  {stats?.totalTenants || 0}
-                </p>
-              </div>
-              <Users className="text-purple-500" size={24} />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main Content Tabs */}
@@ -900,9 +733,12 @@ export default function OfficeStaffDashboard() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Top Action Section - Quote, Callbacks, and Units */}
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Office Staff Dashboard</h2>
+          {/* Header with User Info and Action Widgets */}
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold">Office Staff Dashboard</h2>
+              <p className="text-gray-600 mt-1">Welcome back, John Smith</p>
+            </div>
             <div className="flex items-center space-x-3">
               <RequestQuoteButton />
               <UnitsCompletedWidget />
