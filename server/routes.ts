@@ -512,6 +512,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payroll tracking endpoints
+  app.get("/api/payroll/technician/:technicianId/current-cycle", async (req, res) => {
+    const { technicianId } = req.params;
+    
+    try {
+      // Get current payroll cycle (this pay period)
+      const now = new Date();
+      const cycleStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() >= 15 ? 15 : 1);
+      const cycleEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() >= 15 ? 
+        new Date(now.getFullYear(), now.getMonth() + 1, 1).getDate() - 1 : 14);
+      
+      // Calculate daily earnings within this cycle
+      const dailyEarnings = [];
+      let totalEarnings = 0;
+      let totalDeductions = 0;
+      
+      // Demo daily earnings data
+      for (let day = 1; day <= Math.min(14, now.getDate()); day++) {
+        const hasWork = Math.random() > 0.4; // 60% chance of work each day
+        const earnings = hasWork ? (Math.random() * 200 + 100) : 0; // $100-300 per day when working
+        const deductions = Math.random() > 0.9 ? (earnings * 0.5) : 0; // 10% chance of callback deduction
+        
+        dailyEarnings.push({
+          date: new Date(now.getFullYear(), now.getMonth(), day),
+          grossEarnings: earnings,
+          deductions: deductions,
+          netEarnings: earnings - deductions,
+          jobsCompleted: hasWork ? Math.floor(Math.random() * 3 + 1) : 0,
+          callbackPending: deductions > 0
+        });
+        
+        totalEarnings += earnings;
+        totalDeductions += deductions;
+      }
+      
+      // Mock pending callbacks
+      const pendingCallbacks = [
+        {
+          id: "callback-1",
+          originalJobId: "job-paint-123",
+          jobType: "paint",
+          unitType: "2br",
+          originalAmount: 200,
+          deductedAmount: 200,
+          reason: "Quality Issue - Paint coverage uneven",
+          requestedBy: "Property Manager",
+          requestedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          photos: ["photo1.jpg", "photo2.jpg"],
+          status: "pending"
+        }
+      ];
+      
+      res.json({
+        cycleStart,
+        cycleEnd,
+        totalEarnings,
+        totalDeductions,
+        netPay: totalEarnings - totalDeductions,
+        dailyEarnings,
+        pendingCallbacks,
+        status: "active"
+      });
+    } catch (error) {
+      console.error("Error fetching payroll data:", error);
+      res.status(500).json({ error: "Failed to fetch payroll data" });
+    }
+  });
+
+  app.post("/api/payroll/create-payout", async (req, res) => {
+    const { jobId, staffId, jobType, unitCount, unitType } = req.body;
+    
+    try {
+      // Calculate payout based on job type and unit
+      const paintRates = { studio: 175, '1br': 175, '2br': 200, '3br': 225 };
+      const cleanRates = { studio: 80, '1br': 80, '2br': 95, '3br': 105 };
+      
+      const rates = jobType === 'paint' ? paintRates : cleanRates;
+      const baseAmount = rates[unitType] * unitCount;
+      
+      // Create payroll entry (mock for demo)
+      const payrollEntry = {
+        id: `payout-${Date.now()}`,
+        staffId,
+        jobId,
+        jobType,
+        unitType,
+        unitCount,
+        baseAmount,
+        netAmount: baseAmount,
+        entryDate: new Date(),
+        callbackResolved: false
+      };
+      
+      res.json({
+        success: true,
+        payrollEntry,
+        message: `Payout of $${baseAmount} created for ${jobType} job`
+      });
+    } catch (error) {
+      console.error("Error creating payout:", error);
+      res.status(500).json({ error: "Failed to create payout" });
+    }
+  });
+
+  app.post("/api/payroll/apply-callback-deduction", async (req, res) => {
+    const { originalJobId, technicianId, deductionAmount, reason, requestedBy } = req.body;
+    
+    try {
+      // Create callback deduction record
+      const deduction = {
+        id: `deduction-${Date.now()}`,
+        originalJobId,
+        technicianId,
+        deductionAmount,
+        reason,
+        requestedBy,
+        status: "pending",
+        requestedAt: new Date()
+      };
+      
+      res.json({
+        success: true,
+        deduction,
+        message: `Callback deduction of $${deductionAmount} applied`
+      });
+    } catch (error) {
+      console.error("Error applying callback deduction:", error);
+      res.status(500).json({ error: "Failed to apply callback deduction" });
+    }
+  });
+
+  app.put("/api/payroll/resolve-callback/:callbackId", async (req, res) => {
+    const { callbackId } = req.params;
+    const { resolutionNotes, photos } = req.body;
+    
+    try {
+      // Mark callback as resolved and restore pay
+      res.json({
+        success: true,
+        message: "Callback resolved and pay restored",
+        callbackId,
+        resolutionNotes,
+        restoredAmount: 200 // Example restored amount
+      });
+    } catch (error) {
+      console.error("Error resolving callback:", error);
+      res.status(500).json({ error: "Failed to resolve callback" });
+    }
+  });
+
   // Dashboard stats - Clean for testing
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

@@ -68,6 +68,53 @@ export const timeEntries = pgTable("time_entries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Payroll and earnings tracking
+export const payrollCycles = pgTable("payroll_cycles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id).notNull(),
+  cycleStart: timestamp("cycle_start").notNull(),
+  cycleEnd: timestamp("cycle_end").notNull(),
+  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0.00"),
+  totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }).default("0.00"),
+  netPay: decimal("net_pay", { precision: 10, scale: 2 }).default("0.00"),
+  status: text("status").notNull().default("active"), // active, paid, processing
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const payrollEntries = pgTable("payroll_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id).notNull(),
+  cycleId: varchar("cycle_id").references(() => payrollCycles.id).notNull(),
+  jobId: varchar("job_id").notNull(), // Reference to completed job
+  jobType: text("job_type").notNull(), // paint, clean, repair, inspection
+  unitType: text("unit_type"), // studio, 1br, 2br, 3br
+  unitCount: integer("unit_count").default(1),
+  baseAmount: decimal("base_amount", { precision: 10, scale: 2 }).notNull(),
+  deductionAmount: decimal("deduction_amount", { precision: 10, scale: 2 }).default("0.00"),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(),
+  callbackId: varchar("callback_id"), // Links to callback if deduction applied
+  callbackResolved: boolean("callback_resolved").default(false),
+  entryDate: timestamp("entry_date").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const callbackDeductions = pgTable("callback_deductions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  originalJobId: varchar("original_job_id").notNull(),
+  callbackJobId: varchar("callback_job_id").notNull(),
+  technicianId: varchar("technician_id").references(() => staff.id).notNull(),
+  originalPayAmount: decimal("original_pay_amount", { precision: 10, scale: 2 }).notNull(),
+  deductionAmount: decimal("deduction_amount", { precision: 10, scale: 2 }).notNull(),
+  reason: text("reason").notNull(),
+  requestedBy: varchar("requested_by").notNull(), // Property manager or inspector ID
+  requestedAt: timestamp("requested_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+  status: text("status").notNull().default("pending"), // pending, resolved, cancelled
+  photoUrls: text("photo_urls").array(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   invoiceNumber: text("invoice_number").notNull().unique(),
@@ -662,3 +709,28 @@ export const createUserSchema = createInsertSchema(users).omit({
 
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type CreateUserRequest = z.infer<typeof createUserSchema>;
+
+// Payroll types
+export const insertPayrollCycleSchema = createInsertSchema(payrollCycles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPayrollEntrySchema = createInsertSchema(payrollEntries).omit({
+  id: true,
+  entryDate: true,
+  createdAt: true,
+});
+
+export const insertCallbackDeductionSchema = createInsertSchema(callbackDeductions).omit({
+  id: true,
+  requestedAt: true,
+  createdAt: true,
+});
+
+export type PayrollCycle = typeof payrollCycles.$inferSelect;
+export type InsertPayrollCycle = z.infer<typeof insertPayrollCycleSchema>;
+export type PayrollEntry = typeof payrollEntries.$inferSelect;
+export type InsertPayrollEntry = z.infer<typeof insertPayrollEntrySchema>;
+export type CallbackDeduction = typeof callbackDeductions.$inferSelect;
+export type InsertCallbackDeduction = z.infer<typeof insertCallbackDeductionSchema>;
