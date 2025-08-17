@@ -563,50 +563,55 @@ function ScheduledJobsList() {
           className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors"
           data-testid={`job-card-${job.id}`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <h3 className="font-medium text-slate-900">{job.title}</h3>
-                    <Badge className={`text-xs ${getPriorityColor(job.priority)}`}>
-                      {job.priority}
-                    </Badge>
-                    <Badge className={`text-xs ${getStatusColor(job.status)}`}>
-                      {job.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600">
-                    <div className="flex items-center">
-                      <Building className="mr-2 h-4 w-4" />
-                      {getPropertyName(job.propertyId)}
-                      {job.unitNumber && ` - Unit ${job.unitNumber}`}
-                    </div>
-                    <div className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      {getAssignedTechnician(job.assignedTechnicianId)}
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'Not scheduled'}
-                    </div>
-                    <div className="flex items-center">
-                      <DollarSign className="mr-2 h-4 w-4" />
-                      {job.estimatedCost ? `$${job.estimatedCost}` : 'No estimate'}
-                    </div>
-                  </div>
-                  
-                  {job.description && (
-                    <p className="text-sm text-slate-500 mt-2 line-clamp-2">
-                      {job.description}
-                    </p>
-                  )}
+          {/* Header with title, badges and actions */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              {/* Title and badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <h3 className="font-medium text-slate-900 text-base">{job.title}</h3>
+                <Badge className={`text-xs ${getPriorityColor(job.priority)}`}>
+                  {job.priority}
+                </Badge>
+                <Badge className={`text-xs ${getStatusColor(job.status)}`}>
+                  {job.status.replace('_', ' ')}
+                </Badge>
+              </div>
+              
+              {/* Job details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 text-sm text-slate-600 mb-3">
+                <div className="flex items-center min-w-0">
+                  <Building className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">
+                    {getPropertyName(job.propertyId)}
+                    {job.unitNumber && ` - Unit ${job.unitNumber}`}
+                  </span>
+                </div>
+                <div className="flex items-center min-w-0">
+                  <User className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{getAssignedTechnician(job.assignedTechnicianId)}</span>
+                </div>
+                <div className="flex items-center min-w-0">
+                  <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">
+                    {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'Not scheduled'}
+                  </span>
+                </div>
+                <div className="flex items-center min-w-0">
+                  <DollarSign className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{job.estimatedCost ? `$${job.estimatedCost}` : 'No estimate'}</span>
                 </div>
               </div>
+              
+              {/* Description */}
+              {job.description && (
+                <p className="text-sm text-slate-500 line-clamp-2">
+                  {job.description}
+                </p>
+              )}
             </div>
             
-            <div className="flex items-center space-x-2 ml-4">
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <EditJobDialog job={job} onJobUpdated={handleJobUpdated} />
               <AssignTeamDialog job={job} onJobUpdated={handleJobUpdated} />
               <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
@@ -619,31 +624,32 @@ function ScheduledJobsList() {
       ))}
       
       {/* Summary Stats */}
-      <div className="pt-4 border-t border-slate-200">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
+      <div className="pt-6 border-t border-slate-200 mt-6">
+        <h4 className="text-sm font-medium text-slate-700 mb-4">Job Summary</h4>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
             <p className="text-2xl font-bold text-blue-600">
               {scheduledJobs.filter(j => j.status === 'scheduled').length}
             </p>
-            <p className="text-sm text-slate-600">Scheduled</p>
+            <p className="text-sm text-slate-600 mt-1">Scheduled</p>
           </div>
-          <div>
+          <div className="text-center p-3 bg-amber-50 rounded-lg">
             <p className="text-2xl font-bold text-amber-600">
               {scheduledJobs.filter(j => j.status === 'in_progress').length}
             </p>
-            <p className="text-sm text-slate-600">In Progress</p>
+            <p className="text-sm text-slate-600 mt-1">In Progress</p>
           </div>
-          <div>
+          <div className="text-center p-3 bg-red-50 rounded-lg">
             <p className="text-2xl font-bold text-red-600">
               {scheduledJobs.filter(j => j.priority === 'high' || j.priority === 'emergency').length}
             </p>
-            <p className="text-sm text-slate-600">High Priority</p>
+            <p className="text-sm text-slate-600 mt-1">High Priority</p>
           </div>
-          <div>
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
             <p className="text-2xl font-bold text-slate-600">
               {scheduledJobs.filter(j => !j.assignedTechnicianId).length}
             </p>
-            <p className="text-sm text-slate-600">Unassigned</p>
+            <p className="text-sm text-slate-600 mt-1">Unassigned</p>
           </div>
         </div>
       </div>
