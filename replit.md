@@ -9,11 +9,15 @@ ServicePro is a comprehensive property management platform designed for professi
 - Preferred communication style: Simple, everyday language
 - Dashboard preference: Direct role-based routing without general dashboard (implemented August 2025)
 - Authentication method: Email-based login system (reverted from phone number August 2025)
+- Device compatibility: Both mobile and desktop interfaces required for client accessibility (August 2025)
 
 ## System Architecture
 
 ### UI/UX Decisions
 - Modern component-based UI built with shadcn/ui and Tailwind CSS.
+- Fully responsive design supporting both mobile and desktop interfaces.
+- Mobile-first approach with touch-friendly navigation and app-like experience.
+- Desktop layout with expanded cards and professional presentation for computer users.
 - Visual status tracking for photo documentation.
 - Visual weekly schedule overview.
 - Color-coded profitability indicators for financial analysis.

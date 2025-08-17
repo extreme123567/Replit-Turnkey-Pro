@@ -11,7 +11,7 @@ import Login from "@/pages/login";
 // Removed general dashboard - users go directly to role-specific dashboards
 import PropertyManagerDashboard from "@/pages/property-manager-dashboard";
 import OfficeStaffDashboard from "@/pages/office-staff-dashboard";
-import AdminDashboard from "@/pages/admin-dashboard-mobile";
+import AdminDashboard from "@/pages/admin-dashboard-responsive";
 import TechnicianDashboard from "@/pages/technician-dashboard";
 import InspectorDashboard from "@/pages/inspector-dashboard";
 import Scheduling from "@/pages/scheduling";
