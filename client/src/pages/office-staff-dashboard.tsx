@@ -18,7 +18,7 @@ import {
   FileText,
   DollarSign,
   Building,
-  MessageSquare,
+
   Send,
   UserCheck,
   Plus,
@@ -271,132 +271,7 @@ function RequestQuoteButton() {
   );
 }
 
-// Message Staff Button Component
-function MessageStaffButton() {
-  const [open, setOpen] = useState(false);
-  const [recipient, setRecipient] = useState("");
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
 
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const sendMessageMutation = useMutation({
-    mutationFn: async (messageData: any) => {
-      return apiRequest("POST", "/api/messages", messageData);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
-      setOpen(false);
-      // Reset form
-      setRecipient("");
-      setSubject("");
-      setMessage("");
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSendMessage = () => {
-    if (!recipient || !subject || !message) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    sendMessageMutation.mutate({
-      recipient,
-      subject,
-      message,
-      senderId: "office-staff-1",
-      conversationId: `office-${Date.now()}`
-    });
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" data-testid="button-message-staff">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Message Staff
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Send Message to Staff</DialogTitle>
-          <DialogDescription>
-            Send a message to staff members or the entire team.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="recipient">Recipient *</Label>
-            <Select value={recipient} onValueChange={setRecipient}>
-              <SelectTrigger data-testid="select-recipient">
-                <SelectValue placeholder="Select staff member" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="office-manager">Office Manager</SelectItem>
-                <SelectItem value="admin-assistant">Administrative Assistant</SelectItem>
-                <SelectItem value="property-manager">Property Manager</SelectItem>
-                <SelectItem value="all-staff">All Staff</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="subject">Subject *</Label>
-            <Input
-              id="subject"
-              placeholder="e.g., Urgent: Tenant complaint - Unit 205"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              data-testid="input-message-subject"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="message">Message *</Label>
-            <Textarea
-              id="message"
-              placeholder="Type your message here..."
-              rows={4}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              data-testid="textarea-message-content"
-            />
-          </div>
-
-          <div className="flex space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendMessage}
-              disabled={sendMessageMutation.isPending}
-              className="flex-1"
-              data-testid="button-send-message"
-            >
-              {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 // Multi-Job Scheduling Component
 function ScheduleJobsSection() {
@@ -580,7 +455,6 @@ function UnitsCompletedWidget() {
 export default function OfficeStaffDashboard() {
   // Modal states
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   
   // Form states
   const [quoteForm, setQuoteForm] = useState({
@@ -588,12 +462,6 @@ export default function OfficeStaffDashboard() {
     description: '',
     property: '',
     unitNumber: ''
-  });
-  
-  const [messageForm, setMessageForm] = useState({
-    recipient: '',
-    subject: '',
-    message: ''
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<OfficeStats>({
@@ -735,63 +603,6 @@ export default function OfficeStaffDashboard() {
                   <Button className="servicepro-btn-primary">
                     <DollarSign className="mr-2 h-4 w-4" />
                     Submit Quote Request
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          
-          <Dialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" data-testid="button-message-staff">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Message Office Staff
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Send Message to Office Staff</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="recipient">Recipient</Label>
-                  <Select value={messageForm.recipient} onValueChange={(value) => setMessageForm({...messageForm, recipient: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select staff member" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="office-manager">Office Manager</SelectItem>
-                      <SelectItem value="admin-assistant">Administrative Assistant</SelectItem>
-                      <SelectItem value="all-office-staff">All Office Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="e.g., Urgent: Tenant complaint - Unit 205"
-                    value={messageForm.subject}
-                    onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Type your message here..."
-                    rows={4}
-                    value={messageForm.message}
-                    onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsMessageModalOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button className="servicepro-btn-primary">
-                    <Send className="mr-2 h-4 w-4" />
-                    Send Message
                   </Button>
                 </div>
               </div>
