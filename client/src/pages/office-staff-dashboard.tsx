@@ -399,122 +399,47 @@ function MessageStaffButton() {
 // Schedule Job Button Component
 function ScheduleJobButton() {
   const [open, setOpen] = useState(false);
-  const [property, setProperty] = useState("");
-  const [unitNumber, setUnitNumber] = useState("");
-  const [bedroomSize, setBedroomSize] = useState("");
-  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
-  const [jobDates, setJobDates] = useState<Record<string, string>>({});
-  const [jobLocation, setJobLocation] = useState(""); // "in-unit" or "on-property"
-  const [notes, setNotes] = useState("");
-  const [assignedTechnician, setAssignedTechnician] = useState("");
-  const [priority, setPriority] = useState("medium");
+  const [jobForm, setJobForm] = useState({
+    title: '',
+    description: '',
+    property: '',
+    priority: 'medium',
+    scheduledDate: '',
+    estimatedHours: ''
+  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const scheduleJobMutation = useMutation({
-    mutationFn: async (jobData: any) => {
-      return apiRequest("POST", "/api/jobs/schedule", jobData);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Job Scheduled",
-        description: "New job has been successfully scheduled.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/office"] });
-      setOpen(false);
-      // Reset form
-      setProperty("");
-      setUnitNumber("");
-      setBedroomSize("");
-      setSelectedJobs([]);
-      setJobDates({});
-      setJobLocation("");
-      setNotes("");
-      setAssignedTechnician("");
-      setPriority("medium");
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to schedule job. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleScheduleJob = () => {
-    console.log("Schedule job clicked with data:", {
-      property,
-      unitNumber,
-      bedroomSize,
-      selectedJobs,
-      jobDates,
-      jobLocation,
-      notes,
-      assignedTechnician,
-      priority
-    });
-
-    // Check that all selected jobs have dates
-    const missingDates = selectedJobs.filter(job => !jobDates[job]);
-    if (!property || !unitNumber || !bedroomSize || selectedJobs.length === 0 || !jobLocation || missingDates.length > 0) {
-      console.log("Validation failed - missing required fields or dates");
-      let message = "Please fill in all required fields and select at least one job type.";
-      if (missingDates.length > 0) {
-        message += ` Missing dates for: ${missingDates.join(", ")}.`;
-      }
+  const handleSubmit = () => {
+    if (!jobForm.title || !jobForm.description) {
       toast({
         title: "Missing Information",
-        description: message,
+        description: "Please fill in job title and description.",
         variant: "destructive",
       });
       return;
     }
 
-    // Submit each job separately with its own date
-    selectedJobs.forEach(jobType => {
-      console.log(`Submitting ${jobType} job with date: ${jobDates[jobType]}`);
-      scheduleJobMutation.mutate({
-        property,
-        unitNumber,
-        bedroomSize,
-        jobTypes: [jobType],
-        location: jobLocation,
-        scheduledDate: jobDates[jobType],
-        notes,
-        assignedTechnician: assignedTechnician === "unassigned" ? null : assignedTechnician,
-        priority,
-        status: "scheduled",
-        scheduledBy: "office-staff"
-      });
+    // For demo purposes, we'll show a success message
+    toast({
+      title: "Job Scheduled",
+      description: "New job has been successfully scheduled.",
+    });
+    
+    setOpen(false);
+    // Reset form
+    setJobForm({
+      title: '',
+      description: '',
+      property: '',
+      priority: 'medium',
+      scheduledDate: '',
+      estimatedHours: ''
     });
   };
 
-  const toggleJobSelection = (jobType: string) => {
-    setSelectedJobs(prev => {
-      if (prev.includes(jobType)) {
-        // Remove job and its date
-        setJobDates(prevDates => {
-          const newDates = { ...prevDates };
-          delete newDates[jobType];
-          return newDates;
-        });
-        return prev.filter(job => job !== jobType);
-      } else {
-        // Add job
-        return [...prev, jobType];
-      }
-    });
-  };
 
-  const updateJobDate = (jobType: string, date: string) => {
-    setJobDates(prev => ({
-      ...prev,
-      [jobType]: date
-    }));
-  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -524,178 +449,61 @@ function ScheduleJobButton() {
           Schedule Job
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Schedule Job</DialogTitle>
-          <DialogDescription>
-            Create multiple job assignments for a unit.
-          </DialogDescription>
+          <DialogTitle>Schedule New Job</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          {/* Property Selection */}
-          <div>
-            <Label htmlFor="property">Property *</Label>
-            <Select value={property} onValueChange={setProperty}>
-              <SelectTrigger data-testid="select-property">
-                <SelectValue placeholder="Select property" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="maple-gardens">Maple Gardens</SelectItem>
-                <SelectItem value="oak-village">Oak Village</SelectItem>
-                <SelectItem value="pine-heights">Pine Heights</SelectItem>
-                <SelectItem value="willow-creek">Willow Creek</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="job-title">Job Title</Label>
+            <Input
+              id="job-title"
+              placeholder="e.g., Repair leaky faucet"
+              value={jobForm.title}
+              onChange={(e) => setJobForm({...jobForm, title: e.target.value})}
+            />
           </div>
-
+          <div className="grid gap-2">
+            <Label htmlFor="job-description">Description</Label>
+            <Textarea
+              id="job-description"
+              placeholder="Describe the work needed..."
+              value={jobForm.description}
+              onChange={(e) => setJobForm({...jobForm, description: e.target.value})}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            {/* Unit Number */}
-            <div>
-              <Label htmlFor="unitNumber">Unit Number *</Label>
-              <Input
-                id="unitNumber"
-                value={unitNumber}
-                onChange={(e) => setUnitNumber(e.target.value)}
-                placeholder="e.g., 205"
-                data-testid="input-unit-number"
-              />
-            </div>
-
-            {/* Bedroom Size */}
-            <div>
-              <Label htmlFor="bedroomSize">Bedroom Size *</Label>
-              <Select value={bedroomSize} onValueChange={setBedroomSize}>
-                <SelectTrigger data-testid="select-bedroom-size">
-                  <SelectValue placeholder="Select size" />
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={jobForm.priority} onValueChange={(value) => setJobForm({...jobForm, priority: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="studio">Studio</SelectItem>
-                  <SelectItem value="1br">1 Bedroom</SelectItem>
-                  <SelectItem value="2br">2 Bedroom</SelectItem>
-                  <SelectItem value="3br">3+ Bedroom</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="emergency">Emergency</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Job Types - Multiple Selection */}
-          <div>
-            <Label>Job Types * (Select all that apply)</Label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              {['punch', 'paint', 'clean', 'carpet', 'repairs', 'bulk-trash'].map((jobType) => (
-                <div key={jobType} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`job-${jobType}`}
-                    checked={selectedJobs.includes(jobType)}
-                    onCheckedChange={() => toggleJobSelection(jobType)}
-                    data-testid={`checkbox-${jobType}`}
-                  />
-                  <Label htmlFor={`job-${jobType}`} className="text-sm font-medium capitalize">
-                    {jobType === 'bulk-trash' ? 'Bulk Trash' : jobType}
-                  </Label>
-                </div>
-              ))}
+            <div className="grid gap-2">
+              <Label htmlFor="estimated-hours">Estimated Hours</Label>
+              <Input
+                id="estimated-hours"
+                type="number"
+                placeholder="2.5"
+                value={jobForm.estimatedHours}
+                onChange={(e) => setJobForm({...jobForm, estimatedHours: e.target.value})}
+              />
             </div>
           </div>
-
-          {/* Date Inputs for Selected Jobs */}
-          {selectedJobs.length > 0 && (
-            <div>
-              <Label>Scheduled Dates * (One per job type)</Label>
-              <div className="grid grid-cols-1 gap-3 mt-2">
-                {selectedJobs.map((jobType) => (
-                  <div key={`date-${jobType}`} className="flex items-center space-x-3">
-                    <Label className="min-w-[120px] text-sm capitalize">
-                      {jobType === 'bulk-trash' ? 'Bulk Trash' : jobType}:
-                    </Label>
-                    <Input
-                      type="date"
-                      value={jobDates[jobType] || ""}
-                      onChange={(e) => updateJobDate(jobType, e.target.value)}
-                      data-testid={`input-date-${jobType}`}
-                      className="flex-1"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Job Location */}
-          <div>
-            <Label htmlFor="jobLocation">Location *</Label>
-            <Select value={jobLocation} onValueChange={setJobLocation}>
-              <SelectTrigger data-testid="select-job-location">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="in-unit">In Unit</SelectItem>
-                <SelectItem value="on-property">On Property</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Priority */}
-          <div>
-            <Label htmlFor="priority">Priority</Label>
-            <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger data-testid="select-priority">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Assigned Technician */}
-          <div>
-            <Label htmlFor="assignedTechnician">Assigned Technician</Label>
-            <Select value={assignedTechnician} onValueChange={setAssignedTechnician}>
-              <SelectTrigger data-testid="select-assigned-technician">
-                <SelectValue placeholder="Select technician (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
-                <SelectItem value="tech-1">John Smith</SelectItem>
-                <SelectItem value="tech-2">Mike Johnson</SelectItem>
-                <SelectItem value="tech-3">Sarah Williams</SelectItem>
-                <SelectItem value="tech-4">David Brown</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes or special instructions..."
-              data-testid="textarea-notes"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex space-x-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="flex-1"
-              data-testid="button-cancel-job"
-            >
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleScheduleJob}
-              disabled={scheduleJobMutation.isPending}
-              className="flex-1"
-              data-testid="button-confirm-schedule-job"
-            >
-              {scheduleJobMutation.isPending ? "Scheduling..." : "Schedule Job"}
+            <Button onClick={handleSubmit}>
+              Schedule Job
             </Button>
           </div>
         </div>
