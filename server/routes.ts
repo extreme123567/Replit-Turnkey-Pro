@@ -251,6 +251,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get staff performance data
+  app.get("/api/staff/performance", async (req, res) => {
+    try {
+      // Get all work orders to calculate performance metrics
+      const workOrders = await storage.getWorkOrders();
+      const staffPerformance: Record<string, any> = {};
+
+      // Calculate performance for each staff member
+      const staff = await storage.getStaff();
+      
+      for (const member of staff) {
+        const assignedJobs = workOrders.filter(wo => wo.assignedTechnicianId === member.id);
+        const completedJobs = assignedJobs.filter(wo => wo.status === 'completed');
+        const callbacks = workOrders.filter(wo => 
+          wo.assignedTechnicianId === member.id && 
+          wo.category === 'callback'
+        );
+
+        staffPerformance[member.id] = {
+          completedJobs: completedJobs.length,
+          callbacks: callbacks.length,
+          totalAssigned: assignedJobs.length,
+          inProgress: assignedJobs.filter(wo => wo.status === 'in_progress').length
+        };
+      }
+
+      res.json(staffPerformance);
+    } catch (error) {
+      console.error("Error fetching staff performance:", error);
+      res.status(500).json({ error: "Failed to fetch staff performance" });
+    }
+  });
+
   // Job routes
   app.get("/api/jobs", async (req, res) => {
     try {

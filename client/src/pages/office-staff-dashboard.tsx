@@ -2085,13 +2085,311 @@ function JobApprovalsSection() {
 
 // Staff Management Section
 function StaffManagementSection() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
+  const [newStaffForm, setNewStaffForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: 'technician',
+    phone: '',
+    hourlyRate: ''
+  });
+  const [isAddingStaff, setIsAddingStaff] = useState(false);
+
+  const { data: staff = [], isLoading: staffLoading, refetch: refetchStaff } = useQuery({
+    queryKey: ['/api/staff'],
+    queryFn: async () => {
+      const response = await fetch('/api/staff');
+      if (!response.ok) throw new Error('Failed to fetch staff');
+      return response.json();
+    },
+  });
+
+  const { data: staffPerformance = {}, isLoading: performanceLoading } = useQuery({
+    queryKey: ['/api/staff/performance'],
+    queryFn: async () => {
+      const response = await fetch('/api/staff/performance');
+      if (!response.ok) throw new Error('Failed to fetch staff performance');
+      return response.json();
+    },
+  });
+
+  const addStaffMutation = useMutation({
+    mutationFn: async (staffData: any) => {
+      return apiRequest('/api/staff', 'POST', staffData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Staff member added successfully",
+      });
+      setNewStaffForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: 'technician',
+        phone: '',
+        hourlyRate: ''
+      });
+      setIsAddingStaff(false);
+      refetchStaff();
+      queryClient.invalidateQueries({ queryKey: ['/api/staff/performance'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add staff member",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddStaff = () => {
+    if (!newStaffForm.firstName || !newStaffForm.lastName || !newStaffForm.email) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addStaffMutation.mutate({
+      ...newStaffForm,
+      hourlyRate: newStaffForm.hourlyRate ? parseFloat(newStaffForm.hourlyRate) : null
+    });
+  };
+
+  if (staffLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Staff Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-16" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Staff Management</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Staff Management & Performance</CardTitle>
+        <Button 
+          onClick={() => setIsAddingStaff(true)}
+          className="bg-blue-600 hover:bg-blue-700"
+          data-testid="button-add-staff"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Staff
+        </Button>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-600">Staff assignment and management tools will be implemented here.</p>
+        {/* Add Staff Form */}
+        {isAddingStaff && (
+          <div className="mb-6 p-4 bg-slate-50 rounded-lg border">
+            <h4 className="font-medium mb-4">Add New Staff Member</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">First Name *</label>
+                <input
+                  type="text"
+                  value={newStaffForm.firstName}
+                  onChange={(e) => setNewStaffForm({...newStaffForm, firstName: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  data-testid="input-staff-firstname"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Last Name *</label>
+                <input
+                  type="text"
+                  value={newStaffForm.lastName}
+                  onChange={(e) => setNewStaffForm({...newStaffForm, lastName: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  data-testid="input-staff-lastname"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={newStaffForm.email}
+                  onChange={(e) => setNewStaffForm({...newStaffForm, email: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  data-testid="input-staff-email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={newStaffForm.phone}
+                  onChange={(e) => setNewStaffForm({...newStaffForm, phone: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  data-testid="input-staff-phone"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select
+                  value={newStaffForm.role}
+                  onChange={(e) => setNewStaffForm({...newStaffForm, role: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  data-testid="select-staff-role"
+                >
+                  <option value="technician">Technician</option>
+                  <option value="inspector">Inspector</option>
+                  <option value="office_staff">Office Staff</option>
+                  <option value="property_manager">Property Manager</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Hourly Rate ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={newStaffForm.hourlyRate}
+                  onChange={(e) => setNewStaffForm({...newStaffForm, hourlyRate: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  data-testid="input-staff-hourly-rate"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button 
+                onClick={handleAddStaff}
+                disabled={addStaffMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+                data-testid="button-save-staff"
+              >
+                {addStaffMutation.isPending ? 'Adding...' : 'Add Staff Member'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsAddingStaff(false)}
+                data-testid="button-cancel-add-staff"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Staff List with Performance */}
+        <div className="space-y-4">
+          {staff.map((member: any) => {
+            const performance = staffPerformance[member.id] || { completedJobs: 0, callbacks: 0 };
+            const callbackRate = performance.completedJobs > 0 
+              ? ((performance.callbacks / performance.completedJobs) * 100).toFixed(1)
+              : '0.0';
+
+            return (
+              <div 
+                key={member.id}
+                className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                data-testid={`staff-card-${member.id}`}
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-slate-900">
+                          {member.firstName} {member.lastName}
+                        </h4>
+                        <p className="text-sm text-slate-600">{member.role.replace('_', ' ')}</p>
+                      </div>
+                      <Badge className="capitalize">
+                        {member.role.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600" data-testid={`completed-jobs-${member.id}`}>
+                          {performance.completedJobs}
+                        </p>
+                        <p className="text-sm text-slate-600">Completed Jobs</p>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <p className="text-2xl font-bold text-orange-600" data-testid={`callbacks-${member.id}`}>
+                          {performance.callbacks}
+                        </p>
+                        <p className="text-sm text-slate-600">Callbacks</p>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <p className="text-2xl font-bold text-blue-600" data-testid={`callback-rate-${member.id}`}>
+                          {callbackRate}%
+                        </p>
+                        <p className="text-sm text-slate-600">Callback Rate</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 mt-3 text-sm text-slate-600">
+                      <div className="flex items-center">
+                        <Mail className="mr-1 h-4 w-4" />
+                        {member.email}
+                      </div>
+                      {member.phone && (
+                        <div className="flex items-center">
+                          <Phone className="mr-1 h-4 w-4" />
+                          {member.phone}
+                        </div>
+                      )}
+                      {member.hourlyRate && (
+                        <div className="flex items-center">
+                          <DollarSign className="mr-1 h-4 w-4" />
+                          ${member.hourlyRate}/hr
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedStaff(member.id)}
+                      data-testid={`button-view-details-${member.id}`}
+                    >
+                      <Eye className="mr-1 h-4 w-4" />
+                      View Details
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      data-testid={`button-edit-staff-${member.id}`}
+                    >
+                      <Edit className="mr-1 h-4 w-4" />
+                      Edit
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          
+          {staff.length === 0 && (
+            <div className="text-center py-8">
+              <Users className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No staff members</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Get started by adding your first staff member.
+              </p>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
