@@ -75,7 +75,8 @@ export default function PropertyManagerDashboard() {
     property: '',
     priority: 'medium',
     scheduledDate: '',
-    estimatedHours: ''
+    estimatedHours: '',
+    poNumber: ''
   });
   
   const [messageForm, setMessageForm] = useState({
@@ -334,6 +335,15 @@ export default function PropertyManagerDashboard() {
                     placeholder="Describe the work needed..."
                     value={jobForm.description}
                     onChange={(e) => setJobForm({...jobForm, description: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="po-number">PO# (Purchase Order Number)</Label>
+                  <Input
+                    id="po-number"
+                    placeholder="e.g., PO-2024-001"
+                    value={jobForm.poNumber}
+                    onChange={(e) => setJobForm({...jobForm, poNumber: e.target.value})}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
