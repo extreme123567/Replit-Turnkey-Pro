@@ -228,7 +228,7 @@ export class MemStorage implements IStorage {
       {
         id: "admin-1",
         email: "admin@servicepro.com",
-        password: "$2b$12$2AnEdtdy55ZbofRd8l7eC.8N30.9IQeQIwxQ0WTALoLJELIY21GDy", // "admin123"
+        password: "$2b$12$7F/c3cCG5CJuzKyCk0MJZ.c.fYcEudpPv0swvO20WOcXDu3y.Ugpa", // "adminpass123"
         firstName: "System",
         lastName: "Administrator",
         role: "admin",
@@ -243,7 +243,7 @@ export class MemStorage implements IStorage {
       {
         id: "office-1",
         email: "office@servicepro.com", 
-        password: "$2b$12$eJrpiYXZhsMV8CCxaxXO6ewSkuX20yrrc1XUR8Xy0soDoNo0VfQX2", // "office123"
+        password: "$2b$12$fCyT0vsMq5a6aixd/qtNlezaEieidN26/lH2nwpLgIXyvS7dEo//O", // "officepass123"
         firstName: "Leslie",
         lastName: "Rodriguez",
         role: "office_staff",
@@ -258,7 +258,7 @@ export class MemStorage implements IStorage {
       {
         id: "pm-1",
         email: "manager@servicepro.com",
-        password: "$2b$12$l5S0VJo//V7MEWo9Zs2npOhqCvMT/0ADfOD6g6gHK3imEzbHQ7jK2", // "manager123"
+        password: "$2b$12$hMoDVIRBEypyXJjfUQBy9Ot/GUUOacjQOOeTpJzVmO./s.v64hmnS", // "managerpass123"
         firstName: "Property",
         lastName: "Manager",
         role: "property_manager",
@@ -273,7 +273,7 @@ export class MemStorage implements IStorage {
       {
         id: "tech-1",
         email: "tech@servicepro.com",
-        password: "$2b$12$p42Hg4b2EdHvhMX0lkghuuyPE6pfQpP4P6CQQq2r0eb/W27IYXw5q", // "tech123"
+        password: "$2b$12$Mr.jmZmqdONN.3Rm066SJeJD9DtCgjMDGSmWgTxorDBbeJy71FAx.", // "techpass123"
         firstName: "Mark",
         lastName: "Kebets",
         role: "technician", 
@@ -288,7 +288,7 @@ export class MemStorage implements IStorage {
       {
         id: "inspector-1",
         email: "inspector@servicepro.com",
-        password: "$2b$12$n97VaIruHdAawozIdzg17OwbfpRQcVYkQNySHo6qiWWFEckU67U9u", // "inspector123"
+        password: "$2b$12$GERz5GfKEcmmTcxkQulRr.w2Uvhyt2GcMUqleavDGG666GKInEAvO", // "inspectorpass123"
         firstName: "Quality",
         lastName: "Inspector",
         role: "inspector",
