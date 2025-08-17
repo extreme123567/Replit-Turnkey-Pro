@@ -656,7 +656,16 @@ export default function OfficeStaffDashboard() {
         </div>
         <div className="flex items-center space-x-3">
           <RequestQuoteButton />
-          <UnitsCompletedWidget />
+          <Button variant="outline" className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4" />
+            <span>Units Turned</span>
+            <Badge variant="secondary" className="ml-2">147</Badge>
+          </Button>
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Clock className="h-4 w-4" />
+            <span>Callbacks Scheduled</span>
+            <Badge variant="secondary" className="ml-2">23</Badge>
+          </Button>
           <MessageStaffButton />
         </div>
       </div>
