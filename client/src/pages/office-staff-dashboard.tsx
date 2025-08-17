@@ -655,18 +655,208 @@ export default function OfficeStaffDashboard() {
           <p className="text-slate-600">Welcome back, John Smith</p>
         </div>
         <div className="flex items-center space-x-3">
-          <RequestQuoteButton />
-          <Button variant="outline" className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4" />
-            <span>Units Turned</span>
-            <Badge variant="secondary" className="ml-2">147</Badge>
-          </Button>
-          <Button variant="outline" className="flex items-center space-x-2">
-            <Clock className="h-4 w-4" />
-            <span>Callbacks Scheduled</span>
-            <Badge variant="secondary" className="ml-2">23</Badge>
-          </Button>
-          <MessageStaffButton />
+          <Dialog open={isQuoteModalOpen} onOpenChange={setIsQuoteModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-request-quote">
+                <DollarSign className="mr-2 h-4 w-4" />
+                Request Quote
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Request Quote from Office</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="quote-title">Service Title</Label>
+                  <Input
+                    id="quote-title"
+                    placeholder="e.g., Kitchen renovation - Unit 205"
+                    value={quoteForm.title}
+                    onChange={(e) => setQuoteForm({...quoteForm, title: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="quote-description">Detailed Description</Label>
+                  <Textarea
+                    id="quote-description"
+                    placeholder="Describe the work needed in detail..."
+                    rows={3}
+                    value={quoteForm.description}
+                    onChange={(e) => setQuoteForm({...quoteForm, description: e.target.value})}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="property">Property</Label>
+                    <Select value={quoteForm.property} onValueChange={(value) => setQuoteForm({...quoteForm, property: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select property" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="maple-gardens">Maple Gardens</SelectItem>
+                        <SelectItem value="oak-village">Oak Village</SelectItem>
+                        <SelectItem value="pine-heights">Pine Heights</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="unit-number">Unit Number</Label>
+                    <Input
+                      id="unit-number"
+                      placeholder="e.g., 205"
+                      value={quoteForm.unitNumber}
+                      onChange={(e) => setQuoteForm({...quoteForm, unitNumber: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsQuoteModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="servicepro-btn-primary">
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    Submit Quote Request
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-message-staff">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Message Office Staff
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Send Message to Office Staff</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="recipient">Recipient</Label>
+                  <Select value={messageForm.recipient} onValueChange={(value) => setMessageForm({...messageForm, recipient: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="office-manager">Office Manager</SelectItem>
+                      <SelectItem value="admin-assistant">Administrative Assistant</SelectItem>
+                      <SelectItem value="all-office-staff">All Office Staff</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    placeholder="e.g., Urgent: Tenant complaint - Unit 205"
+                    value={messageForm.subject}
+                    onChange={(e) => setMessageForm({...messageForm, subject: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Type your message here..."
+                    rows={4}
+                    value={messageForm.message}
+                    onChange={(e) => setMessageForm({...messageForm, message: e.target.value})}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsMessageModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="servicepro-btn-primary">
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Message
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isJobModalOpen} onOpenChange={setIsJobModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="servicepro-btn-primary" data-testid="button-schedule-job">
+                <Calendar className="mr-2 h-4 w-4" />
+                Schedule Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Schedule New Job</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="job-title">Job Title</Label>
+                  <Input
+                    id="job-title"
+                    placeholder="e.g., Repair leaky faucet"
+                    value={jobForm.title}
+                    onChange={(e) => setJobForm({...jobForm, title: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="job-description">Description</Label>
+                  <Textarea
+                    id="job-description"
+                    placeholder="Describe the work needed..."
+                    value={jobForm.description}
+                    onChange={(e) => setJobForm({...jobForm, description: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="po-number">PO# (Purchase Order Number)</Label>
+                  <Input
+                    id="po-number"
+                    placeholder="e.g., PO-2024-001"
+                    value={jobForm.poNumber}
+                    onChange={(e) => setJobForm({...jobForm, poNumber: e.target.value})}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select value={jobForm.priority} onValueChange={(value) => setJobForm({...jobForm, priority: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="emergency">Emergency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="estimated-hours">Estimated Hours</Label>
+                    <Input
+                      id="estimated-hours"
+                      type="number"
+                      placeholder="2.5"
+                      value={jobForm.estimatedHours}
+                      onChange={(e) => setJobForm({...jobForm, estimatedHours: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsJobModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="servicepro-btn-primary">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Schedule Job
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
