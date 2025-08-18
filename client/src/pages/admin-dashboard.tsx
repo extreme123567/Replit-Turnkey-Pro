@@ -262,10 +262,10 @@ export default function AdminDashboard() {
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="schedule" data-testid="tab-schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="reports" data-testid="tab-reports">Reports</TabsTrigger>
+            <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -350,7 +350,10 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* Schedule Tab */}
-          <TabsContent value="schedule" className="space-y-6">
+          <TabsContent value="schedule" className="space-y-6" data-testid="schedule-tab-content">
+            <div className="text-center mb-4">
+              <p className="text-sm text-slate-600">Active tab: {activeTab}</p>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Schedule New Job */}
               <Card>
@@ -504,24 +507,38 @@ export default function AdminDashboard() {
                         )}
                       />
 
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={createJobMutation.isPending}
-                        data-testid="button-schedule-job"
-                      >
-                        {createJobMutation.isPending ? (
-                          <>
-                            <Clock className="mr-2" size={16} />
-                            Scheduling...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="mr-2" size={16} />
-                            Schedule Job
-                          </>
-                        )}
-                      </Button>
+                      <div className="space-y-2">
+                        <Button 
+                          type="submit" 
+                          className="w-full" 
+                          disabled={createJobMutation.isPending}
+                          data-testid="button-schedule-job"
+                        >
+                          {createJobMutation.isPending ? (
+                            <>
+                              <Clock className="mr-2" size={16} />
+                              Scheduling...
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="mr-2" size={16} />
+                              Schedule Job
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          className="w-full" 
+                          onClick={() => {
+                            console.log("Test button clicked!");
+                            alert("Button click works! Form values: " + JSON.stringify(jobForm.getValues()));
+                          }}
+                          data-testid="button-test-click"
+                        >
+                          Test Button Click
+                        </Button>
+                      </div>
                     </form>
                   </Form>
                 </CardContent>
