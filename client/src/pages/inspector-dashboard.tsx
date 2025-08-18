@@ -30,7 +30,11 @@ import {
   Upload,
   X,
   Play,
-  Square
+  Square,
+  Settings,
+  Zap,
+  Wrench,
+  Home
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -62,6 +66,15 @@ export default function InspectorDashboard() {
   const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [locationError, setLocationError] = useState<string>("");
   const [geofenceStatus, setGeofenceStatus] = useState<{[jobId: string]: boolean}>({});
+  const [buildingIssueDialogOpen, setBuildingIssueDialogOpen] = useState(false);
+  const [newBuildingIssue, setNewBuildingIssue] = useState({
+    title: '',
+    description: '',
+    location: '',
+    priority: 'medium',
+    category: 'maintenance',
+    photos: [] as File[]
+  });
 
   // Geolocation and geofencing functions
   const getCurrentLocation = (): Promise<{latitude: number, longitude: number}> => {
@@ -275,6 +288,11 @@ export default function InspectorDashboard() {
     retry: false,
   });
 
+  // Fetch building issues
+  const { data: buildingIssues } = useQuery({
+    queryKey: ['/api/building-issues', inspectorId],
+  });
+
   // Mutation for completing inspection with photos
   const completeInspectionMutation = useMutation({
     mutationFn: async (data: {
@@ -304,6 +322,57 @@ export default function InspectorDashboard() {
       });
     },
   });
+
+  // Building issue mutation
+  const createBuildingIssueMutation = useMutation({
+    mutationFn: async (issueData: any) => {
+      return apiRequest('/api/building-issues', {
+        method: 'POST',
+        body: JSON.stringify(issueData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/building-issues'] });
+      setBuildingIssueDialogOpen(false);
+      setNewBuildingIssue({
+        title: '',
+        description: '',
+        location: '',
+        priority: 'medium',
+        category: 'maintenance',
+        photos: []
+      });
+      toast({
+        title: "Building issue reported",
+        description: "The issue has been submitted to the property management team.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to report building issue",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitBuildingIssue = async () => {
+    if (!newBuildingIssue.title || !newBuildingIssue.description || !newBuildingIssue.location) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createBuildingIssueMutation.mutate({
+      ...newBuildingIssue,
+      reportedBy: inspectorId,
+      status: 'open',
+      createdAt: new Date().toISOString()
+    });
+  };
 
   const resetInspectionForm = () => {
     setSelectedJob(null);
@@ -916,6 +985,216 @@ export default function InspectorDashboard() {
               <Clipboard className="text-amber-600" size={20} />
               <span className="text-sm font-medium">Compliance Check</span>
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Building Issues Section */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Building Issues</span>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-red-600">
+                {buildingIssues?.filter((issue: any) => issue.status === 'open').length || 0} open
+              </Badge>
+              <Dialog open={buildingIssueDialogOpen} onOpenChange={setBuildingIssueDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                    <Plus size={16} className="mr-1" />
+                    Report Issue
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Report Building Issue</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="issue-title">Issue Title *</Label>
+                      <Input
+                        id="issue-title"
+                        value={newBuildingIssue.title}
+                        onChange={(e) => setNewBuildingIssue(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Brief description of the issue"
+                        data-testid="input-issue-title"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="issue-location">Location *</Label>
+                      <Input
+                        id="issue-location"
+                        value={newBuildingIssue.location}
+                        onChange={(e) => setNewBuildingIssue(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Building, floor, unit, or specific area"
+                        data-testid="input-issue-location"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="issue-priority">Priority</Label>
+                        <Select 
+                          value={newBuildingIssue.priority} 
+                          onValueChange={(value) => setNewBuildingIssue(prev => ({ ...prev, priority: value }))}
+                        >
+                          <SelectTrigger data-testid="select-issue-priority">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="issue-category">Category</Label>
+                        <Select 
+                          value={newBuildingIssue.category} 
+                          onValueChange={(value) => setNewBuildingIssue(prev => ({ ...prev, category: value }))}
+                        >
+                          <SelectTrigger data-testid="select-issue-category">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="electrical">Electrical</SelectItem>
+                            <SelectItem value="plumbing">Plumbing</SelectItem>
+                            <SelectItem value="hvac">HVAC</SelectItem>
+                            <SelectItem value="structural">Structural</SelectItem>
+                            <SelectItem value="safety">Safety</SelectItem>
+                            <SelectItem value="cleaning">Cleaning</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="issue-description">Description *</Label>
+                      <Textarea
+                        id="issue-description"
+                        value={newBuildingIssue.description}
+                        onChange={(e) => setNewBuildingIssue(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Detailed description of the issue, including any safety concerns"
+                        className="min-h-[100px]"
+                        data-testid="textarea-issue-description"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setBuildingIssueDialogOpen(false)}
+                        data-testid="button-cancel-issue"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleSubmitBuildingIssue}
+                        disabled={createBuildingIssueMutation.isPending}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                        data-testid="button-submit-issue"
+                      >
+                        {createBuildingIssueMutation.isPending ? "Reporting..." : "Report Issue"}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardTitle>
+          <div className="text-sm text-slate-600 mt-2">
+            Report maintenance issues, safety concerns, and building defects
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="space-y-4">
+            {buildingIssues?.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Settings className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                <p>No building issues reported</p>
+                <p className="text-sm">Use the "Report Issue" button to document problems</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {buildingIssues?.slice(0, 5).map((issue: any) => (
+                  <div key={issue.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        issue.priority === 'urgent' ? 'bg-red-100' :
+                        issue.priority === 'high' ? 'bg-orange-100' :
+                        issue.priority === 'medium' ? 'bg-yellow-100' :
+                        'bg-gray-100'
+                      }`}>
+                        {issue.category === 'electrical' ? <Zap className={`${
+                          issue.priority === 'urgent' ? 'text-red-600' :
+                          issue.priority === 'high' ? 'text-orange-600' :
+                          issue.priority === 'medium' ? 'text-yellow-600' :
+                          'text-gray-600'
+                        }`} size={16} /> :
+                        issue.category === 'plumbing' ? <Settings className={`${
+                          issue.priority === 'urgent' ? 'text-red-600' :
+                          issue.priority === 'high' ? 'text-orange-600' :
+                          issue.priority === 'medium' ? 'text-yellow-600' :
+                          'text-gray-600'
+                        }`} size={16} /> :
+                        issue.category === 'structural' ? <Home className={`${
+                          issue.priority === 'urgent' ? 'text-red-600' :
+                          issue.priority === 'high' ? 'text-orange-600' :
+                          issue.priority === 'medium' ? 'text-yellow-600' :
+                          'text-gray-600'
+                        }`} size={16} /> :
+                        <Wrench className={`${
+                          issue.priority === 'urgent' ? 'text-red-600' :
+                          issue.priority === 'high' ? 'text-orange-600' :
+                          issue.priority === 'medium' ? 'text-yellow-600' :
+                          'text-gray-600'
+                        }`} size={16} />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">{issue.title}</p>
+                        <p className="text-sm text-slate-600 flex items-center">
+                          <MapPin className="mr-1" size={12} />
+                          {issue.location}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {new Date(issue.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <Badge className={`text-xs ${
+                        issue.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                        issue.priority === 'high' ? 'bg-orange-100 text-orange-700' :
+                        issue.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {issue.priority}
+                      </Badge>
+                      <Badge className={`text-xs ${
+                        issue.status === 'open' ? 'bg-red-100 text-red-700' :
+                        issue.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {issue.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {buildingIssues?.length > 5 && (
+                  <div className="text-center pt-4">
+                    <Button variant="outline" size="sm" className="text-blue-600">
+                      View All Issues ({buildingIssues.length})
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

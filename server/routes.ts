@@ -2095,6 +2095,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Building Issues API endpoints
+  app.get('/api/building-issues/:inspectorId', (req, res) => {
+    try {
+      // Mock building issues data
+      const mockBuildingIssues = [
+        {
+          id: 'issue-1',
+          title: 'Broken light fixture in hallway',
+          description: 'The overhead light in the 2nd floor hallway is flickering and needs replacement',
+          location: 'Building A - 2nd Floor Hallway',
+          priority: 'medium',
+          category: 'electrical',
+          status: 'open',
+          reportedBy: req.params.inspectorId,
+          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        },
+        {
+          id: 'issue-2',
+          title: 'Leaking faucet in common area bathroom',
+          description: 'Water dripping from the main faucet in the ground floor common bathroom',
+          location: 'Building B - Ground Floor Common Bathroom',
+          priority: 'high',
+          category: 'plumbing',
+          status: 'in_progress',
+          reportedBy: req.params.inspectorId,
+          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+        }
+      ];
+      res.json(mockBuildingIssues);
+    } catch (error) {
+      console.error("Error fetching building issues:", error);
+      res.status(500).json({ error: "Failed to fetch building issues" });
+    }
+  });
+
+  app.post('/api/building-issues', (req, res) => {
+    try {
+      const { title, description, location, priority, category, reportedBy, status, createdAt } = req.body;
+      
+      // Validate required fields
+      if (!title || !description || !location || !reportedBy) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // In a real app, this would save to database
+      const newIssue = {
+        id: `issue-${Date.now()}`,
+        title,
+        description,
+        location,
+        priority: priority || 'medium',
+        category: category || 'maintenance',
+        status: status || 'open',
+        reportedBy,
+        createdAt: createdAt || new Date().toISOString(),
+      };
+
+      // Mock successful creation
+      res.status(201).json(newIssue);
+    } catch (error) {
+      console.error("Error creating building issue:", error);
+      res.status(500).json({ error: "Failed to create building issue" });
+    }
+  });
+
   // Complete job inspection with photos and callback handling
   app.put("/api/jobs/:jobId/inspect", async (req, res) => {
     try {
