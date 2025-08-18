@@ -201,6 +201,7 @@ export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   propertyId: varchar("property_id").notNull(), // Reference to property
   unitNumber: text("unit_number"),
+  bedroomSize: text("bedroom_size"), // studio, 1_bed, 2_bed, 3_bed, loft, 1_bed_townhome, 2_bed_townhome, 3_bed_townhome
   category: text("category").notNull(), // maintenance, emergency, inspection, tenant_request, extra_dirty, repair
   jobType: text("job_type"), // punch, repairs, paint, clean, carpet, inspected, unit_trash_out, onsite_bulk_trash
   priority: text("priority").notNull().default("medium"), // low, medium, high, emergency

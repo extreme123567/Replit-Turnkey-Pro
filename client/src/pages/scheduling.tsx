@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 const jobSchedulingSchema = z.object({
   unitNumber: z.string().min(1, "Unit number is required"),
   propertyId: z.string().min(1, "Property selection is required"),
+  bedroomSize: z.enum(["studio", "1_bed", "2_bed", "3_bed", "loft", "1_bed_townhome", "2_bed_townhome", "3_bed_townhome"]),
   moveInDate: z.string().min(1, "Move-in date is required"),
   completionDate: z.string().min(1, "Completion date is required"),
   selectedJobs: z.array(z.string()).min(1, "At least one job must be selected"),
@@ -40,6 +41,17 @@ const jobSchedulingSchema = z.object({
 });
 
 type JobSchedulingForm = z.infer<typeof jobSchedulingSchema>;
+
+const BEDROOM_SIZES = [
+  { value: "studio", label: "Studio" },
+  { value: "1_bed", label: "1 Bedroom" },
+  { value: "2_bed", label: "2 Bedroom" },
+  { value: "3_bed", label: "3 Bedroom" },
+  { value: "loft", label: "Loft" },
+  { value: "1_bed_townhome", label: "1 Bedroom Townhome" },
+  { value: "2_bed_townhome", label: "2 Bedroom Townhome" },
+  { value: "3_bed_townhome", label: "3 Bedroom Townhome" },
+] as const;
 
 const JOB_TYPES = [
   { id: "punch", name: "Punch List", icon: Calendar, color: "blue", description: "Final walk-through and touch-ups" },
@@ -66,6 +78,7 @@ export default function Scheduling() {
     defaultValues: {
       selectedJobs: [],
       priority: "medium",
+      bedroomSize: "1_bed",
     },
   });
 
@@ -208,6 +221,41 @@ export default function Scheduling() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
+                    <Label htmlFor="bedroomSize">Unit Type</Label>
+                    <Select onValueChange={(value) => form.setValue("bedroomSize", value as any)}>
+                      <SelectTrigger data-testid="select-bedroom-size">
+                        <SelectValue placeholder="Select unit type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BEDROOM_SIZES.map((size) => (
+                          <SelectItem key={size.value} value={size.value}>
+                            {size.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.bedroomSize && (
+                      <p className="text-sm text-red-600 mt-1">{form.formState.errors.bedroomSize.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="priority">Priority Level</Label>
+                    <Select onValueChange={(value) => form.setValue("priority", value as "low" | "medium" | "high")}>
+                      <SelectTrigger data-testid="select-priority">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low Priority</SelectItem>
+                        <SelectItem value="medium">Medium Priority</SelectItem>
+                        <SelectItem value="high">High Priority</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <Label htmlFor="moveInDate">Move-In Date</Label>
                     <Input
                       id="moveInDate"
@@ -234,19 +282,7 @@ export default function Scheduling() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="priority">Priority Level</Label>
-                  <Select onValueChange={(value) => form.setValue("priority", value as "low" | "medium" | "high")}>
-                    <SelectTrigger data-testid="select-priority">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low Priority</SelectItem>
-                      <SelectItem value="medium">Medium Priority</SelectItem>
-                      <SelectItem value="high">High Priority</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
 
                 <div>
                   <Label htmlFor="notes">Additional Notes</Label>
