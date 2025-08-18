@@ -1403,6 +1403,65 @@ export default function OfficeStaffDashboard() {
         </div>
       </div>
 
+      {/* Key Metrics - Job Status & Progress */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-600 text-sm font-medium" data-testid="text-pending-approval-label">Pending Approval</p>
+                <p className="text-2xl font-bold text-red-700" data-testid="text-pending-approval-count">
+                  {stats?.pendingApproval || 0}
+                </p>
+              </div>
+              <AlertTriangle className="text-red-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-600 text-sm font-medium" data-testid="text-high-priority-label">High Priority</p>
+                <p className="text-2xl font-bold text-orange-700" data-testid="text-high-priority-count">
+                  {stats?.highPriorityOrders || 0}
+                </p>
+              </div>
+              <Clock className="text-orange-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-600 text-sm font-medium" data-testid="text-active-staff-label">Active Staff</p>
+                <p className="text-2xl font-bold text-green-700" data-testid="text-active-staff-count">
+                  {stats?.activeStaff || 0}
+                </p>
+              </div>
+              <Users className="text-green-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-medium" data-testid="text-total-properties-label">Properties</p>
+                <p className="text-2xl font-bold text-blue-700" data-testid="text-total-properties-count">
+                  {stats?.totalProperties || 0}
+                </p>
+              </div>
+              <Building className="text-blue-500" size={24} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Search Completed Units Section */}
       <Card className="servicepro-card">
         <CardHeader>
@@ -1523,65 +1582,6 @@ export default function OfficeStaffDashboard() {
           )}
         </CardContent>
       </Card>
-
-      {/* Key Metrics - Job Status & Progress */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-600 text-sm font-medium" data-testid="text-pending-approval-label">Pending Approval</p>
-                <p className="text-2xl font-bold text-red-700" data-testid="text-pending-approval-count">
-                  {stats?.pendingApproval || 0}
-                </p>
-              </div>
-              <AlertTriangle className="text-red-500" size={24} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-600 text-sm font-medium" data-testid="text-high-priority-label">High Priority</p>
-                <p className="text-2xl font-bold text-orange-700" data-testid="text-high-priority-count">
-                  {stats?.highPriorityOrders || 0}
-                </p>
-              </div>
-              <Clock className="text-orange-500" size={24} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 text-sm font-medium" data-testid="text-active-staff-label">Active Staff</p>
-                <p className="text-2xl font-bold text-green-700" data-testid="text-active-staff-count">
-                  {stats?.activeStaff || 0}
-                </p>
-              </div>
-              <Users className="text-green-500" size={24} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 text-sm font-medium" data-testid="text-total-properties-label">Properties</p>
-                <p className="text-2xl font-bold text-blue-700" data-testid="text-total-properties-count">
-                  {stats?.totalProperties || 0}
-                </p>
-              </div>
-              <Building className="text-blue-500" size={24} />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
