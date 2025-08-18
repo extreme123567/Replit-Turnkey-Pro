@@ -133,14 +133,25 @@ export default function AdminDashboard() {
   const createJobMutation = useMutation({
     mutationFn: async (data: JobScheduleFormData) => {
       console.log("Submitting job data:", data);
+      
+      // Use the admin job creation endpoint with proper authentication
       const response = await apiRequest("/api/jobs", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`${response.status}: ${errorData}`);
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
-      console.log("Job creation successful");
+    onSuccess: (data) => {
+      console.log("Job creation successful:", data);
       toast({
         title: "Job scheduled successfully",
         description: "The job has been assigned to the technician.",
@@ -530,13 +541,25 @@ export default function AdminDashboard() {
                           type="button" 
                           variant="outline"
                           className="w-full" 
-                          onClick={() => {
+                          onClick={async () => {
                             console.log("Test button clicked!");
-                            alert("Button click works! Form values: " + JSON.stringify(jobForm.getValues()));
+                            console.log("Form values:", jobForm.getValues());
+                            console.log("Auth token:", localStorage.getItem("auth_token"));
+                            
+                            // Test API call
+                            try {
+                              const response = await apiRequest("/api/auth/me");
+                              const userData = await response.json();
+                              console.log("Auth test successful:", userData);
+                              alert("Auth works! User: " + userData.firstName + " " + userData.lastName);
+                            } catch (error) {
+                              console.error("Auth test failed:", error);
+                              alert("Auth failed: " + error.message);
+                            }
                           }}
-                          data-testid="button-test-click"
+                          data-testid="button-test-auth"
                         >
-                          Test Button Click
+                          Test Auth & Connection
                         </Button>
                       </div>
                     </form>
