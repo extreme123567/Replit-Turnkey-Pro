@@ -2813,5 +2813,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Two-stage job completion endpoints
+  
+  // Technician marks job complete (first stage)
+  // Get work orders awaiting inspector approval (tech_completed status)
+  app.get("/api/work-orders/tech-completed", async (req, res) => {
+    try {
+      const workOrders = await storage.getWorkOrdersByStatus("tech_completed");
+      res.json(workOrders);
+    } catch (error) {
+      console.error("Error fetching tech-completed work orders:", error);
+      res.status(500).json({ message: "Failed to fetch work orders" });
+    }
+  });
+
+  app.put("/api/work-orders/:id/tech-complete", authenticate, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { status, techCompletedDate, completionNotes, techPhotos, technicianId } = req.body;
+      
+      const workOrder = await storage.updateWorkOrder(id, {
+        status: "tech_completed",
+        techCompletedDate: new Date(techCompletedDate),
+        completionNotes,
+        techPhotos: techPhotos || [],
+        updatedAt: new Date()
+      });
+      
+      if (!workOrder) {
+        return res.status(404).json({ message: "Work order not found" });
+      }
+      
+      res.json({
+        message: "Job marked complete by technician",
+        workOrder
+      });
+    } catch (error) {
+      console.error("Tech complete error:", error);
+      res.status(500).json({ message: "Failed to mark job complete" });
+    }
+  });
+
+  // Inspector gives final approval (second stage)
+  app.put("/api/work-orders/:id/inspector-approve", authenticate, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { status, inspectorApprovedDate, inspectionNotes, inspectorId } = req.body;
+      
+      const workOrder = await storage.updateWorkOrder(id, {
+        status: "inspector_approved",
+        inspectorApprovedDate: new Date(inspectorApprovedDate),
+        completedDate: new Date(), // Final completion date
+        inspectionNotes,
+        updatedAt: new Date()
+      });
+      
+      if (!workOrder) {
+        return res.status(404).json({ message: "Work order not found" });
+      }
+      
+      res.json({
+        message: "Job approved by inspector - 100% complete",
+        workOrder
+      });
+    } catch (error) {
+      console.error("Inspector approval error:", error);
+      res.status(500).json({ message: "Failed to approve job" });
+    }
+  });
+
+  // Inspector requests callback
+  app.put("/api/work-orders/:id/callback", authenticate, async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const { inspectionNotes, callbackReason, inspectorId } = req.body;
+      
+      const workOrder = await storage.updateWorkOrder(id, {
+        status: "in_progress", // Send back to technician
+        inspectionNotes,
+        callbackReason,
+        updatedAt: new Date()
+      });
+      
+      if (!workOrder) {
+        return res.status(404).json({ message: "Work order not found" });
+      }
+      
+      res.json({
+        message: "Callback requested - job sent back to technician",
+        workOrder
+      });
+    } catch (error) {
+      console.error("Callback request error:", error);
+      res.status(500).json({ message: "Failed to request callback" });
+    }
+  });
+
   return httpServer;
 }

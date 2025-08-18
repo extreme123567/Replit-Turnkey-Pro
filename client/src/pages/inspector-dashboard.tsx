@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { InspectorFinalApprovalButton } from "@/components/job-completion/InspectorFinalApprovalButton";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -268,6 +269,12 @@ export default function InspectorDashboard() {
     },
   });
 
+  // Fetch work orders awaiting final approval (tech_completed status)
+  const { data: workOrdersForApproval, isLoading: workOrdersLoading } = useQuery({
+    queryKey: ["/api/work-orders/tech-completed"],
+    retry: false,
+  });
+
   // Mutation for completing inspection with photos
   const completeInspectionMutation = useMutation({
     mutationFn: async (data: {
@@ -378,7 +385,7 @@ export default function InspectorDashboard() {
     setInspectionDialogOpen(true);
   };
 
-  const isLoading = statsLoading || inspectionsLoading || todayLoading || reportsLoading || jobsLoading;
+  const isLoading = statsLoading || inspectionsLoading || todayLoading || reportsLoading || jobsLoading || workOrdersLoading;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -519,6 +526,64 @@ export default function InspectorDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Jobs Awaiting Final Approval */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Jobs Awaiting Final Approval</span>
+            <Badge variant="outline" className="text-purple-600">
+              {workOrdersForApproval?.length || 0} jobs
+            </Badge>
+          </CardTitle>
+          <div className="text-sm text-slate-600 mt-2">
+            ✅ Technicians have marked these jobs complete - awaiting inspector final approval
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="space-y-4">
+            {workOrdersForApproval?.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <CheckCircle className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                <p>No jobs awaiting approval</p>
+                <p className="text-sm">Tech-completed jobs will appear here for final approval</p>
+              </div>
+            ) : (
+              workOrdersForApproval?.map((job: any) => (
+                <div key={job.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="text-purple-600 text-sm" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">{job.title}</p>
+                      <p className="text-sm text-slate-600">
+                        Property: {job.propertyName} {job.unitNumber && `• Unit ${job.unitNumber}`}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Completed by: {job.technicianName} • {job.techCompletedDate && new Date(job.techCompletedDate).toLocaleDateString()}
+                      </p>
+                      {job.completionNotes && (
+                        <p className="text-sm text-blue-600 mt-1">Notes: {job.completionNotes}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Badge className="bg-purple-100 text-purple-800">Tech Complete</Badge>
+                    <InspectorFinalApprovalButton
+                      workOrderId={job.id}
+                      jobTitle={job.title}
+                      currentStatus={job.status}
+                      inspectorId={inspectorId}
+                      techCompletedDate={job.techCompletedDate}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Jobs for Inspection */}
       <Card className="servicepro-card">

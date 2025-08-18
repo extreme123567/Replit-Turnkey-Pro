@@ -204,13 +204,15 @@ export const workOrders = pgTable("work_orders", {
   category: text("category").notNull(), // maintenance, emergency, inspection, tenant_request, extra_dirty, repair
   jobType: text("job_type"), // punch, repairs, paint, clean, carpet, inspected, unit_trash_out, onsite_bulk_trash
   priority: text("priority").notNull().default("medium"), // low, medium, high, emergency
-  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, completed, cancelled
+  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, tech_completed, pending_inspection, inspector_approved, cancelled
   title: text("title").notNull(),
   description: text("description"),
   assignedTechnicianId: varchar("assigned_technician_id").references(() => staff.id),
   requestedBy: text("requested_by"), // tenant, property_manager, maintenance, office_staff
   scheduledDate: timestamp("scheduled_date"),
   completedDate: timestamp("completed_date"),
+  techCompletedDate: timestamp("tech_completed_date"), // When technician marks job complete
+  inspectorApprovedDate: timestamp("inspector_approved_date"), // When inspector gives final approval
   photosRequired: integer("photos_required").default(0), // Number of photos required for completion (2 for trash jobs)
   photosSubmitted: text("photos_submitted").array(), // Array of submitted photo URLs
   photosToOffice: boolean("photos_to_office").default(false), // Whether photos need to be sent to office

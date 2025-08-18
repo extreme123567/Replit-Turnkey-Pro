@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TechJobCompleteButton } from "@/components/job-completion/TechJobCompleteButton";
 
 // Complete Job with Payout Component
 const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jobType: 'paint' | 'clean' }) => {
@@ -725,6 +726,14 @@ export default function TechnicianDashboard() {
                             <Timer size={12} className="mr-1" />
                             Start Job
                           </Button>
+                        )}
+                        {order.status === 'in_progress' && (
+                          <TechJobCompleteButton
+                            workOrderId={order.id}
+                            jobTitle={order.title}
+                            currentStatus={order.status}
+                            technicianId={technicianId}
+                          />
                         )}
                         <Button size="sm" variant="outline" className="px-2">
                           <FileText size={12} />
