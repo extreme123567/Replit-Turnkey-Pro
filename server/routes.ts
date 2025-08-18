@@ -2223,14 +2223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
       
-      // Filter units based on search query
+      // Filter units based on search query - ONLY property name and unit number
       const filteredUnits = allCompletedUnits.filter(unit => 
         unit.unit.toLowerCase().includes(searchTerm) ||
-        unit.property.toLowerCase().includes(searchTerm) ||
-        unit.jobType.toLowerCase().includes(searchTerm) ||
-        unit.technician.toLowerCase().includes(searchTerm) ||
-        unit.title.toLowerCase().includes(searchTerm) ||
-        (unit.bedroomSize && unit.bedroomSize.toLowerCase().includes(searchTerm))
+        unit.property.toLowerCase().includes(searchTerm)
       );
       
       res.json(filteredUnits);

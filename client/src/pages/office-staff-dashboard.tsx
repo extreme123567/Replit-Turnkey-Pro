@@ -1474,14 +1474,14 @@ export default function OfficeStaffDashboard() {
             </Badge>
           </CardTitle>
           <div className="text-sm text-slate-600">
-            Search through completed work orders and unit turnovers
+            Search completed work orders by property name and unit number only
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4">
             <div className="flex-1">
               <Input
-                placeholder="Search by unit number, property name, job type, or technician..."
+                placeholder="Search by property name and unit number only..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
