@@ -1403,7 +1403,7 @@ export default function OfficeStaffDashboard() {
         </div>
       </div>
 
-      {/* Key Metrics */}
+      {/* Key Metrics - Job Status & Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <CardContent className="p-6">
