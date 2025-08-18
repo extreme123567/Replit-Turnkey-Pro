@@ -511,6 +511,59 @@ export class MemStorage implements IStorage {
     for (const workOrder of sampleWorkOrders) {
       this.workOrders.set(workOrder.id, workOrder);
     }
+
+    // Add sample jobs awaiting approval for testing approval queue functionality
+    const sampleJobsAwaitingApproval: Job[] = [
+      {
+        id: "job-approval-1",
+        title: "Paint Job - Unit 15B",
+        status: "awaiting_approval",
+        createdAt: new Date(),
+        clientId: "prop-1",
+        description: "Complete paint job for 2-bedroom unit including primer and two coats",
+        assignedStaffId: "tech-1",
+        priority: "medium",
+        estimatedHours: "6",
+        actualHours: null,
+        amount: "450.00",
+        scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        completedDate: null,
+      },
+      {
+        id: "job-approval-2", 
+        title: "Deep Clean - Unit 7A",
+        status: "awaiting_approval",
+        createdAt: new Date(),
+        clientId: "prop-2",
+        description: "Professional deep cleaning service for 1-bedroom unit before new tenant move-in",
+        assignedStaffId: "tech-2",
+        priority: "high",
+        estimatedHours: "4",
+        actualHours: null,
+        amount: "280.00",
+        scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        completedDate: null,
+      },
+      {
+        id: "job-approval-3",
+        title: "Maintenance - Unit 22C",
+        status: "awaiting_approval", 
+        createdAt: new Date(),
+        clientId: "prop-1",
+        description: "Fix kitchen sink leak and replace bathroom faucet",
+        assignedStaffId: "tech-1",
+        priority: "medium",
+        estimatedHours: "3",
+        actualHours: null,
+        amount: "220.00",
+        scheduledDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // tomorrow
+        completedDate: null,
+      }
+    ];
+
+    for (const job of sampleJobsAwaitingApproval) {
+      this.jobs.set(job.id, job);
+    }
   }
 
   // Clients
@@ -988,9 +1041,32 @@ export class MemStorage implements IStorage {
   }
 
   async getJobsByProperty(propertyId: string): Promise<Job[]> { return []; }
-  async getJobsAwaitingApproval(): Promise<Job[]> { return []; }
-  async approveJob(jobId: string, approvedBy: string): Promise<Job | undefined> { return undefined; }
-  async rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<Job | undefined> { return undefined; }
+  async getJobsAwaitingApproval(): Promise<Job[]> { 
+    // Return jobs with "awaiting approval" status
+    return Array.from(this.jobs.values()).filter(job => job.status === "awaiting_approval");
+  }
+  async approveJob(jobId: string, approvedBy: string): Promise<Job | undefined> { 
+    const job = this.jobs.get(jobId);
+    if (!job) return undefined;
+    
+    const updatedJob = { 
+      ...job, 
+      status: "approved"
+    };
+    this.jobs.set(jobId, updatedJob);
+    return updatedJob;
+  }
+  async rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<Job | undefined> { 
+    const job = this.jobs.get(jobId);
+    if (!job) return undefined;
+    
+    const updatedJob = { 
+      ...job, 
+      status: "rejected"
+    };
+    this.jobs.set(jobId, updatedJob);
+    return updatedJob;
+  }
   async getJobCompletionStats(): Promise<{ scheduled: number; completed: number; pending: number; }> {
     return { scheduled: 0, completed: 0, pending: 0 };
   }
