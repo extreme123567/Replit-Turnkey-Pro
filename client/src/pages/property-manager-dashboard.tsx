@@ -1066,96 +1066,7 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Properties Overview and Recent Work Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Work Orders */}
-        <Card className="servicepro-card">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Recent Work Orders</span>
-              <Button variant="ghost" size="sm" className="text-blue-600">
-                View All
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 pt-0">
-            <div className="space-y-4">
-              {workOrders?.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <Wrench className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                  <p>No work orders yet</p>
-                  <p className="text-sm">Work orders will appear here when created</p>
-                </div>
-              ) : (
-                workOrders?.slice(0, 5).map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <Wrench className="text-amber-600 text-sm" size={16} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">{order.title}</p>
-                        <p className="text-sm text-slate-600">#{order.id.slice(0, 8)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <Badge className={getPriorityColor(order.priority)}>
-                        {order.priority}
-                      </Badge>
-                      <Badge className={getStatusColor(order.status)}>
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Quick Actions */}
-      <Card className="servicepro-card">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-create-work-order"
-            >
-              <Wrench className="text-blue-600" size={20} />
-              <span className="text-sm font-medium">Create Work Order</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-schedule-maintenance"
-            >
-              <Calendar className="text-emerald-600" size={20} />
-              <span className="text-sm font-medium">Schedule Maintenance</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-view-reports"
-            >
-              <TrendingUp className="text-purple-600" size={20} />
-              <span className="text-sm font-medium">View Reports</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-inspect-property"
-            >
-              <Eye className="text-amber-600" size={20} />
-              <span className="text-sm font-medium">Inspect Property</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Enhanced Photo Management & Communication Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1431,6 +1342,94 @@ export default function PropertyManagerDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Work Orders */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Recent Work Orders</span>
+            <Button variant="ghost" size="sm" className="text-blue-600">
+              View All
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="space-y-4">
+            {workOrders?.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Wrench className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                <p>No work orders yet</p>
+                <p className="text-sm">Work orders will appear here when created</p>
+              </div>
+            ) : (
+              workOrders?.slice(0, 5).map((order: any) => (
+                <div key={order.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <Wrench className="text-amber-600 text-sm" size={16} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">{order.title}</p>
+                      <p className="text-sm text-slate-600">#{order.id.slice(0, 8)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <Badge className={getPriorityColor(order.priority)}>
+                      {order.priority}
+                    </Badge>
+                    <Badge className={getStatusColor(order.status)}>
+                      {order.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              data-testid="button-create-work-order"
+            >
+              <Wrench className="text-blue-600" size={20} />
+              <span className="text-sm font-medium">Create Work Order</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              data-testid="button-schedule-maintenance"
+            >
+              <Calendar className="text-emerald-600" size={20} />
+              <span className="text-sm font-medium">Schedule Maintenance</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              data-testid="button-view-reports"
+            >
+              <TrendingUp className="text-purple-600" size={20} />
+              <span className="text-sm font-medium">View Reports</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2"
+              data-testid="button-inspect-property"
+            >
+              <Eye className="text-amber-600" size={20} />
+              <span className="text-sm font-medium">Inspect Property</span>
+            </Button>
           </div>
         </CardContent>
       </Card>
