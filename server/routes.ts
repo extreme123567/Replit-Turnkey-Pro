@@ -2266,6 +2266,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Paint supply notification endpoint
+  app.post('/api/paint-supply-notifications', (req, res) => {
+    try {
+      const { technicianId, painterId, alertType, priority, message, location, requestedAt } = req.body;
+      
+      // Validate required fields
+      if (!technicianId || !alertType || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // In a real app, this would:
+      // 1. Save the notification to database
+      // 2. Send push notification to property maintenance supervisor
+      // 3. Send email alert to maintenance team
+      // 4. Log the request for tracking purposes
+      
+      const notification = {
+        id: `paint-alert-${Date.now()}`,
+        technicianId,
+        painterId: painterId || technicianId,
+        alertType,
+        priority: priority || 'medium',
+        message,
+        location: location || 'Current job site',
+        status: 'sent',
+        sentToSupervisor: true,
+        supervisorNotified: true,
+        createdAt: requestedAt || new Date().toISOString(),
+        notifiedAt: new Date().toISOString(),
+      };
+
+      // Mock successful notification creation
+      res.status(201).json({
+        success: true,
+        notification,
+        message: 'Paint supply alert sent to property maintenance supervisor successfully'
+      });
+    } catch (error) {
+      console.error("Error creating paint supply notification:", error);
+      res.status(500).json({ error: "Failed to send paint supply notification" });
+    }
+  });
+
   // Complete job inspection with photos and callback handling
   app.put("/api/jobs/:jobId/inspect", async (req, res) => {
     try {

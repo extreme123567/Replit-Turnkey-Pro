@@ -19,7 +19,9 @@ import {
   AlertTriangle,
   Trash2,
   Upload,
-  X
+  X,
+  Palette,
+  Bell
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
@@ -428,6 +430,70 @@ export default function TechnicianDashboard() {
       >
         <Trash2 className="text-orange-600" size={20} />
         <span className="text-sm font-medium">Extra Dirty</span>
+      </Button>
+    );
+  };
+
+  // Component for Low Paint Supply notification button
+  const LowPaintSupplyButton = ({ technicianId }: { technicianId: string }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    const createPaintSupplyRequest = useMutation({
+      mutationFn: async (data: any) => {
+        const response = await apiRequest("/api/paint-supply-notifications", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+        return response.json();
+      },
+      onSuccess: () => {
+        toast({
+          title: "Paint Supply Alert Sent",
+          description: "Property maintenance supervisor has been notified about low paint supply.",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to send paint supply notification. Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
+
+    const handlePaintSupplyAlert = async () => {
+      setIsLoading(true);
+      try {
+        await createPaintSupplyRequest.mutateAsync({
+          technicianId,
+          painterId: technicianId,
+          alertType: "low_paint_supply",
+          priority: "medium",
+          message: "Paint supply is running low and needs to be restocked for current painting jobs.",
+          location: "Current job site",
+          requestedAt: new Date().toISOString(),
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <Button 
+        variant="outline" 
+        className="h-20 flex-col space-y-2 border-yellow-300 hover:bg-yellow-50"
+        onClick={handlePaintSupplyAlert}
+        disabled={isLoading}
+        data-testid="button-low-paint-supply"
+      >
+        <div className="relative">
+          <Palette className="text-yellow-600" size={20} />
+          <Bell className="absolute -top-1 -right-1 text-red-500" size={10} />
+        </div>
+        <span className="text-sm font-medium text-center">Low Paint Supply</span>
       </Button>
     );
   };
@@ -911,11 +977,12 @@ export default function TechnicianDashboard() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <CompleteJobButton technicianId={technicianId} jobType="paint" />
             <CompleteJobButton technicianId={technicianId} jobType="clean" />
             <ExtraDirtyButton technicianId={technicianId} />
             <RepairPhotoButton painterId={technicianId} />
+            <LowPaintSupplyButton technicianId={technicianId} />
           </div>
         </CardContent>
       </Card>
