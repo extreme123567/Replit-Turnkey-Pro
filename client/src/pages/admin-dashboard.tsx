@@ -37,7 +37,10 @@ import {
   Wrench,
   Home,
   Plus,
-  ClipboardCheck
+  ClipboardCheck,
+  Palette,
+  Sparkles,
+  Square
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { insertJobSchema, type InsertJob } from "@shared/schema";
@@ -69,19 +72,32 @@ interface FinancialSummary {
   payoutHistory: number[];
 }
 
-// Job scheduling form schema
-const jobScheduleSchema = z.object({
-  jobType: z.string().min(1, "Job type is required"),
-  description: z.string().optional(),
-  priority: z.string().default("medium"),
-  scheduledDate: z.string().min(1, "Scheduled date is required"),
-  assignedTechnicianId: z.string().min(1, "Please assign a technician"),
+// Multi-service job scheduling schema with individual dates
+const multiServiceScheduleSchema = z.object({
   propertyId: z.string().min(1, "Please select a property"),
-  estimatedHours: z.string().optional(),
-  amount: z.string().optional(),
+  unitNumber: z.string().min(1, "Unit number is required"),
+  bedroomSize: z.enum(["studio", "1_bed", "2_bed", "3_bed", "loft"]),
+  priority: z.string().default("medium"),
+  services: z.array(z.object({
+    serviceType: z.string(),
+    scheduledDate: z.string().min(1, "Date is required for each service"),
+    assignedTechnicianId: z.string().min(1, "Please assign a technician"),
+    notes: z.string().optional(),
+  })).min(1, "At least one service must be scheduled"),
+  generalNotes: z.string().optional(),
 });
 
-type JobScheduleFormData = z.infer<typeof jobScheduleSchema>;
+type MultiServiceScheduleFormData = z.infer<typeof multiServiceScheduleSchema>;
+
+// Available service types
+const SERVICE_TYPES = [
+  { id: "cleaning", name: "Cleaning", icon: "Sparkles", color: "teal" },
+  { id: "painting", name: "Painting", icon: "Palette", color: "purple" },
+  { id: "maintenance", name: "Maintenance", icon: "Wrench", color: "amber" },
+  { id: "inspection", name: "Inspection", icon: "UserCheck", color: "green" },
+  { id: "repair", name: "Repair", icon: "Settings", color: "red" },
+  { id: "carpet", name: "Carpet Work", icon: "Square", color: "orange" },
+];
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -116,31 +132,40 @@ export default function AdminDashboard() {
   // Filter staff for technicians
   const technicians = Array.isArray(staff) ? staff.filter((member: any) => member.role === 'technician') : [];
 
-  // Job scheduling form
-  const jobForm = useForm<JobScheduleFormData>({
-    resolver: zodResolver(jobScheduleSchema),
+  // Multi-service scheduling form
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const scheduleForm = useForm<MultiServiceScheduleFormData>({
+    resolver: zodResolver(multiServiceScheduleSchema),
     defaultValues: {
-      jobType: "",
-      description: "",
-      priority: "medium",
-      scheduledDate: "",
-      assignedTechnicianId: "",
       propertyId: "",
+      unitNumber: "",
+      bedroomSize: "1_bed",
+      priority: "medium",
+      services: [],
+      generalNotes: "",
     },
   });
 
-  // Create job mutation
-  const createJobMutation = useMutation({
-    mutationFn: async (data: JobScheduleFormData) => {
-      console.log("Submitting job data:", data);
+  // Create multi-service job mutation
+  const createMultiServiceMutation = useMutation({
+    mutationFn: async (data: MultiServiceScheduleFormData) => {
+      console.log("Submitting multi-service schedule data:", data);
       
-      // Use the admin job creation endpoint with proper authentication
-      const response = await apiRequest("/api/jobs", {
+      // Use the job scheduling endpoint that supports multiple services
+      const response = await apiRequest("/api/jobs/schedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          propertyId: data.propertyId,
+          unitNumber: data.unitNumber,
+          bedroomSize: data.bedroomSize,
+          priority: data.priority,
+          selectedJobs: data.services.map(s => s.serviceType),
+          scheduledServices: data.services, // Individual service details with dates
+          notes: data.generalNotes,
+        }),
       });
       
       if (!response.ok) {
@@ -151,23 +176,53 @@ export default function AdminDashboard() {
       return response.json();
     },
     onSuccess: (data) => {
-      console.log("Job creation successful:", data);
+      console.log("Multi-service scheduling successful:", data);
       toast({
-        title: "Job scheduled successfully",
-        description: "The job has been assigned to the technician.",
+        title: "Services scheduled successfully",
+        description: `${data.jobsScheduled} services have been scheduled for the unit.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
-      jobForm.reset();
+      scheduleForm.reset();
+      setSelectedServices([]);
     },
     onError: (error: any) => {
-      console.error("Job creation failed:", error);
+      console.error("Multi-service scheduling failed:", error);
       toast({
-        title: "Failed to schedule job",
+        title: "Failed to schedule services",
         description: error.message || "Please check your input and try again.",
         variant: "destructive",
       });
     },
   });
+
+  // Add service to the schedule
+  const addService = (serviceType: string) => {
+    if (!selectedServices.includes(serviceType)) {
+      const newServices = [...selectedServices, serviceType];
+      setSelectedServices(newServices);
+      
+      const currentServices = scheduleForm.getValues("services");
+      scheduleForm.setValue("services", [
+        ...currentServices,
+        {
+          serviceType,
+          scheduledDate: "",
+          assignedTechnicianId: "",
+          notes: "",
+        }
+      ]);
+    }
+  };
+
+  // Remove service from the schedule
+  const removeService = (serviceType: string) => {
+    const newServices = selectedServices.filter(s => s !== serviceType);
+    setSelectedServices(newServices);
+    
+    const currentServices = scheduleForm.getValues("services");
+    const filteredServices = currentServices.filter(s => s.serviceType !== serviceType);
+    scheduleForm.setValue("services", filteredServices);
+  };
 
   if (statsLoading) {
     return (
@@ -375,31 +430,32 @@ export default function AdminDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Form {...jobForm}>
-                    <form onSubmit={jobForm.handleSubmit((data) => {
+                  <Form {...scheduleForm}>
+                    <form onSubmit={scheduleForm.handleSubmit((data) => {
                       console.log("Form submitted with data:", data);
-                      createJobMutation.mutate(data);
-                    })} className="space-y-4">
+                      createMultiServiceMutation.mutate(data);
+                    })} className="space-y-6">
+                      
+                      {/* Basic Unit Information */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
-                          control={jobForm.control}
-                          name="jobType"
+                          control={scheduleForm.control}
+                          name="propertyId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Job Type</FormLabel>
+                              <FormLabel>Property</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                  <SelectTrigger data-testid="select-job-type">
-                                    <SelectValue placeholder="Select job type" />
+                                  <SelectTrigger data-testid="select-property">
+                                    <SelectValue placeholder="Select property" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="cleaning">Cleaning</SelectItem>
-                                  <SelectItem value="painting">Painting</SelectItem>
-                                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                                  <SelectItem value="inspection">Inspection</SelectItem>
-                                  <SelectItem value="repair">Repair</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
+                                  {Array.isArray(properties) ? properties.map((property: any) => (
+                                    <SelectItem key={property.id} value={property.id}>
+                                      {property.name}
+                                    </SelectItem>
+                                  )) : []}
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -408,7 +464,52 @@ export default function AdminDashboard() {
                         />
 
                         <FormField
-                          control={jobForm.control}
+                          control={scheduleForm.control}
+                          name="unitNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Unit Number</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g., 205A"
+                                  {...field}
+                                  data-testid="input-unit-number"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={scheduleForm.control}
+                          name="bedroomSize"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Unit Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-bedroom-size">
+                                    <SelectValue placeholder="Select unit type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="studio">Studio</SelectItem>
+                                  <SelectItem value="1_bed">1 Bedroom</SelectItem>
+                                  <SelectItem value="2_bed">2 Bedroom</SelectItem>
+                                  <SelectItem value="3_bed">3 Bedroom</SelectItem>
+                                  <SelectItem value="loft">Loft</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={scheduleForm.control}
                           name="priority"
                           render={({ field }) => (
                             <FormItem>
@@ -432,85 +533,124 @@ export default function AdminDashboard() {
                         />
                       </div>
 
-                      <FormField
-                        control={jobForm.control}
-                        name="propertyId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Property</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-property">
-                                  <SelectValue placeholder="Select property" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {Array.isArray(properties) ? properties.map((property: any) => (
-                                  <SelectItem key={property.id} value={property.id}>
-                                    {property.name}
-                                  </SelectItem>
-                                )) : []}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {/* Service Selection */}
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-sm font-medium text-slate-700 mb-3">Available Services</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {SERVICE_TYPES.map((service) => (
+                              <Button
+                                key={service.id}
+                                type="button"
+                                variant={selectedServices.includes(service.id) ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => {
+                                  if (selectedServices.includes(service.id)) {
+                                    removeService(service.id);
+                                  } else {
+                                    addService(service.id);
+                                  }
+                                }}
+                                className="justify-start"
+                                data-testid={`service-${service.id}`}
+                              >
+                                <Plus className="mr-1" size={12} />
+                                {service.name}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
 
-                      <FormField
-                        control={jobForm.control}
-                        name="assignedTechnicianId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Assign Technician</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-technician">
-                                  <SelectValue placeholder="Select technician" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {technicians.map((tech: any) => (
-                                  <SelectItem key={tech.id} value={tech.id}>
-                                    {tech.firstName} {tech.lastName}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                        {/* Individual Service Scheduling */}
+                        {selectedServices.length > 0 && (
+                          <div className="space-y-4">
+                            <h3 className="text-sm font-medium text-slate-700">Schedule Each Service</h3>
+                            {selectedServices.map((serviceType, index) => {
+                              const service = SERVICE_TYPES.find(s => s.id === serviceType);
+                              return (
+                                <div key={serviceType} className="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h4 className="font-medium text-slate-800">{service?.name}</h4>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeService(serviceType)}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-xs font-medium text-slate-600">Scheduled Date</label>
+                                      <Input
+                                        type="date"
+                                        onChange={(e) => {
+                                          const services = scheduleForm.getValues("services");
+                                          services[index].scheduledDate = e.target.value;
+                                          scheduleForm.setValue("services", services);
+                                        }}
+                                        className="mt-1"
+                                        data-testid={`date-${serviceType}`}
+                                      />
+                                    </div>
+                                    
+                                    <div>
+                                      <label className="text-xs font-medium text-slate-600">Assign Technician</label>
+                                      <Select onValueChange={(value) => {
+                                        const services = scheduleForm.getValues("services");
+                                        services[index].assignedTechnicianId = value;
+                                        scheduleForm.setValue("services", services);
+                                      }}>
+                                        <SelectTrigger className="mt-1" data-testid={`technician-${serviceType}`}>
+                                          <SelectValue placeholder="Select technician" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {technicians.map((tech: any) => (
+                                            <SelectItem key={tech.id} value={tech.id}>
+                                              {tech.firstName} {tech.lastName}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-3">
+                                    <label className="text-xs font-medium text-slate-600">Service Notes (Optional)</label>
+                                    <Textarea
+                                      placeholder="Special instructions for this service..."
+                                      className="mt-1"
+                                      rows={2}
+                                      onChange={(e) => {
+                                        const services = scheduleForm.getValues("services");
+                                        services[index].notes = e.target.value;
+                                        scheduleForm.setValue("services", services);
+                                      }}
+                                      data-testid={`notes-${serviceType}`}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         )}
-                      />
+                      </div>
 
+                      {/* General Notes */}
                       <FormField
-                        control={jobForm.control}
-                        name="scheduledDate"
+                        control={scheduleForm.control}
+                        name="generalNotes"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Scheduled Date</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                data-testid="input-scheduled-date"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={jobForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>General Notes</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Job description..."
+                                placeholder="General notes for all services..."
                                 {...field}
-                                data-testid="textarea-description"
+                                data-testid="textarea-general-notes"
                               />
                             </FormControl>
                             <FormMessage />
@@ -518,49 +658,32 @@ export default function AdminDashboard() {
                         )}
                       />
 
+                      {/* Submit Buttons */}
                       <div className="space-y-2">
                         <Button 
                           type="submit" 
                           className="w-full" 
-                          disabled={createJobMutation.isPending}
-                          data-testid="button-schedule-job"
+                          disabled={createMultiServiceMutation.isPending || selectedServices.length === 0}
+                          data-testid="button-schedule-services"
                         >
-                          {createJobMutation.isPending ? (
+                          {createMultiServiceMutation.isPending ? (
                             <>
                               <Clock className="mr-2" size={16} />
-                              Scheduling...
+                              Scheduling Services...
                             </>
                           ) : (
                             <>
-                              <Plus className="mr-2" size={16} />
-                              Schedule Job
+                              <Calendar className="mr-2" size={16} />
+                              Schedule {selectedServices.length} Service{selectedServices.length !== 1 ? 's' : ''}
                             </>
                           )}
                         </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          className="w-full" 
-                          onClick={async () => {
-                            console.log("Test button clicked!");
-                            console.log("Form values:", jobForm.getValues());
-                            console.log("Auth token:", localStorage.getItem("auth_token"));
-                            
-                            // Test API call
-                            try {
-                              const response = await apiRequest("/api/auth/me");
-                              const userData = await response.json();
-                              console.log("Auth test successful:", userData);
-                              alert("Auth works! User: " + userData.firstName + " " + userData.lastName);
-                            } catch (error) {
-                              console.error("Auth test failed:", error);
-                              alert("Auth failed: " + error.message);
-                            }
-                          }}
-                          data-testid="button-test-auth"
-                        >
-                          Test Auth & Connection
-                        </Button>
+                        
+                        {selectedServices.length === 0 && (
+                          <p className="text-sm text-slate-500 text-center">
+                            Select at least one service to schedule
+                          </p>
+                        )}
                       </div>
                     </form>
                   </Form>
