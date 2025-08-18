@@ -132,6 +132,7 @@ export default function AdminDashboard() {
   // Create job mutation
   const createJobMutation = useMutation({
     mutationFn: async (data: JobScheduleFormData) => {
+      console.log("Submitting job data:", data);
       const response = await apiRequest("/api/jobs", {
         method: "POST",
         body: JSON.stringify(data),
@@ -139,6 +140,7 @@ export default function AdminDashboard() {
       return response.json();
     },
     onSuccess: () => {
+      console.log("Job creation successful");
       toast({
         title: "Job scheduled successfully",
         description: "The job has been assigned to the technician.",
@@ -147,6 +149,7 @@ export default function AdminDashboard() {
       jobForm.reset();
     },
     onError: (error: any) => {
+      console.error("Job creation failed:", error);
       toast({
         title: "Failed to schedule job",
         description: error.message || "Please check your input and try again.",
@@ -359,7 +362,10 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Form {...jobForm}>
-                    <form onSubmit={jobForm.handleSubmit((data) => createJobMutation.mutate(data))} className="space-y-4">
+                    <form onSubmit={jobForm.handleSubmit((data) => {
+                      console.log("Form submitted with data:", data);
+                      createJobMutation.mutate(data);
+                    })} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={jobForm.control}
