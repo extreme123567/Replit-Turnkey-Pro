@@ -351,6 +351,21 @@ export default function TechnicianDashboard() {
     }
   };
 
+  const getBedroomSizeDisplay = (bedroomSize: string) => {
+    if (!bedroomSize) return null;
+    const sizeMap: Record<string, string> = {
+      'studio': 'Studio',
+      '1_bed': '1BR',
+      '2_bed': '2BR',
+      '3_bed': '3BR',
+      'loft': 'Loft',
+      '1_bed_townhome': '1BR Townhome',
+      '2_bed_townhome': '2BR Townhome',
+      '3_bed_townhome': '3BR Townhome'
+    };
+    return sizeMap[bedroomSize] || bedroomSize;
+  };
+
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
     return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -715,6 +730,11 @@ export default function TechnicianDashboard() {
                       <Badge className={getStatusColor(order.status)}>
                         {order.status}
                       </Badge>
+                      {order.bedroomSize && (
+                        <Badge className="bg-purple-100 text-purple-700">
+                          {getBedroomSizeDisplay(order.bedroomSize)}
+                        </Badge>
+                      )}
                       <div className="flex space-x-1">
                         {order.status === 'assigned' && (
                           <Button 

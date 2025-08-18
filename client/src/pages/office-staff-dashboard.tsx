@@ -529,6 +529,21 @@ function ScheduledJobsList() {
     }
   };
 
+  const getBedroomSizeDisplay = (bedroomSize: string) => {
+    if (!bedroomSize) return null;
+    const sizeMap: Record<string, string> = {
+      'studio': 'Studio',
+      '1_bed': '1BR',
+      '2_bed': '2BR',
+      '3_bed': '3BR',
+      'loft': 'Loft',
+      '1_bed_townhome': '1BR Townhome',
+      '2_bed_townhome': '2BR Townhome',
+      '3_bed_townhome': '3BR Townhome'
+    };
+    return sizeMap[bedroomSize] || bedroomSize;
+  };
+
   if (jobsLoading) {
     return (
       <div className="space-y-4">
@@ -575,6 +590,11 @@ function ScheduledJobsList() {
                 <Badge className={`text-xs ${getStatusColor(job.status)}`}>
                   {job.status.replace('_', ' ')}
                 </Badge>
+                {job.bedroomSize && (
+                  <Badge className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+                    {getBedroomSizeDisplay(job.bedroomSize)}
+                  </Badge>
+                )}
               </div>
               
               {/* Job details */}

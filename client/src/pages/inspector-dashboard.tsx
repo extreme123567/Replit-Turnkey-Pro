@@ -408,6 +408,21 @@ export default function InspectorDashboard() {
     }
   };
 
+  const getBedroomSizeDisplay = (bedroomSize: string) => {
+    if (!bedroomSize) return null;
+    const sizeMap: Record<string, string> = {
+      'studio': 'Studio',
+      '1_bed': '1BR',
+      '2_bed': '2BR',
+      '3_bed': '3BR',
+      'loft': 'Loft',
+      '1_bed_townhome': '1BR Townhome',
+      '2_bed_townhome': '2BR Townhome',
+      '3_bed_townhome': '3BR Townhome'
+    };
+    return sizeMap[bedroomSize] || bedroomSize;
+  };
+
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
     return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -614,7 +629,14 @@ export default function InspectorDashboard() {
                       <Building className="text-emerald-600 text-sm" size={16} />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-800">{job.jobType} - {job.unit}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium text-slate-800">{job.jobType} - {job.unit}</p>
+                        {job.bedroomSize && (
+                          <Badge className="bg-purple-100 text-purple-700 text-xs">
+                            {getBedroomSizeDisplay(job.bedroomSize)}
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-slate-600">{job.property}</p>
                       <p className="text-sm text-slate-600">
                         Completed by: {job.technicianName} • {new Date(job.completedAt).toLocaleDateString()}

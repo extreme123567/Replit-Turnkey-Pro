@@ -73,6 +73,21 @@ export default function PropertyManagerDashboard() {
   // Filter state for jobs
   const [jobFilter, setJobFilter] = useState("all"); // all, scheduled, in_progress, completed
   
+  const getBedroomSizeDisplay = (bedroomSize: string) => {
+    if (!bedroomSize) return null;
+    const sizeMap: Record<string, string> = {
+      'studio': 'Studio',
+      '1_bed': '1BR',
+      '2_bed': '2BR',
+      '3_bed': '3BR',
+      'loft': 'Loft',
+      '1_bed_townhome': '1BR Townhome',
+      '2_bed_townhome': '2BR Townhome',
+      '3_bed_townhome': '3BR Townhome'
+    };
+    return sizeMap[bedroomSize] || bedroomSize;
+  };
+  
   // Form states
   const [messageForm, setMessageForm] = useState({
     recipient: '',
@@ -631,7 +646,14 @@ export default function PropertyManagerDashboard() {
                          <CheckCircle className="text-green-600" size={16} />}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">{workOrder.title}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-slate-800">{workOrder.title}</p>
+                          {workOrder.bedroomSize && (
+                            <Badge className="bg-purple-100 text-purple-700 text-xs">
+                              {getBedroomSizeDisplay(workOrder.bedroomSize)}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-slate-600">{workOrder.description} • Est. {workOrder.estimatedHours} hours</p>
                         <p className={`text-xs mt-1 ${
                           workOrder.status === "scheduled" ? "text-blue-600" :
