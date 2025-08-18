@@ -34,11 +34,12 @@ ServicePro is a comprehensive property management platform designed for professi
 ### Feature Specifications
 - **Authentication System**: Email-based login with JWT tokens, bcrypt password hashing, and role-based access control. Supports individual user accounts with secure session management.
 - **Role-Based Access Control**: Hierarchical permission system with route-level restrictions: Admin (complete oversight + exclusive financial access) > Office Staff (operational functions only) > Property Manager (view/request only) > Technician/Inspector (execution roles).
+- **Two-Stage Job Completion Workflow**: Implemented complete workflow where technicians mark jobs as "Job Complete" (tech_completed status) and inspectors provide final approval for 100% completion (inspector_approved status). Includes dedicated UI components and backend API endpoints.
 - **Admin Dashboard**: Complete business oversight with exclusive financial access including total revenue, payouts, net profit, property performance analysis, staff management, operations monitoring, business reports, and system settings.
 - **Office Staff Dashboard**: Operational management including property portfolio (work-based revenue tracking), job assignments, staff coordination, and scheduling - financial access removed and moved to Admin only.
 - **Property Manager Dashboard**: View-only access for job monitoring, photo requirements tracking, progress oversight, and communication - no assignment authority.
-- **Technician Role**: Work order execution, daily scheduling, time tracking, mobile-friendly interface, callback resolution with photo uploads and automatic notifications.
-- **Inspector Role**: Property inspections, compliance tracking, report generation, quality assurance, remote photo verification for callbacks, and geofenced unit timer system (within 100 meters).
+- **Technician Role**: Work order execution, daily scheduling, time tracking, mobile-friendly interface, callback resolution with photo uploads, automatic notifications, and integrated job completion buttons for marking work complete.
+- **Inspector Role**: Property inspections, compliance tracking, report generation, quality assurance, remote photo verification for callbacks, geofenced unit timer system (within 100 meters), and dedicated approval section for tech-completed jobs.
 - **Work-Based Revenue Tracking**: Year-to-date revenue based on actual work completed per property (not rental income), job completion metrics, and average job values.
 - **Automated Payout System**: Size-based pricing for paint and cleaning jobs, real-time payout tracking accessible only to Admin.
 - **Data Models**: Extended models for Users, Inspections, Work Orders, Properties, Tenants, User Permissions, and Audit Logs.

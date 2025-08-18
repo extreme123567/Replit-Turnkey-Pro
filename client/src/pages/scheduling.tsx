@@ -57,7 +57,7 @@ export default function Scheduling() {
   const { toast } = useToast();
 
   // Fetch properties for the dropdown
-  const { data: properties = [], isLoading: propertiesLoading } = useQuery({
+  const { data: properties = [], isLoading: propertiesLoading } = useQuery<any[]>({
     queryKey: ["/api/properties"],
   });
   
@@ -71,7 +71,7 @@ export default function Scheduling() {
 
   const scheduleJobsMutation = useMutation({
     mutationFn: async (data: JobSchedulingForm) => {
-      return await apiRequest("/api/jobs/schedule", "POST", data);
+      return await apiRequest("/api/jobs/schedule", { method: "POST", body: data });
     },
     onSuccess: (response: any) => {
       toast({
@@ -103,7 +103,7 @@ export default function Scheduling() {
 
   const seedDataMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/dev/seed-data", "POST", {});
+      return await apiRequest("/api/dev/seed-data", { method: "POST" });
     },
     onSuccess: () => {
       toast({
@@ -178,9 +178,9 @@ export default function Scheduling() {
                       </SelectTrigger>
                       <SelectContent>
                         {propertiesLoading ? (
-                          <SelectItem value="" disabled>Loading properties...</SelectItem>
+                          <SelectItem value="loading" disabled>Loading properties...</SelectItem>
                         ) : properties.length === 0 ? (
-                          <SelectItem value="" disabled>No properties available - Click "Create Test Properties"</SelectItem>
+                          <SelectItem value="none" disabled>No properties available - Click "Create Test Properties"</SelectItem>
                         ) : (
                           properties.map((property: any) => (
                             <SelectItem key={property.id} value={property.id}>
