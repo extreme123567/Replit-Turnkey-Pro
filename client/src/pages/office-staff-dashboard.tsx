@@ -24,9 +24,7 @@ import {
   Eye,
   Phone,
   TrendingUp,
-  Calculator,
-  CreditCard,
-  Wallet,
+
   ArrowRight,
   Settings,
   Check,
@@ -1637,20 +1635,7 @@ export default function OfficeStaffDashboard() {
           >
             Billing
           </TabsTrigger>
-          <TabsTrigger 
-            value="accounts" 
-            data-testid="tab-accounts"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
-          >
-            Accounts
-          </TabsTrigger>
-          <TabsTrigger 
-            value="payroll" 
-            data-testid="tab-payroll"
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-fit"
-          >
-            Payroll
-          </TabsTrigger>
+
         </TabsList>
 
         {/* Overview Tab */}
@@ -2127,15 +2112,7 @@ export default function OfficeStaffDashboard() {
           <BillingSection />
         </TabsContent>
 
-        {/* Accounts Tab */}
-        <TabsContent value="accounts" className="space-y-6">
-          <AccountsSection />
-        </TabsContent>
 
-        {/* Payroll Tab */}
-        <TabsContent value="payroll" className="space-y-6">
-          <PayrollSection />
-        </TabsContent>
       </Tabs>
     </div>
   );
@@ -2573,175 +2550,9 @@ function BillingSection() {
   );
 }
 
-// Accounts Section
-function AccountsSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Accounts Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-blue-50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <FileText className="text-blue-600" size={20} />
-                  <span>Invoice Management</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline" data-testid="button-create-invoice">
-                    <Plus className="mr-2" size={16} />
-                    Create New Invoice
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline" data-testid="button-pending-invoices">
-                    <Clock className="mr-2" size={16} />
-                    Pending Invoices
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline" data-testid="button-paid-invoices">
-                    <CheckCircle className="mr-2" size={16} />
-                    Paid Invoices
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <DollarSign className="text-green-600" size={20} />
-                  <span>Revenue Tracking</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-700">$45,230</p>
-                    <p className="text-sm text-green-600">This Month</p>
-                  </div>
-                  <Button className="w-full" variant="outline" data-testid="button-revenue-report">
-                    <TrendingUp className="mr-2" size={16} />
-                    View Revenue Report
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
-// Payroll Section
-function PayrollSection() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Payroll Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-purple-50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Calculator className="text-purple-600" size={20} />
-                  <span>Payroll Calculator</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button className="w-full" variant="outline" data-testid="button-calculate-payroll">
-                    <Calculator className="mr-2" size={16} />
-                    Calculate Payroll
-                  </Button>
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-purple-700">$12,450</p>
-                    <p className="text-sm text-purple-600">Current Period</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="bg-orange-50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <CreditCard className="text-orange-600" size={20} />
-                  <span>Payment Processing</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button className="w-full" variant="outline" data-testid="button-process-payments">
-                    <Send className="mr-2" size={16} />
-                    Process Payments
-                  </Button>
-                  <Button className="w-full" variant="outline" data-testid="button-payment-history">
-                    <Clock className="mr-2" size={16} />
-                    Payment History
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-teal-50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Wallet className="text-teal-600" size={20} />
-                  <span>Tax & Benefits</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button className="w-full" variant="outline" data-testid="button-tax-documents">
-                    <FileText className="mr-2" size={16} />
-                    Tax Documents
-                  </Button>
-                  <Button className="w-full" variant="outline" data-testid="button-benefits-admin">
-                    <Users className="mr-2" size={16} />
-                    Benefits Admin
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Payroll Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Payroll Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Bi-weekly Payroll - Period 15</p>
-                    <p className="text-sm text-gray-600">Processed on Aug 15, 2025</p>
-                  </div>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    Completed
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Bonus Payments - Q3</p>
-                    <p className="text-sm text-gray-600">Scheduled for Aug 20, 2025</p>
-                  </div>
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                    Pending
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // Helper functions
 function getPriorityColor(priority: string) {
