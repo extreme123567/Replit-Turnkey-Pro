@@ -114,6 +114,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Job approval endpoints for Office Staff
+  app.get("/api/jobs/awaiting-approval", authenticate, requireOfficeStaff, async (req: AuthRequest, res) => {
+    try {
+      const jobs = await storage.getJobsAwaitingApproval();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Get awaiting approval jobs error:", error);
+      res.status(500).json({ message: "Failed to fetch jobs awaiting approval" });
+    }
+  });
+
+  app.put("/api/jobs/:id/approve", authenticate, requireOfficeStaff, async (req: AuthRequest, res) => {
+    try {
+      const { approvedBy } = req.body;
+      const job = await storage.approveJob(req.params.id, approvedBy);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      console.error("Approve job error:", error);
+      res.status(500).json({ message: "Failed to approve job" });
+    }
+  });
+
+  app.put("/api/jobs/:id/reject", authenticate, requireOfficeStaff, async (req: AuthRequest, res) => {
+    try {
+      const { reason, rejectedBy } = req.body;
+      const job = await storage.rejectJob(req.params.id, reason, rejectedBy);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      console.error("Reject job error:", error);
+      res.status(500).json({ message: "Failed to reject job" });
+    }
+  });
+
   // Get staff endpoint - used by admin job scheduling
   app.get("/api/staff", authenticate, async (req: AuthRequest, res) => {
     try {
