@@ -2128,8 +2128,9 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
   const { toast } = useToast();
 
   const approveMutation = useMutation({
-    mutationFn: (jobId: string) => apiRequest("PUT", `/api/jobs/${jobId}/approve`, { 
-      approvedBy: "office-staff-1" 
+    mutationFn: (jobId: string) => apiRequest(`/api/jobs/${jobId}/approve`, { 
+      method: "PUT",
+      body: JSON.stringify({ approvedBy: "office-staff-1" })
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
@@ -2152,9 +2153,9 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
 
   const rejectMutation = useMutation({
     mutationFn: ({ jobId, reason }: { jobId: string; reason: string }) => 
-      apiRequest("PUT", `/api/jobs/${jobId}/reject`, { 
-        reason,
-        rejectedBy: "office-staff-1" 
+      apiRequest(`/api/jobs/${jobId}/reject`, { 
+        method: "PUT",
+        body: JSON.stringify({ reason, rejectedBy: "office-staff-1" })
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
