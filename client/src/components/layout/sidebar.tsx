@@ -46,7 +46,7 @@ export function Sidebar() {
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <Wrench className="text-white text-sm" size={16} />
           </div>
-          <h1 className="text-xl font-bold text-slate-800">ServicePro</h1>
+          <h1 className="text-xl font-bold text-slate-800">Turnkey Pro</h1>
         </div>
       </div>
       

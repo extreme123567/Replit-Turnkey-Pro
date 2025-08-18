@@ -15,7 +15,7 @@ const pageTitles = {
 
 export function Header() {
   const [location] = useLocation();
-  const pageInfo = pageTitles[location as keyof typeof pageTitles] || { title: "ServicePro", subtitle: "" };
+  const pageInfo = pageTitles[location as keyof typeof pageTitles] || { title: "Turnkey Pro", subtitle: "" };
 
   return (
     <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4">

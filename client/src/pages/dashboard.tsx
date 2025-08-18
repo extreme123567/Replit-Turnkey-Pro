@@ -68,7 +68,7 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-gray-900" data-testid="title-dashboard-select">
-          ServicePro - QC Apartment Turns
+          Turnkey Pro - Property Management Platform
         </h1>
         <p className="text-lg text-gray-600" data-testid="text-dashboard-description">
           Select your role to access your personalized dashboard
