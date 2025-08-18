@@ -114,7 +114,7 @@ export default function AdminDashboard() {
   });
 
   // Filter staff for technicians
-  const technicians = (staff || []).filter((member: any) => member.role === 'technician');
+  const technicians = Array.isArray(staff) ? staff.filter((member: any) => member.role === 'technician') : [];
 
   // Job scheduling form
   const jobForm = useForm<JobScheduleFormData>({
@@ -543,11 +543,11 @@ export default function AdminDashboard() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {properties?.map((property: any) => (
+                              {Array.isArray(properties) ? properties.map((property: any) => (
                                 <SelectItem key={property.id} value={property.id}>
                                   {property.name}
                                 </SelectItem>
-                              ))}
+                              )) : []}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -568,11 +568,11 @@ export default function AdminDashboard() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {technicians?.map((tech: any) => (
+                              {Array.isArray(technicians) ? technicians.map((tech: any) => (
                                 <SelectItem key={tech.id} value={tech.id}>
                                   {tech.firstName} {tech.lastName}
                                 </SelectItem>
-                              ))}
+                              )) : []}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -645,7 +645,7 @@ export default function AdminDashboard() {
                 <CardTitle className="flex items-center space-x-2">
                   <ClipboardCheck className="text-green-600" size={20} />
                   <span>Scheduled Jobs</span>
-                  <Badge variant="secondary">{scheduledJobs?.length || 0}</Badge>
+                  <Badge variant="secondary">{Array.isArray(scheduledJobs) ? scheduledJobs.length : 0}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -654,7 +654,7 @@ export default function AdminDashboard() {
                     Array.from({ length: 3 }).map((_, i) => (
                       <Skeleton key={i} className="h-16" />
                     ))
-                  ) : scheduledJobs?.length ? (
+                  ) : Array.isArray(scheduledJobs) && scheduledJobs.length ? (
                     scheduledJobs.slice(0, 5).map((job: any) => (
                       <div key={job.id} className="p-3 border border-slate-200 rounded-lg bg-slate-50">
                         <div className="flex items-center justify-between">
