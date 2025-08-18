@@ -1,4 +1,29 @@
-import { type Client, type InsertClient, type Staff, type InsertStaff, type Job, type InsertJob, type TimeEntry, type InsertTimeEntry, type Invoice, type InsertInvoice, type Message, type InsertMessage, type User, type InsertUser, type WorkOrder, type InsertWorkOrder, type Property, type InsertProperty, type Tenant, type InsertTenant, type MaintenanceSchedule, type InsertMaintenanceSchedule, type Inspection, type InsertInspection, type UserPermission, type InsertUserPermission, type AuditLog, type InsertAuditLog, type QuoteRequest, type InsertQuoteRequest, type CallbackResolution, type InsertCallbackResolution, type StaffPayroll, type InsertStaffPayroll, type ExtraDirtyRequest, type InsertExtraDirtyRequest, type RepairPhotoRequest, type InsertRepairPhotoRequest, type Notification, type InsertNotification } from "@shared/schema";
+import { 
+  type Client, 
+  type InsertClient, 
+  type Staff, 
+  type InsertStaff, 
+  type Job, 
+  type InsertJob, 
+  type TimeEntry, 
+  type InsertTimeEntry, 
+  type Invoice, 
+  type InsertInvoice, 
+  type Message, 
+  type InsertMessage, 
+  type User, 
+  type InsertUser, 
+  type WorkOrder, 
+  type InsertWorkOrder, 
+  type Property, 
+  type InsertProperty, 
+  type Tenant, 
+  type InsertTenant, 
+  type MaintenanceSchedule, 
+  type InsertMaintenanceSchedule, 
+  type Inspection, 
+  type InsertInspection 
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -504,6 +529,8 @@ export class MemStorage implements IStorage {
     const client: Client = {
       ...insertClient,
       id,
+      clientType: insertClient.clientType || "residential",
+      status: insertClient.status || "active",
       totalValue: "0.00",
       jobCount: 0,
       createdAt: new Date(),
@@ -541,8 +568,13 @@ export class MemStorage implements IStorage {
     const staff: Staff = {
       ...insertStaff,
       id,
+      status: insertStaff.status || "active",
+      department: insertStaff.department || null,
+      hourlyRate: insertStaff.hourlyRate || null,
       hoursThisWeek: "0.00",
       activeJobs: 0,
+      lastLogin: null,
+      updatedAt: new Date(),
       createdAt: new Date(),
     };
     this.staff.set(id, staff);
@@ -586,6 +618,11 @@ export class MemStorage implements IStorage {
     const job: Job = {
       ...insertJob,
       id,
+      status: insertJob.status || "scheduled",
+      description: insertJob.description || null,
+      assignedStaffId: insertJob.assignedStaffId || null,
+      priority: insertJob.priority || "medium",
+      estimatedHours: insertJob.estimatedHours || null,
       actualHours: null,
       completedDate: null,
       createdAt: new Date(),
@@ -598,7 +635,7 @@ export class MemStorage implements IStorage {
     const job = this.jobs.get(id);
     if (!job) return undefined;
 
-    const updatedJob = { ...job, ...updates, updatedAt: new Date() };
+    const updatedJob = { ...job, ...updates };
     this.jobs.set(id, updatedJob);
     return updatedJob;
   }
@@ -626,7 +663,6 @@ export class MemStorage implements IStorage {
       ...insertProperty,
       id,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     this.properties.set(id, property);
     return property;
@@ -636,7 +672,7 @@ export class MemStorage implements IStorage {
     const property = this.properties.get(id);
     if (!property) return undefined;
 
-    const updatedProperty = { ...property, ...updates, updatedAt: new Date() };
+    const updatedProperty = { ...property, ...updates };
     this.properties.set(id, updatedProperty);
     return updatedProperty;
   }
@@ -862,32 +898,10 @@ export class MemStorage implements IStorage {
   }
   async markMessageAsRead(id: string): Promise<boolean> { return false; }
 
-  async getUsers(): Promise<User[]> { return Array.from(this.users.values()); }
-  async getUser(id: string): Promise<User | undefined> { return this.users.get(id); }
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
-  }
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = {
-      ...insertUser,
-      id,
-      lastLogin: null,
-      preferences: null,
-      createdAt: new Date(),
-    };
-    this.users.set(id, user);
-    return user;
-  }
-  async updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
 
-    const updatedUser = { ...user, ...updates };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+  async getUser(id: string): Promise<User | undefined> { 
+    return this.users.get(id); 
   }
-  async deleteUser(id: string): Promise<boolean> { return this.users.delete(id); }
 
   async getTenants(): Promise<Tenant[]> { return []; }
   async getTenant(id: string): Promise<Tenant | undefined> { return undefined; }
@@ -1021,7 +1035,7 @@ export class MemStorage implements IStorage {
 
   // Authentication methods
   async getUserById(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    return this.getUser(id);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -1038,6 +1052,12 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      status: insertUser.status || "active",
+      department: insertUser.department || null,
+      permissions: insertUser.permissions || null,
+      assignedRegions: insertUser.assignedRegions || null,
+      lastLogin: null,
+      preferences: null,
       createdAt: new Date(),
     };
     this.users.set(id, user);

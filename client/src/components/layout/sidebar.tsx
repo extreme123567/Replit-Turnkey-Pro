@@ -64,9 +64,9 @@ export function Sidebar() {
               
               return (
                 <Link key={item.name} href={item.href}>
-                  <a
+                  <div
                     className={cn(
-                      "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors",
+                      "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
                       isActive
                         ? "servicepro-nav-active"
                         : "servicepro-nav-item"
@@ -75,7 +75,7 @@ export function Sidebar() {
                   >
                     <Icon className="w-5 h-5" />
                     <span>{item.name}</span>
-                  </a>
+                  </div>
                 </Link>
               );
             })}
@@ -94,9 +94,9 @@ export function Sidebar() {
               
               return (
                 <Link key={item.name} href={item.href}>
-                  <a
+                  <div
                     className={cn(
-                      "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors",
+                      "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
                       isActive
                         ? "servicepro-nav-active"
                         : "servicepro-nav-item"
@@ -110,7 +110,7 @@ export function Sidebar() {
                         {item.badge}
                       </span>
                     )}
-                  </a>
+                  </div>
                 </Link>
               );
             })}
