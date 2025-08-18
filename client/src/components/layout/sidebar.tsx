@@ -30,7 +30,6 @@ const dashboards = [
 const navigation = [
   { name: "Scheduling", href: "/scheduling", icon: Calendar },
   { name: "Clients", href: "/clients", icon: Users },
-  { name: "Staff", href: "/staff", icon: UserCheck },
   { name: "Messages", href: "/messaging", icon: MessageSquare, badge: 3 },
   { name: "Payroll", href: "/payroll", icon: DollarSign },
   { name: "Invoices", href: "/invoices", icon: FileText },
