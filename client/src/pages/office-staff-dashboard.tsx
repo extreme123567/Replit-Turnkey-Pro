@@ -1082,6 +1082,10 @@ export default function OfficeStaffDashboard() {
   // Modal states
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   
+  // Search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  
   // Form states
   const [quoteForm, setQuoteForm] = useState({
     title: '',
@@ -1137,6 +1141,18 @@ export default function OfficeStaffDashboard() {
       if (!response.ok) throw new Error('Failed to fetch work orders');
       return response.json();
     },
+  });
+
+  // Search completed units query
+  const { data: completedUnits, isLoading: searchLoading } = useQuery({
+    queryKey: ['/api/units/completed', searchQuery],
+    queryFn: async () => {
+      if (!searchQuery.trim()) return [];
+      const response = await fetch(`/api/units/search/completed?query=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) throw new Error('Failed to search completed units');
+      return response.json();
+    },
+    enabled: searchQuery.trim().length > 0,
   });
 
   // Quote requests query
@@ -1446,6 +1462,127 @@ export default function OfficeStaffDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Search Completed Units Section */}
+      <Card className="servicepro-card">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Search Completed Units</span>
+            <Badge variant="outline" className="text-green-600">
+              Work History
+            </Badge>
+          </CardTitle>
+          <div className="text-sm text-slate-600">
+            Search through completed work orders and unit turnovers
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search by unit number, property name, job type, or technician..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearchResults(e.target.value.trim().length > 0);
+                }}
+                className="w-full"
+                data-testid="input-search-completed-office"
+              />
+            </div>
+            <Button 
+              onClick={() => setShowSearchResults(true)}
+              disabled={!searchQuery.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid="button-search-completed-office"
+            >
+              <Eye className="mr-2" size={16} />
+              Search
+            </Button>
+          </div>
+
+          {/* Search Results */}
+          {showSearchResults && searchQuery.trim() && (
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Search Results</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowSearchResults(false);
+                    setSearchQuery("");
+                  }}
+                  data-testid="button-clear-search-office"
+                >
+                  <X className="mr-1" size={14} />
+                  Clear
+                </Button>
+              </div>
+
+              {searchLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              ) : completedUnits?.length > 0 ? (
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {completedUnits.map((unit: any) => (
+                    <div key={unit.id} className="border rounded-lg p-4 bg-white">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle className="text-green-600" size={16} />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-800">{unit.title || `${unit.jobType} - ${unit.unit}`}</p>
+                            <div className="flex items-center space-x-4 text-sm text-slate-600">
+                              <span className="flex items-center">
+                                <Building className="mr-1" size={12} />
+                                {unit.property}
+                              </span>
+                              <span className="flex items-center">
+                                <MapPin className="mr-1" size={12} />
+                                {unit.unit}
+                              </span>
+                              <span className="flex items-center">
+                                <UserCheck className="mr-1" size={12} />
+                                {unit.technician || unit.technicianName}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Completed: {new Date(unit.completedAt || unit.completedDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <Badge className="bg-green-100 text-green-800 text-xs">
+                            {unit.status || 'Completed'}
+                          </Badge>
+                          {unit.bedroomSize && (
+                            <div>
+                              <Badge variant="outline" className="bg-purple-100 text-purple-700 text-xs">
+                                {unit.bedroomSize}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <CheckCircle className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                  <p>No completed units found matching "{searchQuery}"</p>
+                  <p className="text-sm">Try a different search term or check the spelling</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
