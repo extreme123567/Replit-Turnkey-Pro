@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { InspectorFinalApprovalButton } from "@/components/job-completion/InspectorFinalApprovalButton";
+import { ImageUploadWithEditor } from "@/components/image-editor/ImageUploadWithEditor";
+import { ImageGallery } from "@/components/image-editor/ImageGallery";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -45,6 +47,119 @@ interface InspectorStats {
   complianceIssues: number;
   todaysInspections: any[];
 }
+
+// Callback Photo Upload Component with Image Editor
+const CallbackPhotoUploadSection = ({ onPhotoSave }: { 
+  onPhotoSave: (files: File[], annotations: any[][]) => void 
+}) => {
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{
+    id: string;
+    url: string;
+    filename: string;
+    annotations?: any[];
+    description?: string;
+  }>>([]);
+
+  const handlePhotoSave = (file: File, annotations: any[]) => {
+    const newPhoto = {
+      id: `callback-${Date.now()}`,
+      url: URL.createObjectURL(file),
+      filename: file.name,
+      annotations,
+      description: `Callback issue - ${file.name}`
+    };
+    
+    setUploadedPhotos(prev => [...prev, newPhoto]);
+    
+    // Convert to File array and annotations array for callback
+    const files = [...uploadedPhotos.map(p => new File([], p.filename)), file];
+    const allAnnotations = [...uploadedPhotos.map(p => p.annotations || []), annotations];
+    onPhotoSave(files, allAnnotations);
+  };
+
+  const handleImageEdit = (imageId: string, editedBlob: Blob, annotations: any[]) => {
+    setUploadedPhotos(prev => prev.map(photo => 
+      photo.id === imageId 
+        ? { ...photo, annotations, url: URL.createObjectURL(editedBlob) }
+        : photo
+    ));
+  };
+
+  if (showPhotoUpload) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-5xl max-h-full overflow-auto">
+          <Card className="border-amber-200 bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between text-amber-800">
+                <span>Callback Photo Evidence - Mark Issues & Areas</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowPhotoUpload(false)}
+                  data-testid="button-close-callback-photo-editor"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+              <p className="text-sm text-amber-700">
+                Upload and annotate photos to show quality issues requiring callbacks
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <ImageUploadWithEditor
+                onSave={handlePhotoSave}
+                title="Callback Evidence Photos"
+                description="Upload 2-3 photos and mark specific areas showing quality issues, damage, or incomplete work"
+                maxFiles={3}
+                required={true}
+              />
+
+              {uploadedPhotos.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-4 text-amber-800">Callback Photos</h3>
+                  <ImageGallery
+                    images={uploadedPhotos}
+                    onImageSave={handleImageEdit}
+                    title="Issue Documentation"
+                    showMetadata={false}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Label className="font-medium text-amber-800">Photo Evidence Required *</Label>
+      <p className="text-sm text-amber-700 mb-3">Upload 2-3 photos showing quality issues with detailed markings</p>
+      
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setShowPhotoUpload(true)}
+        className="w-full h-24 border-2 border-dashed border-amber-300 hover:border-amber-400 flex flex-col items-center justify-center space-y-2 bg-amber-50 hover:bg-amber-100"
+        data-testid="button-open-callback-photo-editor"
+      >
+        <Camera className="h-6 w-6 text-amber-600" />
+        <div className="text-center">
+          <p className="font-medium text-amber-800">Upload & Annotate Photos</p>
+          <p className="text-xs text-amber-600">Mark specific issues with drawing tools</p>
+        </div>
+        {uploadedPhotos.length > 0 && (
+          <Badge className="bg-amber-200 text-amber-800">
+            {uploadedPhotos.length} photo{uploadedPhotos.length !== 1 ? 's' : ''} ready
+          </Badge>
+        )}
+      </Button>
+    </div>
+  );
+};
 
 export default function InspectorDashboard() {
   // For demo, we'll use a mock inspector ID
@@ -1353,67 +1468,16 @@ export default function InspectorDashboard() {
                       />
                     </div>
                     
-                    <div>
-                      <Label className="font-medium text-amber-800">Photo Evidence Required *</Label>
-                      <p className="text-sm text-amber-700 mb-3">Upload 2-3 photos showing the quality issues with detailed notes</p>
-                      
-                      <div className="space-y-4">
-                        {[0, 1, 2].map((index) => (
-                          <div key={index} className="border border-amber-200 rounded-lg p-3 bg-white">
-                            <div className="flex items-center justify-between mb-2">
-                              <Label className="text-sm font-medium">Photo {index + 1} {index < 2 ? '*' : '(Optional)'}</Label>
-                              {callbackPhotos[index] && (
-                                <Button 
-                                  type="button" 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => {
-                                    const newPhotos = [...callbackPhotos];
-                                    const newNotes = [...callbackPhotoNotes];
-                                    newPhotos[index] = null as any;
-                                    newNotes[index] = '';
-                                    setCallbackPhotos(newPhotos);
-                                    setCallbackPhotoNotes(newNotes);
-                                  }}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const newPhotos = [...callbackPhotos];
-                                    newPhotos[index] = file;
-                                    setCallbackPhotos(newPhotos);
-                                  }
-                                }}
-                                className="w-full text-sm"
-                                data-testid={`input-inspector-callback-photo-${index}`}
-                              />
-                              
-                              <Textarea
-                                placeholder="Describe what this photo shows and why it requires a callback..."
-                                value={callbackPhotoNotes[index]}
-                                onChange={(e) => {
-                                  const newNotes = [...callbackPhotoNotes];
-                                  newNotes[index] = e.target.value;
-                                  setCallbackPhotoNotes(newNotes);
-                                }}
-                                rows={2}
-                                className="text-sm border-amber-200"
-                                data-testid={`textarea-inspector-callback-note-${index}`}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <CallbackPhotoUploadSection
+                      onPhotoSave={(files, annotations) => {
+                        setCallbackPhotos(files);
+                        // Store annotations for each photo if needed
+                        toast({
+                          title: "Callback Photos Saved",
+                          description: `${files.length} photos uploaded with annotations.`,
+                        });
+                      }}
+                    />
 
                     <div className="bg-amber-100 p-3 rounded border border-amber-200">
                       <p className="text-sm font-medium text-amber-800 mb-1">

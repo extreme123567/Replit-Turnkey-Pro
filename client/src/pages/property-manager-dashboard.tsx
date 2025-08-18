@@ -35,6 +35,7 @@ import {
   Upload
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageGallery } from "@/components/image-editor/ImageGallery";
 
 interface PropertyManagerStats {
   totalProperties: number;

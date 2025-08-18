@@ -18,13 +18,16 @@ import {
   Navigation,
   AlertTriangle,
   Trash2,
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TechJobCompleteButton } from "@/components/job-completion/TechJobCompleteButton";
+import { ImageUploadWithEditor } from "@/components/image-editor/ImageUploadWithEditor";
+import { ImageGallery } from "@/components/image-editor/ImageGallery";
 
 // Complete Job with Payout Component
 const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jobType: 'paint' | 'clean' }) => {
@@ -432,25 +435,159 @@ export default function TechnicianDashboard() {
   // Component for Repair Photo Upload button
   const RepairPhotoButton = ({ painterId }: { painterId: string }) => {
     const [isLoading, setIsLoading] = useState(false);
+    const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+    const [uploadedPhotos, setUploadedPhotos] = useState<Array<{
+      id: string;
+      url: string;
+      filename: string;
+      annotations?: any[];
+      uploadedBy: string;
+      uploadedAt: string;
+    }>>([]);
     const { toast } = useToast();
 
-    const handleRepairPhotos = () => {
+    // Mock existing photos for demo
+    const existingPhotos = [
+      {
+        id: 'repair-1',
+        url: '/placeholder-repair-before.jpg',
+        filename: 'kitchen-before.jpg',
+        annotations: [{ type: 'draw', points: [], color: '#ef4444' }],
+        uploadedBy: 'Mike Johnson',
+        uploadedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        description: 'Kitchen damage before repair'
+      },
+      {
+        id: 'repair-2', 
+        url: '/placeholder-repair-after.jpg',
+        filename: 'kitchen-after.jpg',
+        annotations: [],
+        uploadedBy: 'Mike Johnson',
+        uploadedAt: new Date().toISOString(),
+        description: 'Kitchen repair completed'
+      }
+    ];
+
+    const handlePhotoSave = async (file: File, annotations: any[]) => {
+      setIsLoading(true);
+      try {
+        // Create a mock URL for demo - in production this would upload to server
+        const mockUrl = URL.createObjectURL(file);
+        const newPhoto = {
+          id: `photo-${Date.now()}`,
+          url: mockUrl,
+          filename: file.name,
+          annotations,
+          uploadedBy: 'Mike Johnson',
+          uploadedAt: new Date().toISOString()
+        };
+        
+        setUploadedPhotos(prev => [...prev, newPhoto]);
+        
+        toast({
+          title: "Photo Saved",
+          description: `${file.name} has been saved with annotations.`,
+        });
+      } catch (error) {
+        toast({
+          title: "Upload Failed",
+          description: "Failed to save photo. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleImageEdit = (imageId: string, editedBlob: Blob, annotations: any[]) => {
+      // Update the photo with new annotations
+      setUploadedPhotos(prev => prev.map(photo => 
+        photo.id === imageId 
+          ? { ...photo, annotations, url: URL.createObjectURL(editedBlob) }
+          : photo
+      ));
+      
       toast({
-        title: "Photo Upload",
-        description: "Repair photo upload feature coming soon.",
+        title: "Photo Updated",
+        description: "Image annotations have been saved.",
       });
     };
+
+    if (showPhotoUpload) {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-6xl max-h-full overflow-auto">
+            <Card className="servicepro-card">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Repair Photos - Add & Edit with Markers</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowPhotoUpload(false)}
+                    data-testid="button-close-photo-editor"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Existing Photos Gallery with Edit Capability */}
+                {existingPhotos.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-4">Existing Repair Photos</h3>
+                    <ImageGallery
+                      images={existingPhotos}
+                      onImageSave={handleImageEdit}
+                      title="Repair Documentation"
+                      showMetadata={true}
+                      allowDownload={true}
+                    />
+                  </div>
+                )}
+
+                {/* New Photo Upload */}
+                <div>
+                  <h3 className="font-medium mb-4">Upload New Repair Photos</h3>
+                  <ImageUploadWithEditor
+                    onSave={handlePhotoSave}
+                    title="Add Repair Photos"
+                    description="Upload before/after photos and mark areas of concern, damage, or completed work"
+                    maxFiles={5}
+                    required={false}
+                  />
+                </div>
+
+                {/* Recently Uploaded Photos */}
+                {uploadedPhotos.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-4">Recently Uploaded</h3>
+                    <ImageGallery
+                      images={uploadedPhotos}
+                      onImageSave={handleImageEdit}
+                      title="New Uploads"
+                      showMetadata={true}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <Button 
         variant="outline" 
-        className="h-20 flex-col space-y-2"
-        onClick={handleRepairPhotos}
+        className="h-20 flex-col space-y-2 hover:bg-purple-50 border-purple-200"
+        onClick={() => setShowPhotoUpload(true)}
         disabled={isLoading}
         data-testid="button-repair-photos"
       >
-        <Upload className="text-purple-600" size={20} />
+        <Camera className="text-purple-600" size={20} />
         <span className="text-sm font-medium">Repair Photos</span>
+        <span className="text-xs text-purple-600">+ Edit</span>
       </Button>
     );
   };
