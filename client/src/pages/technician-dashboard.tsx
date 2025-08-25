@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -34,8 +37,11 @@ import { ImageGallery } from "@/components/image-editor/ImageGallery";
 // Complete Job with Payout Component
 const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jobType: 'paint' | 'clean' }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [unitCount, setUnitCount] = useState(1);
   const [unitType, setUnitType] = useState<'studio' | '1br' | '2br' | '3br'>('studio');
+  const [bedroomCount, setBedroomCount] = useState<number>(0);
+  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ id: string; url: string; filename: string; }>>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,7 +75,9 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
         staffId: technicianId,
         jobType: data.jobType,
         unitCount: data.unitCount,
-          unitType: data.unitType
+          unitType: data.unitType,
+          bedroomCount: data.bedroomCount,
+          completionPhotos: data.photos
         }),
       });
       return data;
@@ -77,11 +85,15 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
     onSuccess: () => {
       toast({
         title: `${jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job Completed`,
-        description: `Payout of $${calculatePayout()} has been added to your account.`,
+        description: `Payout of $${calculatePayout()} has been added to your account. Photos and bedroom count recorded.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/payroll/staff", technicianId] });
+      // Reset form
       setUnitCount(1);
       setUnitType('studio');
+      setBedroomCount(0);
+      setUploadedPhotos([]);
+      setShowCompletionModal(false);
     },
     onError: (error) => {
       toast({
@@ -93,9 +105,76 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
   });
 
   const handleCompleteJob = () => {
+    // Validation
+    if (bedroomCount < 0 || bedroomCount > 10) {
+      toast({
+        title: "Invalid Bedroom Count",
+        description: "Please enter a valid number of bedrooms (0-10).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (uploadedPhotos.length < 3) {
+      toast({
+        title: "Photos Required",
+        description: "Please upload at least 3 photos to complete the job.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (uploadedPhotos.length > 6) {
+      toast({
+        title: "Too Many Photos",
+        description: "Please upload a maximum of 6 photos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
-    completeJobWithPayout.mutate({ jobType, unitCount, unitType });
+    completeJobWithPayout.mutate({ 
+      jobType, 
+      unitCount, 
+      unitType, 
+      bedroomCount,
+      photos: uploadedPhotos.map(p => p.url)
+    });
     setTimeout(() => setIsLoading(false), 1000);
+  };
+
+  const handlePhotoSave = (file: File, annotations?: any[]) => {
+    if (uploadedPhotos.length >= 6) {
+      toast({
+        title: "Maximum Photos Reached",
+        description: "You can upload a maximum of 6 photos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const mockUrl = URL.createObjectURL(file);
+    const newPhoto = {
+      id: `photo-${Date.now()}-${Math.random()}`,
+      url: mockUrl,
+      filename: file.name,
+    };
+    
+    setUploadedPhotos(prev => [...prev, newPhoto]);
+    
+    toast({
+      title: "Photo Added",
+      description: `${file.name} has been added to completion photos.`,
+    });
+  };
+
+  const removePhoto = (photoId: string) => {
+    setUploadedPhotos(prev => prev.filter(p => p.id !== photoId));
+    toast({
+      title: "Photo Removed",
+      description: "Photo has been removed from completion photos.",
+    });
   };
 
   return (
@@ -135,21 +214,182 @@ const CompleteJobButton = ({ technicianId, jobType }: { technicianId: string; jo
         )}
       </select>
       
-      <Button 
-        variant="outline" 
-        className={`h-20 flex-col space-y-2 w-full ${jobType === 'paint' ? 'border-blue-200 hover:bg-blue-50' : 'border-green-200 hover:bg-green-50'}`}
-        onClick={handleCompleteJob}
-        disabled={isLoading || completeJobWithPayout.isPending}
-        data-testid={`button-complete-${jobType}-job`}
-      >
-        <div className={`w-8 h-8 ${jobType === 'paint' ? 'bg-blue-500' : 'bg-green-500'} rounded-full`}></div>
-        <span className="text-sm font-medium">
-          Complete {jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job
-        </span>
-        <span className="text-xs text-slate-500">
-          ${calculatePayout()}
-        </span>
-      </Button>
+      <Dialog open={showCompletionModal} onOpenChange={setShowCompletionModal}>
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            className={`h-20 flex-col space-y-2 w-full ${jobType === 'paint' ? 'border-blue-200 hover:bg-blue-50' : 'border-green-200 hover:bg-green-50'}`}
+            disabled={isLoading || completeJobWithPayout.isPending}
+            data-testid={`button-complete-${jobType}-job`}
+          >
+            <div className={`w-8 h-8 ${jobType === 'paint' ? 'bg-blue-500' : 'bg-green-500'} rounded-full`}></div>
+            <span className="text-sm font-medium">
+              Complete {jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job
+            </span>
+            <span className="text-xs text-slate-500">
+              ${calculatePayout()}
+            </span>
+          </Button>
+        </DialogTrigger>
+        
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <div className={`w-6 h-6 ${jobType === 'paint' ? 'bg-blue-500' : 'bg-green-500'} rounded-full`}></div>
+              <span>Complete {jobType.charAt(0).toUpperCase() + jobType.slice(1)} Job</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Job Summary */}
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2">Job Summary</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-slate-600">Units:</span> {unitCount}
+                </div>
+                <div>
+                  <span className="text-slate-600">Type:</span> {unitType}
+                </div>
+                <div>
+                  <span className="text-slate-600">Job Type:</span> {jobType.charAt(0).toUpperCase() + jobType.slice(1)}
+                </div>
+                <div>
+                  <span className="text-slate-600">Payout:</span> ${calculatePayout()}
+                </div>
+              </div>
+            </div>
+
+            {/* Bedroom Count Input */}
+            <div className="space-y-2">
+              <Label htmlFor="bedroomCount" className="text-sm font-medium">
+                Number of Bedrooms in Unit <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="bedroomCount"
+                type="number"
+                min="0"
+                max="10"
+                value={bedroomCount}
+                onChange={(e) => setBedroomCount(parseInt(e.target.value) || 0)}
+                placeholder="Enter bedroom count (0 for studio)"
+                className="w-full"
+                data-testid="input-bedroom-count"
+              />
+              <p className="text-xs text-slate-600">
+                Enter 0 for studio apartments, or the actual number of bedrooms
+              </p>
+            </div>
+
+            {/* Photo Upload Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">
+                  Completion Photos <span className="text-red-500">*</span>
+                </Label>
+                <Badge variant={uploadedPhotos.length >= 3 && uploadedPhotos.length <= 6 ? "default" : "secondary"}>
+                  {uploadedPhotos.length}/6 photos
+                </Badge>
+              </div>
+              
+              <p className="text-xs text-slate-600">
+                Upload 3-6 photos showing completed work. Photos are required to submit job completion.
+              </p>
+
+              {/* Photo Upload Component */}
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-4">
+                <ImageUploadWithEditor
+                  onSave={handlePhotoSave}
+                  title="Upload Completion Photos"
+                  description="Select photos showing your completed work"
+                  maxFiles={6 - uploadedPhotos.length}
+                  required={true}
+                />
+              </div>
+
+              {/* Uploaded Photos Preview */}
+              {uploadedPhotos.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Uploaded Photos ({uploadedPhotos.length})</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {uploadedPhotos.map((photo) => (
+                      <div key={photo.id} className="relative">
+                        <img
+                          src={photo.url}
+                          alt={photo.filename}
+                          className="w-full h-24 object-cover rounded border"
+                        />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-1 right-1 h-6 w-6 p-0"
+                          onClick={() => removePhoto(photo.id)}
+                          data-testid={`button-remove-photo-${photo.id}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                        <p className="text-xs mt-1 truncate">{photo.filename}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Requirements Check */}
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">Requirements Check</h4>
+                <div className="space-y-1 text-xs">
+                  <div className={`flex items-center space-x-2 ${bedroomCount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`w-2 h-2 rounded-full ${bedroomCount >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span>Bedroom count specified</span>
+                  </div>
+                  <div className={`flex items-center space-x-2 ${uploadedPhotos.length >= 3 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`w-2 h-2 rounded-full ${uploadedPhotos.length >= 3 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span>Minimum 3 photos uploaded</span>
+                  </div>
+                  <div className={`flex items-center space-x-2 ${uploadedPhotos.length <= 6 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`w-2 h-2 rounded-full ${uploadedPhotos.length <= 6 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span>Maximum 6 photos limit</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowCompletionModal(false)}
+                className="flex-1"
+                disabled={isLoading || completeJobWithPayout.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCompleteJob}
+                disabled={
+                  isLoading || 
+                  completeJobWithPayout.isPending || 
+                  bedroomCount < 0 || 
+                  uploadedPhotos.length < 3 || 
+                  uploadedPhotos.length > 6
+                }
+                className={`flex-1 ${jobType === 'paint' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}
+                data-testid="button-submit-completion"
+              >
+                {isLoading || completeJobWithPayout.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Completing...
+                  </>
+                ) : (
+                  `Complete Job - $${calculatePayout()}`
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
