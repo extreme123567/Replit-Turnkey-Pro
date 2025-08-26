@@ -325,6 +325,66 @@ export class MemStorage implements IStorage {
         preferences: null,
         createdAt: new Date(),
       },
+      {
+        id: "tech-2",
+        email: "sarah.tech@servicepro.com",
+        password: "$2b$12$TechPass2Demo123", // "techpass2123"
+        firstName: "Sarah",
+        lastName: "Johnson",
+        role: "technician",
+        department: "Maintenance", 
+        status: "active" as const,
+        permissions: ["complete_jobs", "upload_photos"],
+        assignedRegions: ["New Bern", "Jacksonville"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "tech-3",
+        email: "mike.tech@servicepro.com",
+        password: "$2b$12$TechPass3Demo123", // "techpass3123"
+        firstName: "Mike",
+        lastName: "Rodriguez",
+        role: "technician",
+        department: "Maintenance", 
+        status: "active" as const,
+        permissions: ["complete_jobs", "upload_photos"],
+        assignedRegions: ["Greenville"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "office-2",
+        email: "assistant.office@servicepro.com",
+        password: "$2b$12$OfficePass2Demo123", // "officepass2123"
+        firstName: "Lisa",
+        lastName: "Chen",
+        role: "office_staff",
+        department: "Operations", 
+        status: "active" as const,
+        permissions: ["assign_jobs", "schedule", "approve_quotes"],
+        assignedRegions: ["New Bern", "Jacksonville"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "inspector-2",
+        email: "david.inspector@servicepro.com",
+        password: "$2b$12$InspectorPass2Demo123", // "inspectorpass2123"
+        firstName: "David",
+        lastName: "Wilson",
+        role: "inspector",
+        department: "Quality Assurance", 
+        status: "active" as const,
+        permissions: ["conduct_inspections", "verify_quality"],
+        assignedRegions: ["Jacksonville", "Greenville"],
+        lastLogin: null,
+        preferences: null,
+        createdAt: new Date(),
+      },
     ];
 
     // Add demo users to storage
@@ -952,8 +1012,25 @@ export class MemStorage implements IStorage {
   async markMessageAsRead(id: string): Promise<boolean> { return false; }
 
 
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
   async getUser(id: string): Promise<User | undefined> { 
     return this.users.get(id); 
+  }
+
+  async updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
   }
 
   async getTenants(): Promise<Tenant[]> { return []; }
