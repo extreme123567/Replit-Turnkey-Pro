@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageGallery } from "@/components/image-editor/ImageGallery";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PropertyManagerStats {
   totalProperties: number;
@@ -61,6 +63,8 @@ interface Property {
 
 export default function PropertyManagerDashboard() {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // For demo, we'll use a mock property manager ID
   const propertyManagerId = "pm-1";
@@ -212,6 +216,67 @@ export default function PropertyManagerDashboard() {
       photoNotes: ['', '', '']
     });
     setIsCallbackModalOpen(true);
+  };
+
+  // Approval mutations
+  const approveRequestMutation = useMutation({
+    mutationFn: async ({ requestId, type }: { requestId: string; type: string }) => {
+      const response = await apiRequest(`/api/approval-requests/${requestId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approvedBy: propertyManagerId, type })
+      });
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "Request Approved",
+        description: `${variables.type} request has been approved successfully.`,
+      });
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/approval-requests'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Approval Failed",
+        description: error.message || "Failed to approve request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const rejectRequestMutation = useMutation({
+    mutationFn: async ({ requestId, type, reason }: { requestId: string; type: string; reason?: string }) => {
+      const response = await apiRequest(`/api/approval-requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rejectedBy: propertyManagerId, type, rejectionReason: reason })
+      });
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "Request Rejected",
+        description: `${variables.type} request has been rejected.`,
+      });
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/approval-requests'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleApproveRequest = (requestId: string, type: string) => {
+    approveRequestMutation.mutate({ requestId, type });
+  };
+
+  const handleRejectRequest = (requestId: string, type: string, reason?: string) => {
+    rejectRequestMutation.mutate({ requestId, type, reason });
   };
 
 
@@ -656,11 +721,24 @@ export default function PropertyManagerDashboard() {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" className="text-red-600 border-red-200">
-                    Reject
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-red-600 border-red-200"
+                    onClick={() => handleRejectRequest('extra-dirty-205', 'Extra Dirty Unit', 'Not necessary')}
+                    disabled={rejectRequestMutation.isPending}
+                    data-testid="button-reject-extra-dirty"
+                  >
+                    {rejectRequestMutation.isPending ? 'Rejecting...' : 'Reject'}
                   </Button>
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                    Approve
+                  <Button 
+                    size="sm" 
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => handleApproveRequest('extra-dirty-205', 'Extra Dirty Unit')}
+                    disabled={approveRequestMutation.isPending}
+                    data-testid="button-approve-extra-dirty"
+                  >
+                    {approveRequestMutation.isPending ? 'Approving...' : 'Approve'}
                   </Button>
                 </div>
               </div>
@@ -681,14 +759,32 @@ export default function PropertyManagerDashboard() {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" className="text-xs">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs"
+                    data-testid="button-view-photos"
+                  >
                     View Photos
                   </Button>
-                  <Button size="sm" variant="outline" className="text-red-600 border-red-200">
-                    Reject
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-red-600 border-red-200"
+                    onClick={() => handleRejectRequest('drywall-301', 'Extra Drywall Repair', 'Cost too high')}
+                    disabled={rejectRequestMutation.isPending}
+                    data-testid="button-reject-drywall"
+                  >
+                    {rejectRequestMutation.isPending ? 'Rejecting...' : 'Reject'}
                   </Button>
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                    Approve
+                  <Button 
+                    size="sm" 
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => handleApproveRequest('drywall-301', 'Extra Drywall Repair')}
+                    disabled={approveRequestMutation.isPending}
+                    data-testid="button-approve-drywall"
+                  >
+                    {approveRequestMutation.isPending ? 'Approving...' : 'Approve'}
                   </Button>
                 </div>
               </div>

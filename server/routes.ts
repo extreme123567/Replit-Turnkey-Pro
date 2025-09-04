@@ -497,6 +497,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Approval request routes
+  app.post("/api/approval-requests/:id/approve", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { approvedBy, type } = req.body;
+      
+      // For demo purposes, we'll simulate approval
+      const response = {
+        id,
+        status: 'approved',
+        approvedBy,
+        approvedAt: new Date(),
+        type,
+        message: `${type} request has been approved successfully`
+      };
+      
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve request" });
+    }
+  });
+
+  app.post("/api/approval-requests/:id/reject", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { rejectedBy, type, rejectionReason } = req.body;
+      
+      // For demo purposes, we'll simulate rejection
+      const response = {
+        id,
+        status: 'rejected',
+        rejectedBy,
+        rejectedAt: new Date(),
+        type,
+        rejectionReason,
+        message: `${type} request has been rejected`
+      };
+      
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reject request" });
+    }
+  });
+
   // Message routes
   app.get("/api/messages", async (req, res) => {
     try {
