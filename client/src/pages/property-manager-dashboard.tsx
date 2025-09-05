@@ -286,15 +286,14 @@ export default function PropertyManagerDashboard() {
     mutationFn: async (jobsData: any) => {
       const response = await apiRequest('/api/work-orders/schedule-multiple', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           jobs: jobsData.jobs.map((job: any) => ({
             ...job,
             requestedBy: propertyManagerId,
             status: 'pending_approval',
             createdAt: new Date().toISOString()
           }))
-        })
+        }
       });
       return response.json();
     },
