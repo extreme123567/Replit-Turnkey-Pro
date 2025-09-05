@@ -1815,48 +1815,6 @@ export default function PropertyManagerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <Card className="servicepro-card">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-create-work-order"
-            >
-              <Wrench className="text-blue-600" size={20} />
-              <span className="text-sm font-medium">Create Work Order</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-schedule-maintenance"
-            >
-              <Calendar className="text-emerald-600" size={20} />
-              <span className="text-sm font-medium">Schedule Maintenance</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-view-reports"
-            >
-              <TrendingUp className="text-purple-600" size={20} />
-              <span className="text-sm font-medium">View Reports</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-20 flex-col space-y-2"
-              data-testid="button-inspect-property"
-            >
-              <Eye className="text-amber-600" size={20} />
-              <span className="text-sm font-medium">Inspect Property</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Callback Request Modal */}
       <Dialog open={isCallbackModalOpen} onOpenChange={setIsCallbackModalOpen}>
