@@ -213,8 +213,11 @@ export default function PropertyManagerDashboard() {
         title: "Request Approved",
         description: `${variables.type} request has been approved successfully.`,
       });
-      // Refresh data
+      // Refresh all related data so approved jobs appear in job status section
       queryClient.invalidateQueries({ queryKey: ['/api/approval-requests'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders/manager", propertyManagerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs", { managerId: propertyManagerId }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/property-manager", propertyManagerId] });
     },
     onError: (error: any) => {
       toast({
@@ -238,8 +241,11 @@ export default function PropertyManagerDashboard() {
         title: "Request Rejected",
         description: `${variables.type} request has been rejected.`,
       });
-      // Refresh data
+      // Refresh all related data
       queryClient.invalidateQueries({ queryKey: ['/api/approval-requests'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders/manager", propertyManagerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs", { managerId: propertyManagerId }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/property-manager", propertyManagerId] });
     },
     onError: (error: any) => {
       toast({
