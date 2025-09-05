@@ -223,12 +223,10 @@ export default function PropertyManagerDashboard() {
   // Approval mutations
   const approveRequestMutation = useMutation({
     mutationFn: async ({ requestId, type }: { requestId: string; type: string }) => {
-      const response = await apiRequest(`/api/approval-requests/${requestId}/approve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approvedBy: propertyManagerId, type })
+      return apiRequest(`/api/approval-requests/${requestId}/approve`, 'POST', { 
+        approvedBy: propertyManagerId, 
+        type 
       });
-      return response.json();
     },
     onSuccess: (data, variables) => {
       toast({
@@ -249,12 +247,11 @@ export default function PropertyManagerDashboard() {
 
   const rejectRequestMutation = useMutation({
     mutationFn: async ({ requestId, type, reason }: { requestId: string; type: string; reason?: string }) => {
-      const response = await apiRequest(`/api/approval-requests/${requestId}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rejectedBy: propertyManagerId, type, rejectionReason: reason })
+      return apiRequest(`/api/approval-requests/${requestId}/reject`, 'POST', { 
+        rejectedBy: propertyManagerId, 
+        type, 
+        rejectionReason: reason 
       });
-      return response.json();
     },
     onSuccess: (data, variables) => {
       toast({
@@ -284,18 +281,14 @@ export default function PropertyManagerDashboard() {
   // Schedule jobs mutation
   const scheduleJobsMutation = useMutation({
     mutationFn: async (jobsData: any) => {
-      const response = await apiRequest('/api/work-orders/schedule-multiple', {
-        method: 'POST',
-        body: {
-          jobs: jobsData.jobs.map((job: any) => ({
-            ...job,
-            requestedBy: propertyManagerId,
-            status: 'pending_approval',
-            createdAt: new Date().toISOString()
-          }))
-        }
+      return apiRequest('/api/work-orders/schedule-multiple', 'POST', {
+        jobs: jobsData.jobs.map((job: any) => ({
+          ...job,
+          requestedBy: propertyManagerId,
+          status: 'pending_approval',
+          createdAt: new Date().toISOString()
+        }))
       });
-      return response.json();
     },
     onSuccess: (data) => {
       const jobCount = data.jobs?.length || scheduleJobsForm.jobs.length;

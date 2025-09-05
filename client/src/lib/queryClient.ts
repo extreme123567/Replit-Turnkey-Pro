@@ -17,19 +17,22 @@ function getAuthHeaders(): Record<string, string> {
 
 export async function apiRequest(
   url: string,
-  options?: RequestInit,
-): Promise<Response> {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      ...getAuthHeaders(),
-      ...options?.headers,
-    },
+  method: string = "GET",
+  body?: any,
+): Promise<any> {
+  const options: RequestInit = {
+    method,
+    headers: getAuthHeaders(),
     credentials: "include",
-  });
+  };
 
+  if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
+    options.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(url, options);
   await throwIfResNotOk(res);
-  return res;
+  return await res.json();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
