@@ -1079,6 +1079,7 @@ function UnitsCompletedWidget() {
 
 export default function OfficeStaffDashboard() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Modal states
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
@@ -1520,6 +1521,9 @@ export default function OfficeStaffDashboard() {
                         });
                         
                         const data = await response.json();
+                        
+                        // Invalidate and refetch job data to show newly scheduled jobs
+                        queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
                         
                         toast({
                           title: "Jobs Scheduled",

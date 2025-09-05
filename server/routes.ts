@@ -550,24 +550,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Jobs array is required" });
       }
       
-      // For demo purposes, create mock work order responses
-      const workOrders = jobs.map((job, index) => ({
-        id: `wo-${Date.now()}-${index}`,
-        title: `${job.jobType} work for unit ${job.unitNumber}`,
-        description: job.description || `${job.jobType} work for unit ${job.unitNumber}`,
-        propertyId: job.propertyId,
-        unitNumber: job.unitNumber,
-        bedroomSize: job.bedroomSize,
-        category: job.category || job.jobType,
-        jobType: job.jobType,
-        priority: job.priority || "medium",
-        status: job.status || "pending_approval",
-        estimatedCost: job.estimatedCost ? parseFloat(job.estimatedCost) : null,
-        scheduledDate: job.scheduledDate ? new Date(job.scheduledDate) : null,
-        notes: job.notes,
-        requestedBy: job.requestedBy,
-        createdAt: job.createdAt ? new Date(job.createdAt) : new Date()
-      }));
+      // Actually create and store work orders
+      const workOrders = [];
+      for (const job of jobs) {
+        const workOrder = await storage.createWorkOrder({
+          propertyId: job.propertyId,
+          unitNumber: job.unitNumber,
+          category: job.category || "maintenance",
+          jobType: job.jobType,
+          priority: job.priority || "medium",
+          title: job.description || `${job.jobType} work for unit ${job.unitNumber}`,
+          description: job.description || `${job.jobType} work for unit ${job.unitNumber}`,
+          scheduledDate: job.scheduledDate ? new Date(job.scheduledDate) : null,
+          assignedTo: null,
+          requestedBy: job.requestedBy || "office-staff",
+          photosRequired: 0,
+          photosToOffice: false,
+          photosSubmitted: [],
+          estimatedCost: job.estimatedCost ? parseFloat(job.estimatedCost) : null,
+          notes: job.notes
+        });
+        workOrders.push(workOrder);
+      }
       
       res.json({
         jobs: workOrders,
