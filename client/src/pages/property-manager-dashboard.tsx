@@ -258,9 +258,12 @@ export default function PropertyManagerDashboard() {
     rejectRequestMutation.mutate({ requestId, type, reason });
   };
 
-  // Schedule jobs mutation
-  const scheduleJobsMutation = useMutation({
-    mutationFn: async (jobsData: any) => {
+  // Schedule jobs mutation - using manual approach to avoid TanStack Query issues
+  const [isSchedulingJobs, setIsSchedulingJobs] = useState(false);
+  
+  const scheduleJobsManually = async (jobsData: any) => {
+    setIsSchedulingJobs(true);
+    try {
       const requestData = {
         jobs: jobsData.jobs.map((job: any) => ({
           ...job,
@@ -270,10 +273,10 @@ export default function PropertyManagerDashboard() {
         }))
       };
       
-      console.log("Sending API request with data:", requestData);
+      console.log("Manual scheduling with data:", requestData);
       
-      // Use fetch directly to avoid any TanStack Query interference
-      const response = await fetch('/api/work-orders/schedule-multiple', {
+      // Create a completely new fetch instance to avoid any interference
+      const response = await window.fetch('/api/work-orders/schedule-multiple', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -282,19 +285,22 @@ export default function PropertyManagerDashboard() {
         body: JSON.stringify(requestData)
       });
       
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`${response.status}: ${errorText}`);
       }
       
-      return response.json();
-    },
-    onSuccess: (data) => {
-      const jobCount = data.jobs?.length || scheduleJobsForm.jobs.length;
+      const result = await response.json();
+      
+      // Success handling
+      const jobCount = result.jobs?.length || jobsData.jobs.length;
       toast({
         title: "Jobs Scheduled",
         description: `${jobCount} job${jobCount > 1 ? 's' : ''} scheduled and sent to office staff for approval.`,
       });
+      
       // Reset form and close modal
       setScheduleJobsForm({
         jobs: [{
@@ -311,17 +317,28 @@ export default function PropertyManagerDashboard() {
         }]
       });
       setIsScheduleJobModalOpen(false);
+      
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/work-orders'] });
-    },
-    onError: (error: any) => {
+      
+      return result;
+    } catch (error: any) {
+      console.error("Scheduling error:", error);
       toast({
         title: "Scheduling Failed",
         description: error.message || "Failed to schedule jobs. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsSchedulingJobs(false);
     }
-  });
+  };
+  
+  const scheduleJobsMutation = {
+    mutate: scheduleJobsManually,
+    isPending: isSchedulingJobs,
+  };
 
   const addNewJob = () => {
     setScheduleJobsForm({
