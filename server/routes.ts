@@ -497,6 +497,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Work order scheduling route
+  app.post("/api/work-orders/schedule", async (req, res) => {
+    try {
+      const {
+        title,
+        description,
+        propertyId,
+        unitNumber,
+        jobType,
+        category,
+        priority,
+        bedroomSize,
+        scheduledDate,
+        estimatedCost,
+        notes,
+        requestedBy
+      } = req.body;
+      
+      // For demo purposes, create a mock work order response
+      const workOrder = {
+        id: `wo-${Date.now()}`,
+        title,
+        description: description || `${jobType} work for unit ${unitNumber}`,
+        propertyId,
+        unitNumber,
+        bedroomSize,
+        category: category || jobType,
+        jobType,
+        priority: priority || "medium",
+        status: "pending_approval",
+        estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
+        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        notes,
+        requestedBy,
+        createdAt: new Date(),
+        message: "Job has been scheduled and sent for approval"
+      };
+      
+      res.json(workOrder);
+    } catch (error) {
+      console.error("Error scheduling work order:", error);
+      res.status(500).json({ message: "Failed to schedule job" });
+    }
+  });
+
   // Approval request routes
   app.post("/api/approval-requests/:id/approve", async (req, res) => {
     try {

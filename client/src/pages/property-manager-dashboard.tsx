@@ -73,6 +73,7 @@ export default function PropertyManagerDashboard() {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
+  const [isScheduleJobModalOpen, setIsScheduleJobModalOpen] = useState(false);
   const [selectedJobForCallback, setSelectedJobForCallback] = useState<any>(null);
   
   // Filter state for jobs
@@ -279,6 +280,65 @@ export default function PropertyManagerDashboard() {
     rejectRequestMutation.mutate({ requestId, type, reason });
   };
 
+  // Schedule job mutation
+  const scheduleJobMutation = useMutation({
+    mutationFn: async (jobData: any) => {
+      const response = await apiRequest('/api/work-orders/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...jobData,
+          requestedBy: propertyManagerId,
+          status: 'pending_approval',
+          createdAt: new Date().toISOString()
+        })
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Scheduled",
+        description: "Job has been scheduled and sent to office staff for approval.",
+      });
+      // Reset form and close modal
+      setScheduleJobForm({
+        title: '',
+        description: '',
+        propertyId: '',
+        unitNumber: '',
+        jobType: 'maintenance',
+        category: 'maintenance',
+        priority: 'medium',
+        bedroomSize: '',
+        scheduledDate: '',
+        estimatedCost: '',
+        notes: ''
+      });
+      setIsScheduleJobModalOpen(false);
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/work-orders'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Scheduling Failed",
+        description: error.message || "Failed to schedule job. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleScheduleJob = () => {
+    if (!scheduleJobForm.title || !scheduleJobForm.propertyId || !scheduleJobForm.unitNumber) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    scheduleJobMutation.mutate(scheduleJobForm);
+  };
+
 
 
   const [quoteForm, setQuoteForm] = useState({
@@ -291,6 +351,20 @@ export default function PropertyManagerDashboard() {
     estimatedBudget: '',
     preferredStartDate: '',
     preferredEndDate: ''
+  });
+
+  const [scheduleJobForm, setScheduleJobForm] = useState({
+    title: '',
+    description: '',
+    propertyId: '',
+    unitNumber: '',
+    jobType: 'maintenance',
+    category: 'maintenance',
+    priority: 'medium',
+    bedroomSize: '',
+    scheduledDate: '',
+    estimatedCost: '',
+    notes: ''
   });
 
   // Data fetching
@@ -390,6 +464,199 @@ export default function PropertyManagerDashboard() {
           <p className="text-slate-600">Manage your properties and oversee operations</p>
         </div>
         <div className="flex items-center space-x-3">
+          <Dialog open={isScheduleJobModalOpen} onOpenChange={setIsScheduleJobModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700" data-testid="button-schedule-job">
+                <Calendar className="mr-2 h-4 w-4" />
+                Schedule Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Schedule New Job</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Job Details</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="job-title">Job Title *</Label>
+                      <Input
+                        id="job-title"
+                        placeholder="e.g., Paint Unit 205"
+                        value={scheduleJobForm.title}
+                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, title: e.target.value})}
+                        data-testid="input-job-title"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="job-type">Job Type *</Label>
+                      <Select value={scheduleJobForm.jobType} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, jobType: value})}>
+                        <SelectTrigger data-testid="select-job-type">
+                          <SelectValue placeholder="Select job type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="paint">🎨 Paint</SelectItem>
+                          <SelectItem value="clean">🧽 Clean</SelectItem>
+                          <SelectItem value="maintenance">🔧 Maintenance</SelectItem>
+                          <SelectItem value="inspection">👀 Inspection</SelectItem>
+                          <SelectItem value="repair">⚒️ Repair</SelectItem>
+                          <SelectItem value="carpet">🪟 Carpet Work</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="job-description">Description</Label>
+                    <Textarea
+                      id="job-description"
+                      placeholder="Describe the work to be performed..."
+                      rows={3}
+                      value={scheduleJobForm.description}
+                      onChange={(e) => setScheduleJobForm({...scheduleJobForm, description: e.target.value})}
+                      data-testid="textarea-job-description"
+                    />
+                  </div>
+                </div>
+
+                {/* Property Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Location</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="property">Property *</Label>
+                      <Select value={scheduleJobForm.propertyId} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, propertyId: value})}>
+                        <SelectTrigger data-testid="select-property">
+                          <SelectValue placeholder="Select property" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {properties?.map((property) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="unit-number">Unit Number *</Label>
+                      <Input
+                        id="unit-number"
+                        placeholder="e.g., 205, A12, 3rd Floor"
+                        value={scheduleJobForm.unitNumber}
+                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, unitNumber: e.target.value})}
+                        data-testid="input-unit-number"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="bedroom-size">Unit Size</Label>
+                      <Select value={scheduleJobForm.bedroomSize} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, bedroomSize: value})}>
+                        <SelectTrigger data-testid="select-bedroom-size">
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="studio">Studio</SelectItem>
+                          <SelectItem value="1_bed">1 Bedroom</SelectItem>
+                          <SelectItem value="2_bed">2 Bedroom</SelectItem>
+                          <SelectItem value="3_bed">3 Bedroom</SelectItem>
+                          <SelectItem value="loft">Loft</SelectItem>
+                          <SelectItem value="1_bed_townhome">1BR Townhome</SelectItem>
+                          <SelectItem value="2_bed_townhome">2BR Townhome</SelectItem>
+                          <SelectItem value="3_bed_townhome">3BR Townhome</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scheduling Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Scheduling & Priority</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="priority">Priority</Label>
+                      <Select value={scheduleJobForm.priority} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, priority: value})}>
+                        <SelectTrigger data-testid="select-priority">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">🟢 Low</SelectItem>
+                          <SelectItem value="medium">🟡 Medium</SelectItem>
+                          <SelectItem value="high">🟠 High</SelectItem>
+                          <SelectItem value="emergency">🔴 Emergency</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="scheduled-date">Preferred Date</Label>
+                      <Input
+                        id="scheduled-date"
+                        type="date"
+                        value={scheduleJobForm.scheduledDate}
+                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, scheduledDate: e.target.value})}
+                        data-testid="input-scheduled-date"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="estimated-cost">Estimated Cost</Label>
+                      <Input
+                        id="estimated-cost"
+                        placeholder="e.g., 150.00"
+                        value={scheduleJobForm.estimatedCost}
+                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, estimatedCost: e.target.value})}
+                        data-testid="input-estimated-cost"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Notes */}
+                <div className="grid gap-2">
+                  <Label htmlFor="job-notes">Additional Notes</Label>
+                  <Textarea
+                    id="job-notes"
+                    placeholder="Any special instructions or considerations..."
+                    rows={2}
+                    value={scheduleJobForm.notes}
+                    onChange={(e) => setScheduleJobForm({...scheduleJobForm, notes: e.target.value})}
+                    data-testid="textarea-job-notes"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsScheduleJobModalOpen(false)}
+                    disabled={scheduleJobMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleScheduleJob}
+                    disabled={scheduleJobMutation.isPending || !scheduleJobForm.title || !scheduleJobForm.propertyId || !scheduleJobForm.unitNumber}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    data-testid="button-submit-schedule"
+                  >
+                    {scheduleJobMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Scheduling...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Schedule Job
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
           <Dialog open={isQuoteModalOpen} onOpenChange={setIsQuoteModalOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" data-testid="button-request-quote">
