@@ -258,12 +258,9 @@ export default function PropertyManagerDashboard() {
     rejectRequestMutation.mutate({ requestId, type, reason });
   };
 
-  // Schedule jobs mutation - using manual approach to avoid TanStack Query issues
-  const [isSchedulingJobs, setIsSchedulingJobs] = useState(false);
-  
-  const scheduleJobsManually = async (jobsData: any) => {
-    setIsSchedulingJobs(true);
-    try {
+  // Schedule jobs mutation - copy exact pattern from login
+  const scheduleJobsMutation = useMutation({
+    mutationFn: async (jobsData: any) => {
       const requestData = {
         jobs: jobsData.jobs.map((job: any) => ({
           ...job,
@@ -273,70 +270,11 @@ export default function PropertyManagerDashboard() {
         }))
       };
       
-      console.log("Manual scheduling with data:", requestData);
-      
-      // Create a completely new fetch instance to avoid any interference
-      const url = '/api/work-orders/schedule-multiple';
-      const method = 'POST';
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      const body = JSON.stringify(requestData);
-      
-      console.log('About to make request with:', { url, method, headers, body });
-      
-      // Try multiple approaches to bypass the interference
-      console.log('DEBUGGING: Method being used:', 'POST');
-      console.log('DEBUGGING: URL being called:', url);
-      console.log('DEBUGGING: Headers:', headers);
-      console.log('DEBUGGING: Body:', body);
-      
-      // Try approach 1: XMLHttpRequest with explicit logging
-      const result = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        
-        // Log the method before and after
-        console.log('XHR: Setting method to POST');
-        xhr.open('POST', url, true);
-        console.log('XHR: Method set, adding headers');
-        
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.withCredentials = true;
-        
-        console.log('XHR: About to send request');
-        
-        xhr.onreadystatechange = function() {
-          console.log('XHR: State changed to', xhr.readyState);
-          if (xhr.readyState === 4) {
-            console.log("XHR Response status:", xhr.status);
-            console.log("XHR Response text:", xhr.responseText);
-            console.log("XHR Response headers:", xhr.getAllResponseHeaders());
-            
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const data = JSON.parse(xhr.responseText);
-                resolve(data);
-              } catch (e) {
-                console.error('Failed to parse response:', e);
-                reject(new Error('Failed to parse response'));
-              }
-            } else {
-              reject(new Error(`${xhr.status}: ${xhr.responseText}`));
-            }
-          }
-        };
-        
-        xhr.onerror = function() {
-          console.error('XHR Network error');
-          reject(new Error('Network error'));
-        };
-        
-        xhr.send(body);
-        console.log('XHR: Request sent');
-      });
-      
-      // Success handling
-      const jobCount = result.jobs?.length || jobsData.jobs.length;
+      console.log("Scheduling with mutation, data:", requestData);
+      return await apiRequest('/api/work-orders/schedule-multiple', 'POST', requestData);
+    },
+    onSuccess: (data) => {
+      const jobCount = data.jobs?.length || scheduleJobsForm.jobs.length;
       toast({
         title: "Jobs Scheduled",
         description: `${jobCount} job${jobCount > 1 ? 's' : ''} scheduled and sent to office staff for approval.`,
@@ -361,25 +299,16 @@ export default function PropertyManagerDashboard() {
       
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/work-orders'] });
-      
-      return result;
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error("Scheduling error:", error);
       toast({
         title: "Scheduling Failed",
         description: error.message || "Failed to schedule jobs. Please try again.",
         variant: "destructive",
       });
-      throw error;
-    } finally {
-      setIsSchedulingJobs(false);
     }
-  };
-  
-  const scheduleJobsMutation = {
-    mutate: scheduleJobsManually,
-    isPending: isSchedulingJobs,
-  };
+  });
 
   const addNewJob = () => {
     setScheduleJobsForm({
@@ -411,7 +340,7 @@ export default function PropertyManagerDashboard() {
     setScheduleJobsForm({ jobs: newJobs });
   };
 
-  const handleScheduleJobs = async () => {
+  const handleScheduleJobs = () => {
     // Validate that all jobs have required fields
     const invalidJobs = scheduleJobsForm.jobs.filter(job => !job.propertyId || !job.unitNumber);
     if (invalidJobs.length > 0) {
@@ -424,13 +353,7 @@ export default function PropertyManagerDashboard() {
     }
     
     console.log("Scheduling jobs with data:", scheduleJobsForm);
-    
-    // Call the manual function directly instead of using mutation
-    try {
-      await scheduleJobsManually(scheduleJobsForm);
-    } catch (error) {
-      console.error("Scheduling failed:", error);
-    }
+    scheduleJobsMutation.mutate(scheduleJobsForm);
   };
 
 
