@@ -125,22 +125,12 @@ export default function PropertyManagerDashboard() {
 
   const handleQuoteRequest = async () => {
     try {
-      const response = await fetch('/api/quote-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...quoteRequestForm,
-          requestedBy: propertyManagerId,
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        }),
+      await apiRequest('/api/quote-requests', 'POST', {
+        ...quoteRequestForm,
+        requestedBy: propertyManagerId,
+        status: 'pending',
+        createdAt: new Date().toISOString()
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit quote request');
-      }
 
       // Reset form and close modal
       setQuoteRequestForm({
@@ -164,31 +154,21 @@ export default function PropertyManagerDashboard() {
     if (!selectedJobForCallback) return;
     
     try {
-      const response = await fetch('/api/work-orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: `Callback - ${selectedJobForCallback.title}`,
-          description: `Callback requested for completed job: ${callbackRequestForm.description}`,
-          propertyId: selectedJobForCallback.propertyId,
-          category: 'callback',
-          priority: callbackRequestForm.priority,
-          assignedTechnicianId: selectedJobForCallback.assignedTechnicianId,
-          requestedBy: propertyManagerId,
-          originalJobId: selectedJobForCallback.id,
-          callbackReason: callbackRequestForm.reason,
-          callbackPhotos: callbackRequestForm.photos,
-          photoNotes: callbackRequestForm.photoNotes.filter(note => note.trim() !== ''),
-          status: 'scheduled',
-          createdAt: new Date().toISOString()
-        }),
+      await apiRequest('/api/work-orders', 'POST', {
+        title: `Callback - ${selectedJobForCallback.title}`,
+        description: `Callback requested for completed job: ${callbackRequestForm.description}`,
+        propertyId: selectedJobForCallback.propertyId,
+        category: 'callback',
+        priority: callbackRequestForm.priority,
+        assignedTechnicianId: selectedJobForCallback.assignedTechnicianId,
+        requestedBy: propertyManagerId,
+        originalJobId: selectedJobForCallback.id,
+        callbackReason: callbackRequestForm.reason,
+        callbackPhotos: callbackRequestForm.photos,
+        photoNotes: callbackRequestForm.photoNotes.filter(note => note.trim() !== ''),
+        status: 'scheduled',
+        createdAt: new Date().toISOString()
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit callback request');
-      }
 
       // Reset form and close modal
       setCallbackRequestForm({
@@ -401,36 +381,28 @@ export default function PropertyManagerDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<PropertyManagerStats>({
     queryKey: ["/api/dashboard/property-manager", propertyManagerId],
     queryFn: async () => {
-      const response = await fetch(`/api/dashboard/property-manager/${propertyManagerId}`);
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      return response.json();
+      return await apiRequest(`/api/dashboard/property-manager/${propertyManagerId}`, 'GET');
     },
   });
 
   const { data: properties, isLoading: propertiesLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties/manager", propertyManagerId],
     queryFn: async () => {
-      const response = await fetch(`/api/properties/manager/${propertyManagerId}`);
-      if (!response.ok) throw new Error('Failed to fetch properties');
-      return response.json();
+      return await apiRequest(`/api/properties/manager/${propertyManagerId}`, 'GET');
     },
   });
 
   const { data: jobs, isLoading: jobsLoading } = useQuery({
     queryKey: ["/api/jobs", { managerId: propertyManagerId }],
     queryFn: async () => {
-      const response = await fetch(`/api/jobs?managerId=${propertyManagerId}`);
-      if (!response.ok) throw new Error('Failed to fetch jobs');
-      return response.json();
+      return await apiRequest(`/api/jobs?managerId=${propertyManagerId}`, 'GET');
     },
   });
 
   const { data: workOrders, isLoading: workOrdersLoading } = useQuery({
     queryKey: ["/api/work-orders/manager", propertyManagerId],
     queryFn: async () => {
-      const response = await fetch(`/api/work-orders/manager/${propertyManagerId}`);
-      if (!response.ok) throw new Error('Failed to fetch work orders');
-      return response.json();
+      return await apiRequest(`/api/work-orders/manager/${propertyManagerId}`, 'GET');
     },
   });
 
@@ -439,9 +411,7 @@ export default function PropertyManagerDashboard() {
     queryKey: ['/api/units/completed', searchQuery],
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
-      const response = await fetch(`/api/units/search/completed?query=${encodeURIComponent(searchQuery)}`);
-      if (!response.ok) throw new Error('Failed to search completed units');
-      return response.json();
+      return await apiRequest(`/api/units/search/completed?query=${encodeURIComponent(searchQuery)}`, 'GET');
     },
     enabled: searchQuery.trim().length > 0,
   });
