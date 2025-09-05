@@ -1088,6 +1088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updateData: any = {
         assignedTechnicianId,
+        status: "in_progress", // Move to in_progress when assigned
         updatedAt: new Date(),
       };
       

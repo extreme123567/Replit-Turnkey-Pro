@@ -555,7 +555,7 @@ function ScheduledJobsList() {
   }
 
   const scheduledJobs = (jobs as any[])?.filter(job => 
-    job.status === 'scheduled' || job.status === 'in_progress' || job.status === 'pending_approval'
+    (job.status === 'scheduled' || job.status === 'pending_approval') && !job.assignedTechnicianId
   ) || [];
 
   if (scheduledJobs.length === 0) {
@@ -906,7 +906,7 @@ function ScheduleJobsSection() {
   });
 
   const scheduledJobs = (jobs as any[])?.filter(job => 
-    job.status === 'scheduled' || job.status === 'in_progress' || job.status === 'pending_approval'
+    (job.status === 'scheduled' || job.status === 'pending_approval') && !job.assignedTechnicianId
   ) || [];
 
   const removeJob = (jobId: string) => {
