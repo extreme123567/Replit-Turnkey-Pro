@@ -1209,9 +1209,7 @@ export default function OfficeStaffDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<OfficeStats>({
     queryKey: ["/api/dashboard/office"],
     queryFn: async () => {
-      const response = await fetch('/api/dashboard/office');
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      return response.json();
+      return await apiRequest('/api/dashboard/office', 'GET');
     },
   });
 
@@ -1220,36 +1218,28 @@ export default function OfficeStaffDashboard() {
   const { data: scheduledCallbacks, isLoading: callbacksLoading } = useQuery({
     queryKey: ["/api/callbacks/scheduled"],
     queryFn: async () => {
-      const response = await fetch('/api/callbacks/scheduled');
-      if (!response.ok) throw new Error('Failed to fetch callbacks');
-      return response.json();
+      return await apiRequest('/api/callbacks/scheduled', 'GET');
     },
   });
 
   const { data: pendingApprovals, isLoading: approvalsLoading } = useQuery({
     queryKey: ["/api/jobs/awaiting-approval"],
     queryFn: async () => {
-      const response = await fetch('/api/jobs/awaiting-approval');
-      if (!response.ok) throw new Error('Failed to fetch pending approvals');
-      return response.json();
+      return await apiRequest('/api/jobs/awaiting-approval', 'GET');
     },
   });
 
   const { data: upcomingLeaseExpirations, isLoading: leasesLoading } = useQuery({
     queryKey: ["/api/leases/expiring"],
     queryFn: async () => {
-      const response = await fetch('/api/leases/expiring');
-      if (!response.ok) throw new Error('Failed to fetch lease expirations');
-      return response.json();
+      return await apiRequest('/api/leases/expiring', 'GET');
     },
   });
 
   const { data: recentWorkOrders, isLoading: workOrdersLoading } = useQuery({
     queryKey: ["/api/work-orders/recent"],
     queryFn: async () => {
-      const response = await fetch('/api/work-orders/recent');
-      if (!response.ok) throw new Error('Failed to fetch work orders');
-      return response.json();
+      return await apiRequest('/api/work-orders/recent', 'GET');
     },
   });
 
@@ -1258,9 +1248,7 @@ export default function OfficeStaffDashboard() {
     queryKey: ['/api/units/completed', searchQuery],
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
-      const response = await fetch(`/api/units/search/completed?query=${encodeURIComponent(searchQuery)}`);
-      if (!response.ok) throw new Error('Failed to search completed units');
-      return response.json();
+      return await apiRequest(`/api/units/search/completed?query=${encodeURIComponent(searchQuery)}`, 'GET');
     },
     enabled: searchQuery.trim().length > 0,
   });
@@ -1269,9 +1257,7 @@ export default function OfficeStaffDashboard() {
   const { data: quoteRequests = [], isLoading: quotesLoading, refetch: refetchQuotes } = useQuery({
     queryKey: ['/api/quote-requests'],
     queryFn: async () => {
-      const response = await fetch('/api/quote-requests');
-      if (!response.ok) throw new Error('Failed to fetch quote requests');
-      return response.json();
+      return await apiRequest('/api/quote-requests', 'GET');
     },
   });
 
@@ -1283,20 +1269,10 @@ export default function OfficeStaffDashboard() {
         return;
       }
 
-      const response = await fetch('/api/quote-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...quoteForm,
-          requesterId: 'office-staff-1', // This would come from auth context
-        }),
+      await apiRequest('/api/quote-requests', 'POST', {
+        ...quoteForm,
+        requesterId: 'office-staff-1', // This would come from auth context
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to create quote request');
-      }
 
       // Reset form and close modal
       setQuoteForm({
@@ -2692,18 +2668,14 @@ function StaffManagementSection() {
   const { data: staff = [], isLoading: staffLoading, refetch: refetchStaff } = useQuery({
     queryKey: ['/api/staff'],
     queryFn: async () => {
-      const response = await fetch('/api/staff');
-      if (!response.ok) throw new Error('Failed to fetch staff');
-      return response.json();
+      return await apiRequest('/api/staff', 'GET');
     },
   });
 
   const { data: staffPerformance = {}, isLoading: performanceLoading } = useQuery({
     queryKey: ['/api/staff/performance'],
     queryFn: async () => {
-      const response = await fetch('/api/staff/performance');
-      if (!response.ok) throw new Error('Failed to fetch staff performance');
-      return response.json();
+      return await apiRequest('/api/staff/performance', 'GET');
     },
   });
 
