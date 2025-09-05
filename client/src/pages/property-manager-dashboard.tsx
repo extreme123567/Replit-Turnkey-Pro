@@ -283,23 +283,39 @@ export default function PropertyManagerDashboard() {
       };
       const body = JSON.stringify(requestData);
       
-      console.log('About to make fetch request with:', { url, method, headers, body });
+      console.log('About to make request with:', { url, method, headers, body });
       
-      const response = await window.fetch(url, {
-        method,
-        headers,
-        credentials: 'include',
-        body
+      // Use XMLHttpRequest instead of fetch to avoid any interference
+      const result = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.withCredentials = true;
+        
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            console.log("XHR Response status:", xhr.status);
+            console.log("XHR Response text:", xhr.responseText);
+            
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText);
+                resolve(data);
+              } catch (e) {
+                reject(new Error('Failed to parse response'));
+              }
+            } else {
+              reject(new Error(`${xhr.status}: ${xhr.responseText}`));
+            }
+          }
+        };
+        
+        xhr.onerror = function() {
+          reject(new Error('Network error'));
+        };
+        
+        xhr.send(body);
       });
-      
-      console.log("Response status:", response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`${response.status}: ${errorText}`);
-      }
-      
-      const result = await response.json();
       
       // Success handling
       const jobCount = result.jobs?.length || jobsData.jobs.length;
