@@ -1509,14 +1509,14 @@ export default function OfficeStaffDashboard() {
                         // Submit jobs to API
                         const response = await apiRequest('/api/work-orders/schedule-multiple', {
                           method: 'POST',
-                          body: {
+                          body: JSON.stringify({
                             jobs: scheduleJobsForm.jobs.map(job => ({
                               ...job,
                               requestedBy: "office-staff",
                               status: 'pending_approval',
                               createdAt: new Date().toISOString()
                             }))
-                          }
+                          })
                         });
                         
                         const data = await response.json();
