@@ -900,33 +900,17 @@ function RequestQuoteButton() {
 
 // Multi-Job Scheduling Component
 function ScheduleJobsSection() {
-  const [jobs, setJobs] = useState([
-    {
-      id: 1,
-      type: 'Paint',
-      property: 'Sunset Gardens Apt 102B',
-      unit: '102B',
-      scheduledDate: '2024-08-18',
-      completionDate: '2024-08-20',
-      priority: 'medium',
-      status: 'scheduled',
-      poNumber: 'PO-2024-001'
-    },
-    {
-      id: 2,
-      type: 'Clean',
-      property: 'Oak Ridge Complex 205A',
-      unit: '205A',
-      scheduledDate: '2024-08-19',
-      completionDate: '2024-08-19',
-      priority: 'high',
-      status: 'in_progress',
-      poNumber: 'PO-2024-002'
-    }
-  ]);
+  const { data: jobs, isLoading: jobsLoading } = useQuery({ 
+    queryKey: ["/api/work-orders"] 
+  });
 
-  const removeJob = (jobId: number) => {
-    setJobs(jobs.filter(job => job.id !== jobId));
+  const scheduledJobs = (jobs as any[])?.filter(job => 
+    job.status === 'scheduled' || job.status === 'in_progress' || job.status === 'pending_approval'
+  ) || [];
+
+  const removeJob = (jobId: string) => {
+    // This would typically call an API to remove the job
+    console.log('Remove job:', jobId);
   };
 
   const getStatusColor = (status: string) => {
@@ -955,11 +939,16 @@ function ScheduleJobsSection() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {jobs.map((job) => (
-            <div key={job.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+          {jobsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))
+          ) : (
+            scheduledJobs.map((job) => (
+              <div key={job.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
               <div className="flex-1 space-y-2">
                 <div className="flex items-center space-x-3">
-                  <span className="font-semibold text-lg">{job.type} - {job.property}</span>
+                  <span className="font-semibold text-lg">{job.jobType || job.category} - {job.propertyId} Unit {job.unitNumber}</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
                     {job.status.replace('_', ' ').toUpperCase()}
                   </span>
@@ -967,20 +956,22 @@ function ScheduleJobsSection() {
                     {job.priority.toUpperCase()}
                   </span>
                 </div>
-                <div className="grid grid-cols-4 gap-4 text-sm text-gray-600">
+                <div className="grid grid-cols-3 gap-4 text-sm text-gray-600">
                   <div>
-                    <span className="font-medium">Unit:</span> {job.unit}
+                    <span className="font-medium">Unit:</span> {job.unitNumber}
                   </div>
                   <div>
-                    <span className="font-medium">Scheduled:</span> {job.scheduledDate}
+                    <span className="font-medium">Scheduled:</span> {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'Not set'}
                   </div>
                   <div>
-                    <span className="font-medium">Target:</span> {job.completionDate || 'TBD'}
-                  </div>
-                  <div>
-                    <span className="font-medium">PO#:</span> {job.poNumber || 'N/A'}
+                    <span className="font-medium">Requested by:</span> {job.requestedBy}
                   </div>
                 </div>
+                {job.description && (
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Description:</span> {job.description}
+                  </div>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -994,8 +985,9 @@ function ScheduleJobsSection() {
                 </Button>
               </div>
             </div>
-          ))}
-          {jobs.length === 0 && (
+            ))
+          )}
+          {!jobsLoading && scheduledJobs.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <Calendar className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               <p>No jobs scheduled.</p>
