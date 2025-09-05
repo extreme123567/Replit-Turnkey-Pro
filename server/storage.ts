@@ -971,31 +971,31 @@ export class MemStorage implements IStorage {
   }
 
   async getJobsByProperty(propertyId: string): Promise<Job[]> { return []; }
-  async getJobsAwaitingApproval(): Promise<Job[]> { 
-    // Return jobs with "awaiting approval" status
-    return Array.from(this.jobs.values()).filter(job => job.status === "awaiting_approval");
+  async getJobsAwaitingApproval(): Promise<WorkOrder[]> { 
+    // Return work orders with "pending approval" status (requested by property managers)
+    return Array.from(this.workOrders.values()).filter(workOrder => workOrder.status === "pending_approval");
   }
-  async approveJob(jobId: string, approvedBy: string): Promise<Job | undefined> { 
-    const job = this.jobs.get(jobId);
-    if (!job) return undefined;
+  async approveJob(jobId: string, approvedBy: string): Promise<WorkOrder | undefined> { 
+    const workOrder = this.workOrders.get(jobId);
+    if (!workOrder) return undefined;
     
-    const updatedJob = { 
-      ...job, 
+    const updatedWorkOrder = { 
+      ...workOrder, 
       status: "approved"
     };
-    this.jobs.set(jobId, updatedJob);
-    return updatedJob;
+    this.workOrders.set(jobId, updatedWorkOrder);
+    return updatedWorkOrder;
   }
-  async rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<Job | undefined> { 
-    const job = this.jobs.get(jobId);
-    if (!job) return undefined;
+  async rejectJob(jobId: string, rejectedBy: string, reason: string): Promise<WorkOrder | undefined> { 
+    const workOrder = this.workOrders.get(jobId);
+    if (!workOrder) return undefined;
     
-    const updatedJob = { 
-      ...job, 
+    const updatedWorkOrder = { 
+      ...workOrder, 
       status: "rejected"
     };
-    this.jobs.set(jobId, updatedJob);
-    return updatedJob;
+    this.workOrders.set(jobId, updatedWorkOrder);
+    return updatedWorkOrder;
   }
   async getJobCompletionStats(): Promise<{ scheduled: number; completed: number; pending: number; }> {
     return { scheduled: 0, completed: 0, pending: 0 };
