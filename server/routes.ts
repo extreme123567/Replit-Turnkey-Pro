@@ -153,6 +153,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Combined approve and assign endpoint
+  app.put("/api/jobs/:id/approve-and-assign", authenticate, requireOfficeStaff, async (req: AuthRequest, res) => {
+    try {
+      const { assignedTechnicianId, scheduledDate, notes } = req.body;
+      const userId = req.user?.id;
+      
+      // First approve the job
+      const approvedJob = await storage.approveJob(req.params.id, userId);
+      if (!approvedJob) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      // Then assign the technician and update status
+      const updateData: any = {
+        assignedTechnicianId,
+        status: "in_progress",
+        updatedAt: new Date(),
+      };
+      
+      if (scheduledDate) {
+        updateData.scheduledDate = new Date(scheduledDate);
+      }
+      
+      if (notes) {
+        updateData.notes = notes;
+      }
+
+      const assignedJob = await storage.updateWorkOrder(req.params.id, updateData);
+      
+      // Create notification for property manager who requested the job
+      if (approvedJob.requestedBy) {
+        await storage.createNotification({
+          userId: approvedJob.requestedBy,
+          title: "Job Request Approved & Assigned",
+          message: `Your job request "${approvedJob.title || approvedJob.type}" has been approved and assigned to a technician. Scheduled for ${scheduledDate ? new Date(scheduledDate).toLocaleDateString() : 'soon'}.`,
+          type: "job_approved",
+          relatedJobId: req.params.id,
+          isRead: false,
+          createdAt: new Date()
+        });
+      }
+
+      res.json({
+        message: "Job approved and assigned successfully",
+        job: assignedJob || approvedJob
+      });
+    } catch (error) {
+      console.error("Approve and assign error:", error);
+      res.status(500).json({ message: "Failed to approve and assign job" });
+    }
+  });
+
   // Get staff endpoint - used by admin job scheduling
   app.get("/api/staff", authenticate, async (req: AuthRequest, res) => {
     try {

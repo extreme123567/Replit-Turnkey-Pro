@@ -91,6 +91,105 @@ const assignTeamSchema = z.object({
 
 type AssignTeamFormData = z.infer<typeof assignTeamSchema>;
 
+// Approve & Assign Form Component
+interface ApproveAssignFormProps {
+  job: any;
+  staff: any[];
+  onSubmit: (data: AssignTeamFormData) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}
+
+function ApproveAssignForm({ job, staff, onSubmit, onCancel, isLoading }: ApproveAssignFormProps) {
+  const form = useForm<AssignTeamFormData>({
+    resolver: zodResolver(assignTeamSchema),
+    defaultValues: {
+      assignedTechnicianId: "",
+      scheduledDate: "",
+      notes: "",
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-slate-50 rounded-lg">
+        <h4 className="font-medium text-slate-900">{job.title || job.type}</h4>
+        <p className="text-sm text-slate-600">{job.description}</p>
+        <p className="text-xs text-slate-500 mt-1">Property: {job.property || 'Unknown'}</p>
+      </div>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="assignedTechnicianId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assign to Technician</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a technician" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {staff?.filter(member => 
+                      member.role === 'technician' || member.role === 'inspector'
+                    ).map((member: any) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.firstName} {member.lastName} ({member.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="scheduledDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Scheduled Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes (Optional)</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Additional instructions..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              <UserCheck size={16} className="mr-2" />
+              {isLoading ? "Processing..." : "Approve & Assign"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
+
 // Edit Job Dialog Component
 function EditJobDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -2452,26 +2551,30 @@ interface JobApprovalCardProps {
 function JobApprovalCard({ job }: JobApprovalCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
 
-  const approveMutation = useMutation({
-    mutationFn: (jobId: string) => apiRequest(`/api/jobs/${jobId}/approve`, { 
-      method: "PUT",
-      body: JSON.stringify({ approvedBy: "office-staff-1" })
-    }),
+  const { data: staff } = useQuery({ queryKey: ["/api/staff"] });
+
+  const approveAndAssignMutation = useMutation({
+    mutationFn: async (data: { jobId: string; assignedTechnicianId: string; scheduledDate: string; notes?: string }) => {
+      return apiRequest(`/api/jobs/${data.jobId}/approve-and-assign`, "PUT", data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/awaiting-approval"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs/completion-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/financial/summary"] });
+      setShowAssignDialog(false);
       toast({
-        title: "Job Approved",
-        description: "The job has been approved and assigned to technician",
+        title: "Job Approved & Assigned",
+        description: "The job has been approved, assigned to technician, and property has been notified",
         variant: "default"
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Approval Failed",
-        description: "Unable to approve job. Please try again.",
+        description: error.message || "Unable to approve and assign job. Please try again.",
         variant: "destructive"
       });
     }
@@ -2509,11 +2612,12 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
             size="sm"
             variant="outline"
             className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-            onClick={() => approveMutation.mutate(job.id)}
-            disabled={approveMutation.isPending}
-            data-testid={`button-approve-${job.id}`}
+            onClick={() => setShowAssignDialog(true)}
+            disabled={approveAndAssignMutation.isPending}
+            data-testid={`button-approve-assign-${job.id}`}
           >
-            <Check size={14} />
+            <UserCheck size={14} className="mr-1" />
+            Approve & Assign
           </Button>
           <Button
             size="sm"
@@ -2527,6 +2631,32 @@ function JobApprovalCard({ job }: JobApprovalCardProps) {
           </Button>
         </div>
       </div>
+
+      {/* Approve & Assign Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve & Assign Job</DialogTitle>
+            <DialogDescription>
+              Approve this job request and assign it to a technician. The property will be automatically notified.
+            </DialogDescription>
+          </DialogHeader>
+          <ApproveAssignForm 
+            job={job} 
+            staff={staff as any[]} 
+            onSubmit={(data) => {
+              approveAndAssignMutation.mutate({
+                jobId: job.id,
+                assignedTechnicianId: data.assignedTechnicianId,
+                scheduledDate: data.scheduledDate,
+                notes: data.notes
+              });
+            }}
+            onCancel={() => setShowAssignDialog(false)}
+            isLoading={approveAndAssignMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
