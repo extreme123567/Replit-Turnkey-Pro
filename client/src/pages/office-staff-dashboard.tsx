@@ -1494,7 +1494,7 @@ export default function OfficeStaffDashboard() {
                     Cancel
                   </Button>
                   <Button 
-                    onClick={() => {
+                    onClick={async () => {
                       const invalidJobs = scheduleJobsForm.jobs.filter(job => !job.propertyId || !job.unitNumber);
                       if (invalidJobs.length > 0) {
                         toast({
@@ -1505,27 +1505,50 @@ export default function OfficeStaffDashboard() {
                         return;
                       }
                       
-                      toast({
-                        title: "Jobs Scheduled",
-                        description: `${scheduleJobsForm.jobs.length} job${scheduleJobsForm.jobs.length > 1 ? 's' : ''} scheduled successfully.`,
-                      });
-                      
-                      // Reset form and close modal
-                      setScheduleJobsForm({
-                        jobs: [{
-                          description: '',
-                          propertyId: '',
-                          unitNumber: '',
-                          jobType: 'maintenance',
-                          category: 'maintenance',
-                          priority: 'medium',
-                          bedroomSize: '',
-                          scheduledDate: '',
-                          estimatedCost: '',
-                          notes: ''
-                        }]
-                      });
-                      setIsScheduleJobModalOpen(false);
+                      try {
+                        // Submit jobs to API
+                        const response = await apiRequest('/api/work-orders/schedule-multiple', {
+                          method: 'POST',
+                          body: {
+                            jobs: scheduleJobsForm.jobs.map(job => ({
+                              ...job,
+                              requestedBy: "office-staff",
+                              status: 'pending_approval',
+                              createdAt: new Date().toISOString()
+                            }))
+                          }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        toast({
+                          title: "Jobs Scheduled",
+                          description: `${scheduleJobsForm.jobs.length} job${scheduleJobsForm.jobs.length > 1 ? 's' : ''} scheduled successfully and sent for approval.`,
+                        });
+                        
+                        // Reset form and close modal
+                        setScheduleJobsForm({
+                          jobs: [{
+                            description: '',
+                            propertyId: '',
+                            unitNumber: '',
+                            jobType: 'maintenance',
+                            category: 'maintenance',
+                            priority: 'medium',
+                            bedroomSize: '',
+                            scheduledDate: '',
+                            estimatedCost: '',
+                            notes: ''
+                          }]
+                        });
+                        setIsScheduleJobModalOpen(false);
+                      } catch (error: any) {
+                        toast({
+                          title: "Scheduling Failed",
+                          description: error.message || "Failed to schedule jobs. Please try again.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                     disabled={scheduleJobsForm.jobs.some(job => !job.propertyId || !job.unitNumber)}
                     className="bg-blue-600 hover:bg-blue-700"
