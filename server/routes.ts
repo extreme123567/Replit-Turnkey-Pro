@@ -497,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Work order scheduling route
+  // Work order scheduling route (single job)
   app.post("/api/work-orders/schedule", async (req, res) => {
     try {
       const {
@@ -538,6 +538,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error scheduling work order:", error);
       res.status(500).json({ message: "Failed to schedule job" });
+    }
+  });
+
+  // Multiple work orders scheduling route
+  app.post("/api/work-orders/schedule-multiple", async (req, res) => {
+    try {
+      const { jobs } = req.body;
+      
+      if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
+        return res.status(400).json({ message: "Jobs array is required" });
+      }
+      
+      // For demo purposes, create mock work order responses
+      const workOrders = jobs.map((job, index) => ({
+        id: `wo-${Date.now()}-${index}`,
+        title: `${job.jobType} work for unit ${job.unitNumber}`,
+        description: job.description || `${job.jobType} work for unit ${job.unitNumber}`,
+        propertyId: job.propertyId,
+        unitNumber: job.unitNumber,
+        bedroomSize: job.bedroomSize,
+        category: job.category || job.jobType,
+        jobType: job.jobType,
+        priority: job.priority || "medium",
+        status: job.status || "pending_approval",
+        estimatedCost: job.estimatedCost ? parseFloat(job.estimatedCost) : null,
+        scheduledDate: job.scheduledDate ? new Date(job.scheduledDate) : null,
+        notes: job.notes,
+        requestedBy: job.requestedBy,
+        createdAt: job.createdAt ? new Date(job.createdAt) : new Date()
+      }));
+      
+      res.json({
+        jobs: workOrders,
+        message: `${workOrders.length} jobs have been scheduled and sent for approval`
+      });
+    } catch (error) {
+      console.error("Error scheduling multiple work orders:", error);
+      res.status(500).json({ message: "Failed to schedule jobs" });
     }
   });
 

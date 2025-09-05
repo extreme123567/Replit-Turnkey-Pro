@@ -32,7 +32,8 @@ import {
   PackageX,
   CheckCircle,
   Camera,
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageGallery } from "@/components/image-editor/ImageGallery";
@@ -280,28 +281,60 @@ export default function PropertyManagerDashboard() {
     rejectRequestMutation.mutate({ requestId, type, reason });
   };
 
-  // Schedule job mutation
-  const scheduleJobMutation = useMutation({
-    mutationFn: async (jobData: any) => {
-      const response = await apiRequest('/api/work-orders/schedule', {
+  // Schedule jobs mutation
+  const scheduleJobsMutation = useMutation({
+    mutationFn: async (jobsData: any) => {
+      const response = await apiRequest('/api/work-orders/schedule-multiple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...jobData,
-          requestedBy: propertyManagerId,
-          status: 'pending_approval',
-          createdAt: new Date().toISOString()
+          jobs: jobsData.jobs.map((job: any) => ({
+            ...job,
+            requestedBy: propertyManagerId,
+            status: 'pending_approval',
+            createdAt: new Date().toISOString()
+          }))
         })
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const jobCount = data.jobs?.length || scheduleJobsForm.jobs.length;
       toast({
-        title: "Job Scheduled",
-        description: "Job has been scheduled and sent to office staff for approval.",
+        title: "Jobs Scheduled",
+        description: `${jobCount} job${jobCount > 1 ? 's' : ''} scheduled and sent to office staff for approval.`,
       });
       // Reset form and close modal
-      setScheduleJobForm({
+      setScheduleJobsForm({
+        jobs: [{
+          description: '',
+          propertyId: '',
+          unitNumber: '',
+          jobType: 'maintenance',
+          category: 'maintenance',
+          priority: 'medium',
+          bedroomSize: '',
+          scheduledDate: '',
+          estimatedCost: '',
+          notes: ''
+        }]
+      });
+      setIsScheduleJobModalOpen(false);
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/work-orders'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Scheduling Failed",
+        description: error.message || "Failed to schedule jobs. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const addNewJob = () => {
+    setScheduleJobsForm({
+      jobs: [...scheduleJobsForm.jobs, {
         description: '',
         propertyId: '',
         unitNumber: '',
@@ -312,30 +345,35 @@ export default function PropertyManagerDashboard() {
         scheduledDate: '',
         estimatedCost: '',
         notes: ''
-      });
-      setIsScheduleJobModalOpen(false);
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/work-orders'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Scheduling Failed",
-        description: error.message || "Failed to schedule job. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
+      }]
+    });
+  };
 
-  const handleScheduleJob = () => {
-    if (!scheduleJobForm.propertyId || !scheduleJobForm.unitNumber) {
+  const removeJob = (index: number) => {
+    if (scheduleJobsForm.jobs.length > 1) {
+      const newJobs = scheduleJobsForm.jobs.filter((_, i) => i !== index);
+      setScheduleJobsForm({ jobs: newJobs });
+    }
+  };
+
+  const updateJob = (index: number, field: string, value: string) => {
+    const newJobs = [...scheduleJobsForm.jobs];
+    newJobs[index] = { ...newJobs[index], [field]: value };
+    setScheduleJobsForm({ jobs: newJobs });
+  };
+
+  const handleScheduleJobs = () => {
+    // Validate that all jobs have required fields
+    const invalidJobs = scheduleJobsForm.jobs.filter(job => !job.propertyId || !job.unitNumber);
+    if (invalidJobs.length > 0) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in property and unit number for all jobs.",
         variant: "destructive",
       });
       return;
     }
-    scheduleJobMutation.mutate(scheduleJobForm);
+    scheduleJobsMutation.mutate(scheduleJobsForm);
   };
 
 
@@ -352,17 +390,19 @@ export default function PropertyManagerDashboard() {
     preferredEndDate: ''
   });
 
-  const [scheduleJobForm, setScheduleJobForm] = useState({
-    description: '',
-    propertyId: '',
-    unitNumber: '',
-    jobType: 'maintenance',
-    category: 'maintenance',
-    priority: 'medium',
-    bedroomSize: '',
-    scheduledDate: '',
-    estimatedCost: '',
-    notes: ''
+  const [scheduleJobsForm, setScheduleJobsForm] = useState({
+    jobs: [{
+      description: '',
+      propertyId: '',
+      unitNumber: '',
+      jobType: 'maintenance',
+      category: 'maintenance',
+      priority: 'medium',
+      bedroomSize: '',
+      scheduledDate: '',
+      estimatedCost: '',
+      notes: ''
+    }]
   });
 
   // Data fetching
@@ -474,14 +514,46 @@ export default function PropertyManagerDashboard() {
                 <DialogTitle>Schedule New Job</DialogTitle>
               </DialogHeader>
               <div className="grid gap-6 py-4">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Job Details</h3>
-                  <div className="grid gap-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Jobs to Schedule ({scheduleJobsForm.jobs.length})</h3>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={addNewJob}
+                    data-testid="button-add-job"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Another Job
+                  </Button>
+                </div>
+
+                {scheduleJobsForm.jobs.map((job, index) => (
+                  <div key={index} className="border rounded-lg p-4 space-y-4 bg-slate-50">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium text-slate-800">Job #{index + 1}</h4>
+                      {scheduleJobsForm.jobs.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeJob(index)}
+                          className="text-red-600 hover:text-red-700"
+                          data-testid={`button-remove-job-${index}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Job Type */}
                     <div className="grid gap-2">
-                      <Label htmlFor="job-type">Job Type *</Label>
-                      <Select value={scheduleJobForm.jobType} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, jobType: value})}>
-                        <SelectTrigger data-testid="select-job-type">
+                      <Label>Job Type *</Label>
+                      <Select 
+                        value={job.jobType} 
+                        onValueChange={(value) => updateJob(index, 'jobType', value)}
+                      >
+                        <SelectTrigger data-testid={`select-job-type-${index}`}>
                           <SelectValue placeholder="Select job type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -496,141 +568,140 @@ export default function PropertyManagerDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="job-description">Description</Label>
-                    <Textarea
-                      id="job-description"
-                      placeholder="Describe the work to be performed..."
-                      rows={3}
-                      value={scheduleJobForm.description}
-                      onChange={(e) => setScheduleJobForm({...scheduleJobForm, description: e.target.value})}
-                      data-testid="textarea-job-description"
-                    />
-                  </div>
-                </div>
 
-                {/* Property Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Location</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="property">Property *</Label>
-                      <Select value={scheduleJobForm.propertyId} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, propertyId: value})}>
-                        <SelectTrigger data-testid="select-property">
-                          <SelectValue placeholder="Select property" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {properties?.map((property) => (
-                            <SelectItem key={property.id} value={property.id}>
-                              {property.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {/* Property Information */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Property *</Label>
+                        <Select 
+                          value={job.propertyId} 
+                          onValueChange={(value) => updateJob(index, 'propertyId', value)}
+                        >
+                          <SelectTrigger data-testid={`select-property-${index}`}>
+                            <SelectValue placeholder="Select property" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {properties?.map((property) => (
+                              <SelectItem key={property.id} value={property.id}>
+                                {property.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Unit Number *</Label>
+                        <Input
+                          placeholder="e.g., 205, A12"
+                          value={job.unitNumber}
+                          onChange={(e) => updateJob(index, 'unitNumber', e.target.value)}
+                          data-testid={`input-unit-number-${index}`}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Unit Size</Label>
+                        <Select 
+                          value={job.bedroomSize} 
+                          onValueChange={(value) => updateJob(index, 'bedroomSize', value)}
+                        >
+                          <SelectTrigger data-testid={`select-bedroom-size-${index}`}>
+                            <SelectValue placeholder="Select size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="studio">Studio</SelectItem>
+                            <SelectItem value="1_bed">1 Bedroom</SelectItem>
+                            <SelectItem value="2_bed">2 Bedroom</SelectItem>
+                            <SelectItem value="3_bed">3 Bedroom</SelectItem>
+                            <SelectItem value="loft">Loft</SelectItem>
+                            <SelectItem value="1_bed_townhome">1BR Townhome</SelectItem>
+                            <SelectItem value="2_bed_townhome">2BR Townhome</SelectItem>
+                            <SelectItem value="3_bed_townhome">3BR Townhome</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="unit-number">Unit Number *</Label>
-                      <Input
-                        id="unit-number"
-                        placeholder="e.g., 205, A12, 3rd Floor"
-                        value={scheduleJobForm.unitNumber}
-                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, unitNumber: e.target.value})}
-                        data-testid="input-unit-number"
-                      />
+
+                    {/* Scheduling Information */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Priority</Label>
+                        <Select 
+                          value={job.priority} 
+                          onValueChange={(value) => updateJob(index, 'priority', value)}
+                        >
+                          <SelectTrigger data-testid={`select-priority-${index}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">🟢 Low</SelectItem>
+                            <SelectItem value="medium">🟡 Medium</SelectItem>
+                            <SelectItem value="high">🟠 High</SelectItem>
+                            <SelectItem value="emergency">🔴 Emergency</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Preferred Date</Label>
+                        <Input
+                          type="date"
+                          value={job.scheduledDate}
+                          onChange={(e) => updateJob(index, 'scheduledDate', e.target.value)}
+                          data-testid={`input-scheduled-date-${index}`}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Estimated Cost</Label>
+                        <Input
+                          placeholder="e.g., 150.00"
+                          value={job.estimatedCost}
+                          onChange={(e) => updateJob(index, 'estimatedCost', e.target.value)}
+                          data-testid={`input-estimated-cost-${index}`}
+                        />
+                      </div>
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="bedroom-size">Unit Size</Label>
-                      <Select value={scheduleJobForm.bedroomSize} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, bedroomSize: value})}>
-                        <SelectTrigger data-testid="select-bedroom-size">
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="studio">Studio</SelectItem>
-                          <SelectItem value="1_bed">1 Bedroom</SelectItem>
-                          <SelectItem value="2_bed">2 Bedroom</SelectItem>
-                          <SelectItem value="3_bed">3 Bedroom</SelectItem>
-                          <SelectItem value="loft">Loft</SelectItem>
-                          <SelectItem value="1_bed_townhome">1BR Townhome</SelectItem>
-                          <SelectItem value="2_bed_townhome">2BR Townhome</SelectItem>
-                          <SelectItem value="3_bed_townhome">3BR Townhome</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    {/* Description and Notes */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          placeholder="Describe the work..."
+                          rows={2}
+                          value={job.description}
+                          onChange={(e) => updateJob(index, 'description', e.target.value)}
+                          data-testid={`textarea-job-description-${index}`}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Additional Notes</Label>
+                        <Textarea
+                          placeholder="Special instructions..."
+                          rows={2}
+                          value={job.notes}
+                          onChange={(e) => updateJob(index, 'notes', e.target.value)}
+                          data-testid={`textarea-job-notes-${index}`}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Scheduling Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Scheduling & Priority</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select value={scheduleJobForm.priority} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, priority: value})}>
-                        <SelectTrigger data-testid="select-priority">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">🟢 Low</SelectItem>
-                          <SelectItem value="medium">🟡 Medium</SelectItem>
-                          <SelectItem value="high">🟠 High</SelectItem>
-                          <SelectItem value="emergency">🔴 Emergency</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="scheduled-date">Preferred Date</Label>
-                      <Input
-                        id="scheduled-date"
-                        type="date"
-                        value={scheduleJobForm.scheduledDate}
-                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, scheduledDate: e.target.value})}
-                        data-testid="input-scheduled-date"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="estimated-cost">Estimated Cost</Label>
-                      <Input
-                        id="estimated-cost"
-                        placeholder="e.g., 150.00"
-                        value={scheduleJobForm.estimatedCost}
-                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, estimatedCost: e.target.value})}
-                        data-testid="input-estimated-cost"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Additional Notes */}
-                <div className="grid gap-2">
-                  <Label htmlFor="job-notes">Additional Notes</Label>
-                  <Textarea
-                    id="job-notes"
-                    placeholder="Any special instructions or considerations..."
-                    rows={2}
-                    value={scheduleJobForm.notes}
-                    onChange={(e) => setScheduleJobForm({...scheduleJobForm, notes: e.target.value})}
-                    data-testid="textarea-job-notes"
-                  />
-                </div>
+                ))}
 
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-3 pt-4 border-t">
                   <Button 
                     variant="outline" 
                     onClick={() => setIsScheduleJobModalOpen(false)}
-                    disabled={scheduleJobMutation.isPending}
+                    disabled={scheduleJobsMutation.isPending}
                   >
                     Cancel
                   </Button>
                   <Button 
-                    onClick={handleScheduleJob}
-                    disabled={scheduleJobMutation.isPending || !scheduleJobForm.propertyId || !scheduleJobForm.unitNumber}
+                    onClick={handleScheduleJobs}
+                    disabled={scheduleJobsMutation.isPending || scheduleJobsForm.jobs.some(job => !job.propertyId || !job.unitNumber)}
                     className="bg-blue-600 hover:bg-blue-700"
                     data-testid="button-submit-schedule"
                   >
-                    {scheduleJobMutation.isPending ? (
+                    {scheduleJobsMutation.isPending ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         Scheduling...
@@ -638,7 +709,7 @@ export default function PropertyManagerDashboard() {
                     ) : (
                       <>
                         <Calendar className="mr-2 h-4 w-4" />
-                        Schedule Job
+                        Schedule {scheduleJobsForm.jobs.length} Job{scheduleJobsForm.jobs.length > 1 ? 's' : ''}
                       </>
                     )}
                   </Button>
