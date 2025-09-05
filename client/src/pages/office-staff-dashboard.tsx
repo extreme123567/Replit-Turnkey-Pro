@@ -1078,6 +1078,8 @@ function UnitsCompletedWidget() {
 }
 
 export default function OfficeStaffDashboard() {
+  const { toast } = useToast();
+  
   // Modal states
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [isScheduleJobModalOpen, setIsScheduleJobModalOpen] = useState(false);
