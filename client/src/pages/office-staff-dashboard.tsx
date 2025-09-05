@@ -554,7 +554,7 @@ function ScheduledJobsList() {
   }
 
   const scheduledJobs = (jobs as any[])?.filter(job => 
-    job.status === 'scheduled' || job.status === 'in_progress'
+    job.status === 'scheduled' || job.status === 'in_progress' || job.status === 'pending_approval'
   ) || [];
 
   if (scheduledJobs.length === 0) {
@@ -648,7 +648,7 @@ function ScheduledJobsList() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-blue-50 rounded-lg">
             <p className="text-2xl font-bold text-blue-600">
-              {scheduledJobs.filter(j => j.status === 'scheduled').length}
+              {scheduledJobs.filter(j => j.status === 'scheduled' || j.status === 'pending_approval').length}
             </p>
             <p className="text-sm text-slate-600 mt-1">Scheduled</p>
           </div>
