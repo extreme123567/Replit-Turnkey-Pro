@@ -20,13 +20,17 @@ export async function apiRequest(
   method: string = "GET",
   body?: any,
 ): Promise<any> {
+  // Ensure method is a string
+  const httpMethod = typeof method === 'string' ? method : 'GET';
+  console.log('API Request:', { url, method: httpMethod, body });
+  
   const options: RequestInit = {
-    method,
+    method: httpMethod,
     headers: getAuthHeaders(),
     credentials: "include",
   };
 
-  if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
+  if (body && (httpMethod === "POST" || httpMethod === "PUT" || httpMethod === "PATCH")) {
     options.body = JSON.stringify(body);
   }
 
