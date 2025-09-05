@@ -285,23 +285,39 @@ export default function PropertyManagerDashboard() {
       
       console.log('About to make request with:', { url, method, headers, body });
       
-      // Use XMLHttpRequest instead of fetch to avoid any interference
+      // Try multiple approaches to bypass the interference
+      console.log('DEBUGGING: Method being used:', 'POST');
+      console.log('DEBUGGING: URL being called:', url);
+      console.log('DEBUGGING: Headers:', headers);
+      console.log('DEBUGGING: Body:', body);
+      
+      // Try approach 1: XMLHttpRequest with explicit logging
       const result = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        
+        // Log the method before and after
+        console.log('XHR: Setting method to POST');
         xhr.open('POST', url, true);
+        console.log('XHR: Method set, adding headers');
+        
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.withCredentials = true;
         
+        console.log('XHR: About to send request');
+        
         xhr.onreadystatechange = function() {
+          console.log('XHR: State changed to', xhr.readyState);
           if (xhr.readyState === 4) {
             console.log("XHR Response status:", xhr.status);
             console.log("XHR Response text:", xhr.responseText);
+            console.log("XHR Response headers:", xhr.getAllResponseHeaders());
             
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
                 const data = JSON.parse(xhr.responseText);
                 resolve(data);
               } catch (e) {
+                console.error('Failed to parse response:', e);
                 reject(new Error('Failed to parse response'));
               }
             } else {
@@ -311,10 +327,12 @@ export default function PropertyManagerDashboard() {
         };
         
         xhr.onerror = function() {
+          console.error('XHR Network error');
           reject(new Error('Network error'));
         };
         
         xhr.send(body);
+        console.log('XHR: Request sent');
       });
       
       // Success handling
