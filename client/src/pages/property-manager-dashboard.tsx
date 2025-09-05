@@ -261,23 +261,33 @@ export default function PropertyManagerDashboard() {
   // Schedule jobs mutation
   const scheduleJobsMutation = useMutation({
     mutationFn: async (jobsData: any) => {
-      console.log("Sending API request with data:", {
+      const requestData = {
         jobs: jobsData.jobs.map((job: any) => ({
           ...job,
           requestedBy: propertyManagerId,
           status: 'pending_approval',
           createdAt: new Date().toISOString()
         }))
+      };
+      
+      console.log("Sending API request with data:", requestData);
+      
+      // Use fetch directly to avoid any TanStack Query interference
+      const response = await fetch('/api/work-orders/schedule-multiple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestData)
       });
       
-      return apiRequest('/api/work-orders/schedule-multiple', 'POST', {
-        jobs: jobsData.jobs.map((job: any) => ({
-          ...job,
-          requestedBy: propertyManagerId,
-          status: 'pending_approval',
-          createdAt: new Date().toISOString()
-        }))
-      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`${response.status}: ${errorText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       const jobCount = data.jobs?.length || scheduleJobsForm.jobs.length;
