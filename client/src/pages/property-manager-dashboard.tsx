@@ -261,6 +261,15 @@ export default function PropertyManagerDashboard() {
   // Schedule jobs mutation
   const scheduleJobsMutation = useMutation({
     mutationFn: async (jobsData: any) => {
+      console.log("Sending API request with data:", {
+        jobs: jobsData.jobs.map((job: any) => ({
+          ...job,
+          requestedBy: propertyManagerId,
+          status: 'pending_approval',
+          createdAt: new Date().toISOString()
+        }))
+      });
+      
       return apiRequest('/api/work-orders/schedule-multiple', 'POST', {
         jobs: jobsData.jobs.map((job: any) => ({
           ...job,
@@ -345,6 +354,8 @@ export default function PropertyManagerDashboard() {
       });
       return;
     }
+    
+    console.log("Scheduling jobs with data:", scheduleJobsForm);
     scheduleJobsMutation.mutate(scheduleJobsForm);
   };
 
