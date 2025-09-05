@@ -392,6 +392,7 @@ function AssignTeamDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () =>
   });
 
   const onSubmit = (data: AssignTeamFormData) => {
+    console.log("Submitting assignment:", data);
     assignTeamMutation.mutate(data);
   };
 
@@ -431,7 +432,7 @@ function AssignTeamDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () =>
                         <SelectItem key={member.id} value={member.id}>
                           {member.firstName} {member.lastName} ({member.role})
                         </SelectItem>
-                      ))}
+                      )) || <SelectItem value="no-staff">No staff available</SelectItem>}
                     </SelectContent>
                   </Select>
                   <FormMessage />
