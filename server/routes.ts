@@ -501,7 +501,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/work-orders/schedule", async (req, res) => {
     try {
       const {
-        title,
         description,
         propertyId,
         unitNumber,
@@ -518,7 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For demo purposes, create a mock work order response
       const workOrder = {
         id: `wo-${Date.now()}`,
-        title,
+        title: `${jobType} work for unit ${unitNumber}`,
         description: description || `${jobType} work for unit ${unitNumber}`,
         propertyId,
         unitNumber,

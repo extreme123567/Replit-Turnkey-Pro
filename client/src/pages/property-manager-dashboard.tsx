@@ -302,7 +302,6 @@ export default function PropertyManagerDashboard() {
       });
       // Reset form and close modal
       setScheduleJobForm({
-        title: '',
         description: '',
         propertyId: '',
         unitNumber: '',
@@ -328,7 +327,7 @@ export default function PropertyManagerDashboard() {
   });
 
   const handleScheduleJob = () => {
-    if (!scheduleJobForm.title || !scheduleJobForm.propertyId || !scheduleJobForm.unitNumber) {
+    if (!scheduleJobForm.propertyId || !scheduleJobForm.unitNumber) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -354,7 +353,6 @@ export default function PropertyManagerDashboard() {
   });
 
   const [scheduleJobForm, setScheduleJobForm] = useState({
-    title: '',
     description: '',
     propertyId: '',
     unitNumber: '',
@@ -479,17 +477,7 @@ export default function PropertyManagerDashboard() {
                 {/* Basic Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Job Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="job-title">Job Title *</Label>
-                      <Input
-                        id="job-title"
-                        placeholder="e.g., Paint Unit 205"
-                        value={scheduleJobForm.title}
-                        onChange={(e) => setScheduleJobForm({...scheduleJobForm, title: e.target.value})}
-                        data-testid="input-job-title"
-                      />
-                    </div>
+                  <div className="grid gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="job-type">Job Type *</Label>
                       <Select value={scheduleJobForm.jobType} onValueChange={(value) => setScheduleJobForm({...scheduleJobForm, jobType: value})}>
@@ -503,6 +491,8 @@ export default function PropertyManagerDashboard() {
                           <SelectItem value="inspection">👀 Inspection</SelectItem>
                           <SelectItem value="repair">⚒️ Repair</SelectItem>
                           <SelectItem value="carpet">🪟 Carpet Work</SelectItem>
+                          <SelectItem value="punch">👊 Punch</SelectItem>
+                          <SelectItem value="hvac">❄️ HVAC Services</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -636,7 +626,7 @@ export default function PropertyManagerDashboard() {
                   </Button>
                   <Button 
                     onClick={handleScheduleJob}
-                    disabled={scheduleJobMutation.isPending || !scheduleJobForm.title || !scheduleJobForm.propertyId || !scheduleJobForm.unitNumber}
+                    disabled={scheduleJobMutation.isPending || !scheduleJobForm.propertyId || !scheduleJobForm.unitNumber}
                     className="bg-blue-600 hover:bg-blue-700"
                     data-testid="button-submit-schedule"
                   >
