@@ -559,6 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           category: job.category || "maintenance",
           jobType: job.jobType,
           priority: job.priority || "medium",
+          status: "scheduled",
           title: job.description || `${job.jobType} work for unit ${job.unitNumber}`,
           description: job.description || `${job.jobType} work for unit ${job.unitNumber}`,
           scheduledDate: job.scheduledDate ? new Date(job.scheduledDate) : null,
