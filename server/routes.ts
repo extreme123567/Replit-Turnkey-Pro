@@ -2226,38 +2226,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get jobs ready for inspection
   app.get("/api/jobs/for-inspection/:inspectorId", async (req, res) => {
     try {
-      // Mock data for jobs ready for inspection
-      const jobsForInspection = [
-        {
-          id: "job-1",
-          jobType: "Clean",
-          unit: "Unit 205",
-          property: "Sunset Apartments",
-          technicianName: "David Lee",
-          completedAt: new Date().toISOString(),
-          status: "completed"
-        },
-        {
-          id: "job-2", 
-          jobType: "Paint",
-          unit: "Unit 301",
-          property: "Oak Ridge Condos",
-          technicianName: "Mike Johnson",
-          completedAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-          status: "completed"
-        },
-        {
-          id: "job-3",
-          jobType: "Carpet",
-          unit: "Unit 150",
-          property: "Sunset Apartments", 
-          technicianName: "Alex Chen",
-          completedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          status: "completed"
-        }
-      ];
-      
-      res.json(jobsForInspection);
+      // Return empty array - no sample data
+      res.json([]);
     } catch (error) {
       console.error("Error fetching jobs for inspection:", error);
       res.status(500).json({ error: "Failed to fetch jobs for inspection" });
@@ -2292,7 +2262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
         }
       ];
-      res.json(mockBuildingIssues);
+      res.json([]);
     } catch (error) {
       console.error("Error fetching building issues:", error);
       res.status(500).json({ error: "Failed to fetch building issues" });
@@ -2310,92 +2280,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const searchTerm = query.toLowerCase().trim();
       
-      // Mock completed units data
-      const allCompletedUnits = [
-        {
-          id: 'unit-completed-1',
-          title: 'Apartment Turn - Unit 205',
-          jobType: 'Apartment Turn',
-          unit: '205',
-          property: 'Maple Gardens',
-          technician: 'Mike Johnson',
-          technicianName: 'Mike Johnson',
-          status: 'inspector_approved',
-          completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          completedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          bedroomSize: '2_bed'
-        },
-        {
-          id: 'unit-completed-2',
-          title: 'Deep Cleaning - Unit 101',
-          jobType: 'Deep Cleaning',
-          unit: '101',
-          property: 'Oak Village',
-          technician: 'Sarah Wilson',
-          technicianName: 'Sarah Wilson',
-          status: 'inspector_approved',
-          completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          completedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          bedroomSize: 'studio'
-        },
-        {
-          id: 'unit-completed-3',
-          title: 'Paint Touch-up - Unit 301',
-          jobType: 'Painting',
-          unit: '301',
-          property: 'Pine Heights',
-          technician: 'David Brown',
-          technicianName: 'David Brown',
-          status: 'inspector_approved',
-          completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          completedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          bedroomSize: '1_bed'
-        },
-        {
-          id: 'unit-completed-4',
-          title: 'Full Apartment Turn - Unit 408',
-          jobType: 'Apartment Turn',
-          unit: '408',
-          property: 'Maple Gardens',
-          technician: 'Mike Johnson',
-          technicianName: 'Mike Johnson',
-          status: 'inspector_approved',
-          completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          completedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          bedroomSize: '3_bed'
-        },
-        {
-          id: 'unit-completed-5',
-          title: 'Maintenance Repair - Unit 150',
-          jobType: 'Maintenance',
-          unit: '150',
-          property: 'Oak Village',
-          technician: 'Sarah Wilson',
-          technicianName: 'Sarah Wilson',
-          status: 'inspector_approved',
-          completedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          completedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          bedroomSize: 'loft'
-        },
-        {
-          id: 'unit-completed-6',
-          title: 'Townhome Turn - Unit TH12',
-          jobType: 'Apartment Turn',
-          unit: 'TH12',
-          property: 'Cedar Creek Townhomes',
-          technician: 'Alex Martinez',
-          technicianName: 'Alex Martinez',
-          status: 'inspector_approved',
-          completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          completedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          bedroomSize: '2_bed_townhome'
-        }
-      ];
+      // Return empty array - no sample data
+      const allCompletedUnits: any[] = [];
       
-      // Filter units based on search query - ONLY property name and unit number
+      // Filter units based on search query
       const filteredUnits = allCompletedUnits.filter(unit => 
-        unit.unit.toLowerCase().includes(searchTerm) ||
-        unit.property.toLowerCase().includes(searchTerm)
+        unit.unit?.toLowerCase().includes(searchTerm) ||
+        unit.property?.toLowerCase().includes(searchTerm)
       );
       
       res.json(filteredUnits);
