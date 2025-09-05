@@ -276,13 +276,20 @@ export default function PropertyManagerDashboard() {
       console.log("Manual scheduling with data:", requestData);
       
       // Create a completely new fetch instance to avoid any interference
-      const response = await window.fetch('/api/work-orders/schedule-multiple', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const url = '/api/work-orders/schedule-multiple';
+      const method = 'POST';
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      const body = JSON.stringify(requestData);
+      
+      console.log('About to make fetch request with:', { url, method, headers, body });
+      
+      const response = await window.fetch(url, {
+        method,
+        headers,
         credentials: 'include',
-        body: JSON.stringify(requestData)
+        body
       });
       
       console.log("Response status:", response.status);
@@ -370,7 +377,7 @@ export default function PropertyManagerDashboard() {
     setScheduleJobsForm({ jobs: newJobs });
   };
 
-  const handleScheduleJobs = () => {
+  const handleScheduleJobs = async () => {
     // Validate that all jobs have required fields
     const invalidJobs = scheduleJobsForm.jobs.filter(job => !job.propertyId || !job.unitNumber);
     if (invalidJobs.length > 0) {
@@ -383,7 +390,13 @@ export default function PropertyManagerDashboard() {
     }
     
     console.log("Scheduling jobs with data:", scheduleJobsForm);
-    scheduleJobsMutation.mutate(scheduleJobsForm);
+    
+    // Call the manual function directly instead of using mutation
+    try {
+      await scheduleJobsManually(scheduleJobsForm);
+    } catch (error) {
+      console.error("Scheduling failed:", error);
+    }
   };
 
 

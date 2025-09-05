@@ -74,6 +74,8 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: false,
+      // DO NOT use default queryFn for mutations
+      mutationFn: undefined,
     },
   },
 });
