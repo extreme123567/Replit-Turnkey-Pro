@@ -84,7 +84,7 @@ type EditJobFormData = z.infer<typeof editJobSchema>;
 
 // Team assignment form schema
 const assignTeamSchema = z.object({
-  assignedTechnicianId: z.string().min(1, "Please select a team member"),
+  assignedTechnicianId: z.string().min(1, "Please select a team member").refine(val => val !== "unassigned", "Please select a team member"),
   scheduledDate: z.string().min(1, "Scheduled date is required"),
   notes: z.string().optional(),
 });
@@ -359,7 +359,7 @@ function AssignTeamDialog({ job, onJobUpdated }: { job: any; onJobUpdated: () =>
   const assignForm = useForm<AssignTeamFormData>({
     resolver: zodResolver(assignTeamSchema),
     defaultValues: {
-      assignedTechnicianId: job?.assignedTechnicianId || "unassigned",
+      assignedTechnicianId: job?.assignedTechnicianId || "",
       scheduledDate: job?.scheduledDate ? new Date(job.scheduledDate).toISOString().split('T')[0] : "",
       notes: "",
     },
