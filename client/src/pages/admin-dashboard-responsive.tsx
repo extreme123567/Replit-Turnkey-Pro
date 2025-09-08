@@ -42,6 +42,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { TurnoverTracker } from "@/components/turnover-tracker";
 
 // Job scheduling form schema
 const jobScheduleSchema = z.object({
@@ -412,6 +413,11 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Apartment Turnover Tracking */}
+            <div className="mb-8">
+              <TurnoverTracker />
             </div>
 
             {/* Desktop Content Grid */}

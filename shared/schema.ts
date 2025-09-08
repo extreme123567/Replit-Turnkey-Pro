@@ -248,6 +248,10 @@ export const properties = pgTable("properties", {
   managerId: varchar("manager_id").references(() => staff.id),
   status: text("status").notNull().default("active"), // active, inactive, under_renovation
   monthlyRent: decimal("monthly_rent", { precision: 10, scale: 2 }),
+  turnoversThisMonth: integer("turnovers_this_month").default(0),
+  turnoversThisYear: integer("turnovers_this_year").default(0),
+  totalTurnovers: integer("total_turnovers").default(0),
+  lastTurnoverDate: timestamp("last_turnover_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
