@@ -67,10 +67,10 @@ export function CalendarView({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'in_progress': return 'bg-amber-100 border-amber-500 text-amber-900';
-      case 'scheduled': return 'bg-blue-100 border-blue-500 text-blue-900';
-      case 'completed': return 'bg-emerald-100 border-emerald-500 text-emerald-900';
-      default: return 'bg-slate-100 border-slate-500 text-slate-900';
+      case 'in_progress': return 'bg-gradient-to-br from-amber-100 to-orange-100 border-l-amber-500 text-amber-900 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200';
+      case 'scheduled': return 'bg-gradient-to-br from-blue-100 to-indigo-100 border-l-blue-500 text-blue-900 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200';
+      case 'completed': return 'bg-gradient-to-br from-emerald-100 to-green-100 border-l-emerald-500 text-emerald-900 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200';
+      default: return 'bg-gradient-to-br from-slate-100 to-gray-100 border-l-slate-500 text-slate-900 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200';
     }
   };
 
@@ -82,8 +82,8 @@ export function CalendarView({
     return (
       <div className="space-y-0">
         {/* Header */}
-        <div className="grid grid-cols-8 border-b border-slate-200">
-          <div className="p-4 text-center font-medium text-slate-600 border-r border-slate-200">
+        <div className="grid grid-cols-8 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white">
+          <div className="p-4 text-center font-semibold text-slate-700 border-r border-slate-200/60 bg-gradient-to-b from-slate-100 to-slate-50">
             Time
           </div>
           {weekDates.map((date, index) => {
@@ -91,15 +91,19 @@ export function CalendarView({
             return (
               <div 
                 key={index} 
-                className={`p-4 text-center font-medium border-r border-slate-200 ${
-                  isToday ? 'text-blue-700 bg-blue-50' : 'text-slate-700'
+                className={`p-4 text-center font-semibold border-r border-slate-200/60 transition-all duration-300 ${
+                  isToday 
+                    ? 'text-blue-700 bg-gradient-to-b from-blue-50 to-indigo-50 shadow-sm' 
+                    : 'text-slate-700 hover:bg-gradient-to-b hover:from-slate-50 hover:to-slate-100'
                 }`}
               >
                 {dayNames[index]}
                 <br />
-                <span className={`text-xs ${isToday ? 'text-blue-600' : 'text-slate-500'}`}>
+                <span className={`text-xs font-medium ${isToday ? 'text-blue-600' : 'text-slate-500'}`}>
                   {formatDate(date, 'MMM d')}
-                  {isToday && ' (Today)'}
+                  {isToday && (
+                    <span className="block text-xs font-bold text-blue-500 animate-pulse">Today</span>
+                  )}
                 </span>
               </div>
             );
@@ -127,25 +131,25 @@ export function CalendarView({
                   {dayJobs.map((job) => (
                     <div 
                       key={job.id} 
-                      className={`p-2 rounded text-xs border-l-4 mb-1 cursor-pointer ${getStatusColor(job.status)}`}
+                      className={`p-2 rounded-lg text-xs border-l-4 mb-1 cursor-pointer transform ${getStatusColor(job.status)}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onJobClick?.(job);
                       }}
                       data-testid={`job-${job.id}`}
                     >
-                      <div className="font-medium truncate">{job.title}</div>
-                      <div className="truncate">{getClientName(job.clientId)}</div>
+                      <div className="font-semibold truncate">{job.title}</div>
+                      <div className="truncate text-xs opacity-80">{getClientName(job.clientId)}</div>
                     </div>
                   ))}
                   {dayJobs.length === 0 && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full h-full opacity-0 hover:opacity-100 transition-opacity"
+                      className="w-full h-full opacity-0 hover:opacity-100 transition-all duration-200 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:scale-105 group"
                       onClick={() => onCreateJob?.(date, timeSlot)}
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-4 w-4 text-blue-500 group-hover:rotate-90 transition-transform duration-200" />
                     </Button>
                   )}
                 </div>
@@ -164,9 +168,9 @@ export function CalendarView({
     return (
       <div className="space-y-0">
         {/* Header */}
-        <div className="grid grid-cols-7 border-b border-slate-200">
+        <div className="grid grid-cols-7 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white">
           {dayNames.map((day) => (
-            <div key={day} className="p-4 text-center font-medium text-slate-600 border-r border-slate-200 last:border-r-0">
+            <div key={day} className="p-4 text-center font-semibold text-slate-700 border-r border-slate-200/60 last:border-r-0 bg-gradient-to-b from-slate-100 to-slate-50">
               {day}
             </div>
           ))}
@@ -182,30 +186,35 @@ export function CalendarView({
             return (
               <div
                 key={index}
-                className={`min-h-[120px] p-2 border-r border-b border-slate-200 last:border-r-0 ${
-                  !isCurrentMonth ? 'bg-slate-50 text-slate-400' : ''
-                } ${isToday ? 'bg-blue-50' : ''}`}
+                className={`min-h-[130px] p-3 border-r border-b border-slate-200/60 last:border-r-0 cursor-pointer hover:bg-slate-50/50 transition-all duration-200 group ${
+                  !isCurrentMonth ? 'bg-slate-50/80 text-slate-400' : 'hover:shadow-sm'
+                } ${isToday ? 'bg-gradient-to-br from-blue-50 to-indigo-50 ring-1 ring-blue-200' : ''}`}
                 onClick={() => onCreateJob?.(date)}
               >
-                <div className={`text-sm font-medium mb-2 ${isToday ? 'text-blue-700' : ''}`}>
-                  {date.getDate()}
+                <div className={`text-sm font-bold mb-3 flex items-center justify-between ${
+                  isToday ? 'text-blue-700' : isCurrentMonth ? 'text-slate-800' : 'text-slate-400'
+                }`}>
+                  <span>{date.getDate()}</span>
+                  {isToday && (
+                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  )}
                 </div>
                 <div className="space-y-1">
                   {dayJobs.slice(0, 3).map((job) => (
                     <div
                       key={job.id}
-                      className={`text-xs p-1 rounded truncate cursor-pointer ${getStatusColor(job.status)}`}
+                      className={`text-xs p-2 rounded-lg truncate cursor-pointer border-l-3 transform ${getStatusColor(job.status)}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onJobClick?.(job);
                       }}
                       data-testid={`job-${job.id}`}
                     >
-                      {job.title}
+                      <div className="font-semibold">{job.title}</div>
                     </div>
                   ))}
                   {dayJobs.length > 3 && (
-                    <div className="text-xs text-slate-500 text-center">
+                    <div className="text-xs text-slate-500 text-center font-medium bg-slate-100 rounded-md py-1 transition-colors duration-200 hover:bg-slate-200">
                       +{dayJobs.length - 3} more
                     </div>
                   )}
@@ -226,32 +235,45 @@ export function CalendarView({
 
     return (
       <div className="space-y-0">
-        <div className="p-4 border-b border-slate-200 text-center font-medium">
+        <div className="p-6 border-b border-slate-200/60 text-center font-bold text-lg bg-gradient-to-r from-slate-50 to-white text-slate-800">
           {formatDate(currentDate, 'EEEE, MMMM d, yyyy')}
         </div>
         {timeSlots.map((timeSlot, index) => {
           const dayJobs = getJobsForDateTime(currentDate, timeSlot);
+          const isCurrentHour = new Date().getHours() === (index + 8);
           
           return (
-            <div key={index} className="flex border-b border-slate-100 min-h-[60px]">
-              <div className="w-20 p-4 text-sm text-slate-600 border-r border-slate-200 bg-slate-50">
+            <div key={index} className={`flex border-b border-slate-100/60 min-h-[70px] ${
+              isCurrentHour ? 'bg-gradient-to-r from-blue-50/50 to-indigo-50/50' : ''
+            }`}>
+              <div className={`w-24 p-4 text-sm font-semibold border-r border-slate-200/60 bg-gradient-to-b from-slate-100 to-slate-50 flex items-center justify-center ${
+                isCurrentHour ? 'text-blue-700 bg-gradient-to-b from-blue-100 to-indigo-100' : 'text-slate-600'
+              }`}>
                 {timeSlot}
+                {isCurrentHour && (
+                  <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                )}
               </div>
-              <div className="flex-1 p-2" onClick={() => onCreateJob?.(currentDate, timeSlot)}>
+              <div className="flex-1 p-3 cursor-pointer hover:bg-slate-50/50 transition-colors duration-200" onClick={() => onCreateJob?.(currentDate, timeSlot)}>
                 {dayJobs.map((job) => (
                   <div
                     key={job.id}
-                    className={`p-2 rounded text-sm border-l-4 mb-1 cursor-pointer ${getStatusColor(job.status)}`}
+                    className={`p-3 rounded-lg text-sm border-l-4 mb-2 cursor-pointer transform ${getStatusColor(job.status)}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onJobClick?.(job);
                     }}
                     data-testid={`job-${job.id}`}
                   >
-                    <div className="font-medium">{job.title}</div>
-                    <div className="text-xs">{getClientName(job.clientId)}</div>
+                    <div className="font-bold">{job.title}</div>
+                    <div className="text-xs opacity-80 mt-1">{getClientName(job.clientId)}</div>
                   </div>
                 ))}
+                {dayJobs.length === 0 && (
+                  <div className="h-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+                    <Plus className="h-5 w-5 text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200" />
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -261,30 +283,32 @@ export function CalendarView({
   };
 
   return (
-    <Card className="servicepro-card">
+    <Card className="servicepro-card shadow-lg border-0 bg-gradient-to-br from-white to-slate-50/30 overflow-hidden">
       <CardContent className="p-0">
         {/* Calendar controls */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+        <div className="p-6 border-b border-slate-200/60 bg-gradient-to-r from-slate-50 to-white flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => handleDateNavigation("prev")}
                 data-testid="button-prev-period"
+                className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 hover:scale-105 transition-all duration-200 shadow-sm group"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => handleDateNavigation("next")}
                 data-testid="button-next-period"
+                className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 hover:scale-105 transition-all duration-200 shadow-sm group"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Button>
             </div>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-xl font-bold text-slate-800 tracking-tight">
               {viewMode === "week" 
                 ? `Week of ${formatDate(getWeekDates(currentDate)[0], 'MMM d, yyyy')}`
                 : viewMode === "month" 
@@ -294,19 +318,19 @@ export function CalendarView({
             </h3>
           </div>
           <Select value={viewMode} onValueChange={onViewModeChange}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-36 bg-white border-slate-200 hover:border-blue-300 transition-colors duration-200 shadow-sm">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="day">Day</SelectItem>
-              <SelectItem value="week">Week</SelectItem>
-              <SelectItem value="month">Month</SelectItem>
+            <SelectContent className="bg-white border-slate-200 shadow-xl">
+              <SelectItem value="day" className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors duration-150">Day</SelectItem>
+              <SelectItem value="week" className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors duration-150">Week</SelectItem>
+              <SelectItem value="month" className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors duration-150">Month</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Calendar content */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto bg-white">
           {viewMode === "week" && renderWeekView()}
           {viewMode === "month" && renderMonthView()}
           {viewMode === "day" && renderDayView()}
