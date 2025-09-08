@@ -14,7 +14,7 @@ export default function Landing() {
             Turnkey Pro
           </h1>
           <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 mx-auto rounded-full"></div>
-          <p className="text-slate-600 text-lg">Property Management Platform</p>
+          <p className="text-slate-600 text-lg">We Punch, repair, paint clean your units to satifaction</p>
         </div>
         
         <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-lg">

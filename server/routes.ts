@@ -3244,7 +3244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get turnover statistics
   app.get("/api/turnovers/stats", authenticate, async (req: AuthRequest, res) => {
     try {
-      const properties = await storage.getAllProperties();
+      const properties = await storage.getProperties();
       
       // For now, simulate turnover data until schema is updated
       const totalTurnovers = 47; // Example data
@@ -3274,7 +3274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get property from storage
-      const properties = await storage.getAllProperties();
+      const properties = await storage.getProperties();
       const property = properties.find(p => p.id === propertyId);
       if (!property) {
         return res.status(404).json({ message: "Property not found" });
