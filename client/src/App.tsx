@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import AppLayout from "@/components/layout/app-layout";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
+import Landing from "@/pages/landing";
 // Removed general dashboard - users go directly to role-specific dashboards
 import PropertyManagerDashboard from "@/pages/property-manager-dashboard";
 import OfficeStaffDashboard from "@/pages/office-staff-dashboard";
@@ -64,9 +65,9 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const [location] = useLocation();
 
-  // Show login page if not authenticated and not already on login page
+  // Show landing page if not authenticated and not on login page
   if (!isAuthenticated && !isLoading && location !== "/login") {
-    return <Login />;
+    return <Landing />;
   }
 
   return (
@@ -142,6 +143,7 @@ function App() {
         <div className="min-h-screen bg-slate-50">
           <Switch>
             <Route path="/login" component={Login} />
+            <Route path="/" component={Landing} />
             <Route>
               <AppLayout>
                 <Router />

@@ -48,10 +48,23 @@ export class AuthService {
     }
   }
 
-  // Login user
+  // Login user - restricted to owner only
   static async login(loginData: LoginRequest): Promise<{ user: User; token: string } | null> {
     try {
-      const user = await databaseAuth.getUserByEmail(loginData.email.toLowerCase().trim());
+      const allowedEmails = [
+        'admin@servicepro.com',
+        'owner@turnkeypro.com'
+      ];
+
+      const email = loginData.email.toLowerCase().trim();
+      
+      // Check if email is in allowed list
+      if (!allowedEmails.includes(email)) {
+        console.log(`Access denied for email: ${email}`);
+        return null;
+      }
+
+      const user = await databaseAuth.getUserByEmail(email);
       if (!user) {
         return null;
       }

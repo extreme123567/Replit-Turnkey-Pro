@@ -84,7 +84,7 @@ export default function Login() {
             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
               <Wrench className="text-white" size={20} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800">ServicePro</h1>
+            <h1 className="text-2xl font-bold text-slate-800">Turnkey Pro</h1>
           </div>
           <CardTitle className="text-xl">Sign in to your account</CardTitle>
           <CardDescription>
