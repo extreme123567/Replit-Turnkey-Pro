@@ -12,6 +12,7 @@ const pageTitles = {
   "/clients": { title: "Client Management", subtitle: "Manage your client relationships" },
   "/staff": { title: "Staff Management", subtitle: "Manage your team and assignments" },
   "/messaging": { title: "Messages", subtitle: "Communicate with clients and team" },
+  "/finance": { title: "Finance Management", subtitle: "Manage payroll and invoices" },
   "/payroll": { title: "Payroll Management", subtitle: "Track hours and calculate payments" },
   "/invoices": { title: "Invoice Management", subtitle: "Create and manage invoices" },
 };

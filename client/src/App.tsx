@@ -21,6 +21,7 @@ import Staff from "@/pages/staff";
 import Messaging from "@/pages/messaging";
 import Payroll from "@/pages/payroll";
 import Invoices from "@/pages/invoices";
+import Finance from "@/pages/finance";
 import EnhancedStaffDashboard from "@/pages/enhanced-staff-dashboard";
 
 // Protected route wrapper
@@ -120,6 +121,10 @@ function Router() {
       
       <Route path="/messaging">
         <ProtectedRoute component={Messaging} />
+      </Route>
+      
+      <Route path="/finance">
+        <ProtectedRoute component={Finance} allowedRoles={["admin"]} />
       </Route>
       
       <Route path="/payroll">

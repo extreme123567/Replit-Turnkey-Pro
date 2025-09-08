@@ -31,8 +31,7 @@ const navigation = [
   { name: "Scheduling", href: "/scheduling", icon: Calendar },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Messages", href: "/messaging", icon: MessageSquare, badge: 3 },
-  { name: "Payroll", href: "/payroll", icon: DollarSign },
-  { name: "Invoices", href: "/invoices", icon: FileText },
+  { name: "Finance", href: "/finance", icon: DollarSign },
 ];
 
 export function Sidebar() {
