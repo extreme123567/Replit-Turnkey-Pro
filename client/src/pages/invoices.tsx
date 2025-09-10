@@ -51,6 +51,12 @@ export default function Invoices() {
     refetchInterval: 30000, // Check every 30 seconds
   });
 
+  // QuickBooks unpaid summary
+  const { data: qbUnpaidSummary } = useQuery<{ connected: boolean; count: number; totalBalance: number; overdueCount: number; overdueBalance: number; asOf: string; }>({
+    queryKey: ["/api/quickbooks/unpaid-summary"],
+    refetchInterval: 60000,
+  });
+
   const isLoading = invoicesLoading || clientsLoading || jobsLoading;
 
   const updateInvoiceMutation = useMutation({
@@ -290,7 +296,7 @@ export default function Invoices() {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="servicepro-card">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -347,6 +353,28 @@ export default function Invoices() {
               </div>
             </div>
             <p className="text-sm text-slate-600 mt-2">Ready to send</p>
+          </CardContent>
+        </Card>
+
+        {/* QuickBooks Unpaid Summary */}
+        <Card className="servicepro-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-600 text-sm font-medium">QBO Unpaid</p>
+                <p className="text-2xl font-bold text-slate-800 mt-1" data-testid="stat-qbo-unpaid">
+                  {qbStatus?.connected && qbUnpaidSummary ? `${qbUnpaidSummary.count} ($${(qbUnpaidSummary.totalBalance || 0).toFixed(2)})` : "—"}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="text-purple-600" size={20} />
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mt-2">
+              {qbStatus?.connected && qbUnpaidSummary
+                ? `Overdue: ${qbUnpaidSummary.overdueCount} ($${(qbUnpaidSummary.overdueBalance || 0).toFixed(2)})`
+                : "Connect QuickBooks to view unpaid summary"}
+            </p>
           </CardContent>
         </Card>
       </div>

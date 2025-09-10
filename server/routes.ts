@@ -2239,6 +2239,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unpaid invoice summary for dashboard widget
+  app.get("/api/quickbooks/unpaid-summary", async (req, res) => {
+    try {
+      if (!qbTokens) {
+        return res.json({ connected: false, count: 0, totalBalance: 0, overdueCount: 0, overdueBalance: 0 });
+      }
+
+      quickBooksService.initializeClient(qbTokens);
+      const summary = await quickBooksService.getUnpaidSummary();
+      res.json({ connected: true, ...summary });
+    } catch (error) {
+      console.error("Error fetching QuickBooks unpaid summary:", error);
+      res.status(500).json({ connected: false, error: "Failed to fetch unpaid summary" });
+    }
+  });
+
   // Development endpoint to seed test data
   app.post("/api/dev/seed-data", async (req, res) => {
     try {
@@ -3200,10 +3216,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Work order not found" });
       }
       
-      res.json({
-        message: "Job approved by inspector - 100% complete",
-        workOrder
-      });
+      // Attempt to create/sync an invoice in QuickBooks when connected (idempotent by DocNumber)
+      try {
+        if (qbTokens) {
+          quickBooksService.initializeClient(qbTokens);
+          const docNumber = `WO-${id}`;
+          const existing = await quickBooksService.findInvoiceByDocNumber(docNumber);
+
+          let qbInvoice: any = existing;
+          if (!existing) {
+            const clients = await storage.getClients();
+            const client = clients[0];
+            if (client) {
+              const customers = await quickBooksService.getCustomers();
+              let qbCustomer = customers.find((c: any) => c.Name === client.name || c.PrimaryEmailAddr?.Address === client.email);
+              if (!qbCustomer) {
+                qbCustomer = await quickBooksService.createCustomer(client.name, client.email, {
+                  Line1: client.address,
+                  City: client.city,
+                  CountrySubDivisionCode: client.state,
+                  PostalCode: client.zipCode,
+                });
+              }
+
+              const amount = workOrder.estimatedCost ? parseFloat(workOrder.estimatedCost as any) : 0;
+              const invoiceRequest: CreateInvoiceRequest = {
+                customerId: qbCustomer.Id,
+                customerName: client.name,
+                customerEmail: client.email,
+                lineItems: [
+                  {
+                    amount: amount || 0,
+                    description: workOrder.title || `Work Order ${id}`,
+                    itemName: "Service",
+                    quantity: 1,
+                    unitPrice: amount || 0,
+                  },
+                ],
+                invoiceNumber: docNumber,
+                memo: workOrder.description || undefined,
+              };
+
+              qbInvoice = await quickBooksService.createInvoice(invoiceRequest);
+            }
+          }
+
+          return res.json({
+            message: "Job approved by inspector - 100% complete",
+            workOrder,
+            quickbooks: qbInvoice ? { id: qbInvoice.Id, docNumber: qbInvoice.DocNumber } : null,
+          });
+        }
+      } catch (qbError) {
+        console.error("QuickBooks invoice creation during approval failed:", qbError);
+        // Continue without blocking
+      }
+
+      res.json({ message: "Job approved by inspector - 100% complete", workOrder });
     } catch (error) {
       console.error("Inspector approval error:", error);
       res.status(500).json({ message: "Failed to approve job" });
