@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { QuickBooksService, type QuickBooksTokens, type CreateInvoiceRequest } from "./quickbooksService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema, insertQuoteRequestSchema, loginSchema, createUserSchema } from "@shared/schema";
+import { insertClientSchema, insertStaffSchema, insertJobSchema, insertTimeEntrySchema, insertInvoiceSchema, insertMessageSchema, insertQuoteRequestSchema, loginSchema, createUserSchema, type PropertyPriceEntry } from "@shared/schema";
 import { AuthService, authenticate, requireAdmin, requireOfficeStaff, requirePropertyManager, requireTechnician, requireInspector, type AuthRequest } from "./auth";
 
 // Initialize QuickBooks service
@@ -1090,10 +1090,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Work Orders routes
-  app.get("/api/work-orders", async (req, res) => {
+  app.get("/api/work-orders", authenticate, async (req: AuthRequest, res) => {
     try {
       const workOrders = await storage.getWorkOrders();
-      res.json(workOrders);
+      // Role-based redaction of billing fields
+      const role = req.user?.role;
+      const canSeeBilling = role === 'admin' || role === 'office_staff' || role === 'invoice' || role === 'property_manager';
+      const canSeePay = role === 'admin' || role === 'office_staff' || role === 'inspector' || role === 'technician';
+
+      const sanitized = workOrders.map((wo: any) => {
+        const copy: any = { ...wo };
+        // Hide what we bill (estimatedCost/actualCost) from techs and inspectors
+        if (!canSeeBilling) {
+          copy.estimatedCost = null;
+          copy.actualCost = null;
+        }
+        // Technician can see their pay (not implemented yet; placeholder field 'techPay')
+        // Inspector can see inspector pay (placeholder 'inspectorPay').
+        // For now, ensure these are only visible if allowed.
+        if (!canSeePay) {
+          copy.techPay = null;
+          copy.inspectorPay = null;
+        }
+        return copy;
+      });
+
+      res.json(sanitized);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch work orders" });
     }
@@ -1164,13 +1186,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/work-orders/:id", async (req, res) => {
+  app.get("/api/work-orders/:id", authenticate, async (req: AuthRequest, res) => {
     try {
       const workOrder = await storage.getWorkOrder(req.params.id);
       if (!workOrder) {
         return res.status(404).json({ error: "Work order not found" });
       }
-      res.json(workOrder);
+      const role = req.user?.role;
+      const canSeeBilling = role === 'admin' || role === 'office_staff' || role === 'invoice' || role === 'property_manager';
+      const canSeePay = role === 'admin' || role === 'office_staff' || role === 'inspector' || role === 'technician';
+      const copy: any = { ...workOrder };
+      if (!canSeeBilling) {
+        copy.estimatedCost = null;
+        copy.actualCost = null;
+      }
+      if (!canSeePay) {
+        copy.techPay = null;
+        copy.inspectorPay = null;
+      }
+      res.json(copy);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch work order" });
     }
@@ -1229,7 +1263,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/work-orders", async (req, res) => {
     try {
-      const workOrder = await storage.createWorkOrder(req.body);
+      const payload = { ...(req.body || {}) };
+      if (!payload.estimatedCost && payload.propertyId && payload.jobType) {
+        try {
+          const auto = await storage.getPriceForWork(payload.propertyId, payload.jobType, payload.bedroomSize);
+          if (auto != null) payload.estimatedCost = auto;
+        } catch (e) {
+          // ignore auto-pricing failures
+        }
+      }
+      const workOrder = await storage.createWorkOrder(payload);
       res.status(201).json(workOrder);
     } catch (error) {
       res.status(500).json({ error: "Failed to create work order" });
@@ -1328,6 +1371,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(property);
     } catch (error) {
       res.status(500).json({ error: "Failed to create property" });
+    }
+  });
+
+  // Set or update a property's price book
+  app.put("/api/properties/:id/price-book", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const entries = (req.body?.entries || []) as PropertyPriceEntry[];
+      const success = await storage.setPropertyPriceBook(id, entries);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error saving price book:", error);
+      res.status(500).json({ error: "Failed to save price book" });
+    }
+  });
+
+  // Get a property's price book
+  app.get("/api/properties/:id/price-book", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const book = await storage.getPropertyPriceBook(id);
+      res.json(book);
+    } catch (error) {
+      console.error("Error fetching price book:", error);
+      res.status(500).json({ error: "Failed to fetch price book" });
     }
   });
 
