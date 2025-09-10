@@ -22,7 +22,8 @@ import {
   type MaintenanceSchedule, 
   type InsertMaintenanceSchedule, 
   type Inspection, 
-  type InsertInspection 
+  type InsertInspection,
+  type PropertyPriceEntry 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 

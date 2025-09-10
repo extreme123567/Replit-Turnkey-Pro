@@ -1095,7 +1095,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const workOrders = await storage.getWorkOrders();
       // Role-based redaction of billing fields
       const role = req.user?.role;
-      const canSeeBilling = role === 'admin' || role === 'office_staff' || role === 'invoice' || role === 'property_manager';
+      // Only admin and office staff can see billed amounts
+      const canSeeBilling = role === 'admin' || role === 'office_staff';
       const canSeePay = role === 'admin' || role === 'office_staff' || role === 'inspector' || role === 'technician';
 
       const sanitized = workOrders.map((wo: any) => {
@@ -1193,7 +1194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Work order not found" });
       }
       const role = req.user?.role;
-      const canSeeBilling = role === 'admin' || role === 'office_staff' || role === 'invoice' || role === 'property_manager';
+      // Only admin and office staff can see billed amounts
+      const canSeeBilling = role === 'admin' || role === 'office_staff';
       const canSeePay = role === 'admin' || role === 'office_staff' || role === 'inspector' || role === 'technician';
       const copy: any = { ...workOrder };
       if (!canSeeBilling) {
