@@ -275,4 +275,64 @@ export class QuickBooksService {
       return false;
     }
   }
+
+  // Find existing invoice by DocNumber (idempotency)
+  async findInvoiceByDocNumber(docNumber: string): Promise<any | null> {
+    if (!this.qbClient) {
+      throw new Error('QuickBooks client not initialized');
+    }
+
+    return new Promise((resolve, reject) => {
+      const query = `select * from Invoice where DocNumber = '${docNumber.replace(/'/g, "''")}'`;
+      (this.qbClient as any).query(query, (err: any, result: any) => {
+        if (err) {
+          return reject(err);
+        }
+        const invoices = result?.QueryResponse?.Invoice || [];
+        resolve(invoices.length > 0 ? invoices[0] : null);
+      });
+    });
+  }
+
+  // Get unpaid and overdue summary
+  async getUnpaidSummary(): Promise<{ count: number; totalBalance: number; overdueCount: number; overdueBalance: number; asOf: string; }> {
+    if (!this.qbClient) {
+      throw new Error('QuickBooks client not initialized');
+    }
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    const runQuery = (q: string) => new Promise<any>((resolve, reject) => {
+      (this.qbClient as any).query(q, (err: any, result: any) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+
+    const unpaidQuery = `select Id, Balance from Invoice where Balance > 0`;
+    const overdueQuery = `select Id, Balance from Invoice where Balance > 0 and DueDate < '${todayStr}'`;
+
+    const [unpaidRes, overdueRes] = await Promise.all([
+      runQuery(unpaidQuery),
+      runQuery(overdueQuery)
+    ]);
+
+    const unpaidInvoices: any[] = unpaidRes?.QueryResponse?.Invoice || [];
+    const overdueInvoices: any[] = overdueRes?.QueryResponse?.Invoice || [];
+
+    const totalBalance = unpaidInvoices.reduce((sum, inv) => sum + (parseFloat(inv.Balance) || 0), 0);
+    const overdueBalance = overdueInvoices.reduce((sum, inv) => sum + (parseFloat(inv.Balance) || 0), 0);
+
+    return {
+      count: unpaidInvoices.length,
+      totalBalance,
+      overdueCount: overdueInvoices.length,
+      overdueBalance,
+      asOf: today.toISOString(),
+    };
+  }
 }

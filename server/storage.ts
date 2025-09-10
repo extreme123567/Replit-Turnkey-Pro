@@ -22,7 +22,8 @@ import {
   type MaintenanceSchedule, 
   type InsertMaintenanceSchedule, 
   type Inspection, 
-  type InsertInspection 
+  type InsertInspection,
+  type PropertyPriceEntry 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -130,6 +131,11 @@ export interface IStorage {
   createProperty(property: InsertProperty): Promise<Property>;
   updateProperty(id: string, property: Partial<InsertProperty>): Promise<Property | undefined>;
   deleteProperty(id: string): Promise<boolean>;
+
+  // Property Pricing (per-property price book)
+  getPropertyPriceBook(propertyId: string): Promise<PropertyPriceEntry[]>;
+  setPropertyPriceBook(propertyId: string, entries: PropertyPriceEntry[]): Promise<boolean>;
+  getPriceForWork(propertyId: string, jobType: string, bedroomSize?: string | null): Promise<number | null>;
 
   // Tenants
   getTenants(): Promise<Tenant[]>;
@@ -241,6 +247,7 @@ export class MemStorage implements IStorage {
   private auditLogs: Map<string, AuditLog> = new Map();
   private quoteRequests: Map<string, QuoteRequest> = new Map();
   private invoiceCounter = 1;
+  private propertyPricing: Map<string, PropertyPriceEntry[]> = new Map();
 
   constructor() {
     // Initialize system with default users for testing
@@ -645,6 +652,34 @@ export class MemStorage implements IStorage {
 
   async deleteProperty(id: string): Promise<boolean> {
     return this.properties.delete(id);
+  }
+
+  // Property Pricing
+  async getPropertyPriceBook(propertyId: string): Promise<PropertyPriceEntry[]> {
+    return this.propertyPricing.get(propertyId) || [];
+  }
+
+  async setPropertyPriceBook(propertyId: string, entries: PropertyPriceEntry[]): Promise<boolean> {
+    // Normalize: lowercase jobType and bedroomSize
+    const normalized = entries.map(e => ({
+      jobType: (e.jobType || '').toLowerCase(),
+      bedroomSize: e.bedroomSize ? e.bedroomSize.toLowerCase() : null,
+      price: Number(e.price) || 0,
+    }));
+    this.propertyPricing.set(propertyId, normalized);
+    return true;
+  }
+
+  async getPriceForWork(propertyId: string, jobType: string, bedroomSize?: string | null): Promise<number | null> {
+    const book = this.propertyPricing.get(propertyId) || [];
+    const jt = (jobType || '').toLowerCase();
+    const bs = bedroomSize ? bedroomSize.toLowerCase() : null;
+    // Try exact match first
+    const exact = book.find(e => e.jobType === jt && (e.bedroomSize || null) === (bs || null));
+    if (exact) return exact.price;
+    // Fallback to jobType-only entry
+    const byType = book.find(e => e.jobType === jt && (e.bedroomSize == null || e.bedroomSize === 'any'));
+    return byType ? byType.price : null;
   }
 
   // Work Orders

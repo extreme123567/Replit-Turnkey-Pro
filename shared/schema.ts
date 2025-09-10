@@ -248,6 +248,8 @@ export const properties = pgTable("properties", {
   managerId: varchar("manager_id").references(() => staff.id),
   status: text("status").notNull().default("active"), // active, inactive, under_renovation
   monthlyRent: decimal("monthly_rent", { precision: 10, scale: 2 }),
+  // Optional JSON price book for property-specific pricing by job type and unit size
+  priceBook: jsonb("price_book").default([]),
   turnoversThisMonth: integer("turnovers_this_month").default(0),
   turnoversThisYear: integer("turnovers_this_year").default(0),
   totalTurnovers: integer("total_turnovers").default(0),
@@ -639,6 +641,9 @@ export type InsertWorkOrder = z.infer<typeof insertWorkOrderSchema>;
 
 export type Property = typeof properties.$inferSelect;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
+
+// Property price entry runtime type
+export type PropertyPriceEntry = { jobType: string; bedroomSize?: string | null; price: number };
 
 export type Tenant = typeof tenants.$inferSelect;
 export type InsertTenant = z.infer<typeof insertTenantSchema>;
