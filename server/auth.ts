@@ -53,7 +53,9 @@ export class AuthService {
     try {
       const allowedEmails = [
         'admin@servicepro.com',
-        'owner@turnkeypro.com'
+        'owner@turnkeypro.com',
+        'tech@servicepro.com',
+        'inspector@servicepro.com'
       ];
 
       const email = loginData.email.toLowerCase().trim();
