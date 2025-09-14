@@ -11,6 +11,18 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertJob, Client, Staff } from "@shared/schema";
 
+type JobFormValues = {
+  title: string;
+  description?: string;
+  clientId: string;
+  assignedStaffId?: string;
+  status?: string;
+  priority?: string;
+  estimatedHours?: string;
+  amount: string;
+  scheduledDate: string; // yyyy-MM-ddTHH:mm for datetime-local
+};
+
 interface JobFormProps {
   onSuccess?: () => void;
   initialData?: Partial<InsertJob>;
@@ -27,18 +39,18 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
     queryKey: ["/api/staff"],
   });
 
-  const form = useForm<InsertJob>({
+  const form = useForm<JobFormValues>({
     resolver: zodResolver(insertJobSchema),
     defaultValues: {
-      title: initialData?.title || "",
-      description: initialData?.description || "",
-      clientId: initialData?.clientId || "",
-      assignedStaffId: initialData?.assignedStaffId || "",
-      status: initialData?.status || "scheduled",
-      priority: initialData?.priority || "medium",
-      estimatedHours: initialData?.estimatedHours || "",
-      amount: initialData?.amount || "",
-      scheduledDate: initialData?.scheduledDate ? new Date(initialData.scheduledDate).toISOString().slice(0, 16) : "",
+      title: (initialData?.title as string | undefined) ?? "",
+      description: (initialData?.description as string | undefined) ?? "",
+      clientId: (initialData?.clientId as string | undefined) ?? "",
+      assignedStaffId: (initialData?.assignedStaffId as string | undefined) ?? "",
+      status: (initialData?.status as string | undefined) ?? "scheduled",
+      priority: (initialData?.priority as string | undefined) ?? "medium",
+      estimatedHours: (initialData?.estimatedHours as unknown as string | undefined) ?? undefined,
+      amount: (initialData?.amount as unknown as string | undefined) ?? "",
+      scheduledDate: initialData?.scheduledDate ? new Date(initialData.scheduledDate as any).toISOString().slice(0, 16) : "",
     },
   });
 
@@ -70,13 +82,19 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
     },
   });
 
-  const onSubmit = (data: InsertJob) => {
-    const jobData = {
-      ...data,
-      scheduledDate: new Date(data.scheduledDate).toISOString(),
-      estimatedHours: data.estimatedHours ? data.estimatedHours.toString() : null,
-      amount: data.amount.toString(),
-    };
+  const onSubmit = (values: JobFormValues) => {
+    const jobData: InsertJob = {
+      title: values.title,
+      description: values.description || undefined,
+      clientId: values.clientId,
+      assignedStaffId: values.assignedStaffId || undefined,
+      status: values.status || "scheduled",
+      priority: values.priority || "medium",
+      estimatedHours: values.estimatedHours || undefined,
+      amount: values.amount,
+      scheduledDate: new Date(values.scheduledDate),
+    } as InsertJob;
+
     createJobMutation.mutate(jobData);
   };
 
@@ -107,7 +125,9 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
                 <FormControl>
                   <Textarea 
                     placeholder="Detailed description of the work to be performed..." 
-                    {...field} 
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="textarea-job-description"
                   />
                 </FormControl>
@@ -155,9 +175,9 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="">Unassigned</SelectItem>
-                    {staff?.filter(member => member.status === 'available').map((member) => (
+                    {staff?.filter(member => member.status === 'active').map((member) => (
                       <SelectItem key={member.id} value={member.id}>
-                        {member.name} - {member.role}
+                        {member.firstName} {member.lastName} - {member.role}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -176,7 +196,9 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
                 <FormControl>
                   <Input 
                     type="datetime-local" 
-                    {...field} 
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="input-job-date"
                   />
                 </FormControl>
@@ -196,7 +218,8 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
                     type="number" 
                     step="0.5" 
                     placeholder="4.0" 
-                    {...field} 
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : e.target.value)}
                     data-testid="input-job-hours"
                   />
                 </FormControl>
@@ -216,7 +239,8 @@ export function JobForm({ onSuccess, initialData }: JobFormProps) {
                     type="number" 
                     step="0.01" 
                     placeholder="450.00" 
-                    {...field} 
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="input-job-amount"
                   />
                 </FormControl>

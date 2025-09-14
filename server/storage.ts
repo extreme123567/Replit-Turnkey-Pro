@@ -22,7 +22,23 @@ import {
   type MaintenanceSchedule, 
   type InsertMaintenanceSchedule, 
   type Inspection, 
-  type InsertInspection 
+  type InsertInspection,
+  type QuoteRequest,
+  type InsertQuoteRequest,
+  type Notification,
+  type InsertNotification,
+  type UserPermission,
+  type InsertUserPermission,
+  type AuditLog,
+  type InsertAuditLog,
+  type CallbackResolution,
+  type InsertCallbackResolution,
+  type StaffPayroll,
+  type InsertStaffPayroll,
+  type ExtraDirtyRequest,
+  type InsertExtraDirtyRequest,
+  type RepairPhotoRequest,
+  type InsertRepairPhotoRequest
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
