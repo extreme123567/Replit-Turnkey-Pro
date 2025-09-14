@@ -152,20 +152,14 @@ export default function AdminDashboard() {
       console.log("Submitting multi-service schedule data:", data);
       
       // Use the job scheduling endpoint that supports multiple services
-      const response = await apiRequest("/api/jobs/schedule", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await apiRequest("/api/jobs/schedule", "POST", {
           propertyId: data.propertyId,
           unitNumber: data.unitNumber,
           bedroomSize: data.bedroomSize,
           priority: data.priority,
           selectedJobs: data.services.map(s => s.serviceType),
-          scheduledServices: data.services, // Individual service details with dates
+          scheduledServices: data.services,
           notes: data.generalNotes,
-        }),
       });
       
       if (!response.ok) {

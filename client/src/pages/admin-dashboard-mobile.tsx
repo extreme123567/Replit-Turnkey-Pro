@@ -97,10 +97,7 @@ export default function AdminDashboard() {
   // Create job mutation
   const createJobMutation = useMutation({
     mutationFn: async (data: JobScheduleFormData) => {
-      const response = await apiRequest("/api/jobs", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("/api/jobs", "POST", data);
       return response.json();
     },
     onSuccess: () => {
