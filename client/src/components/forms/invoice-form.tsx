@@ -1,3 +1,4 @@
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -10,6 +11,18 @@ import { insertInvoiceSchema } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertInvoice, Client, Job } from "@shared/schema";
+
+type InvoiceFormValues = {
+  clientId: string;
+  jobId?: string;
+  amount: string;
+  tax?: string;
+  total: string;
+  status?: string;
+  issueDate: string; // yyyy-MM-dd
+  dueDate: string;   // yyyy-MM-dd
+  notes?: string;
+};
 
 interface InvoiceFormProps {
   onSuccess?: () => void;
@@ -27,22 +40,22 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
     queryKey: ["/api/jobs"],
   });
 
-  const form = useForm<InsertInvoice>({
+  const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
-      clientId: initialData?.clientId || "",
-      jobId: initialData?.jobId || "",
-      amount: initialData?.amount || "",
-      tax: initialData?.tax || "0.00",
-      total: initialData?.total || "",
-      status: initialData?.status || "draft",
-      issueDate: initialData?.issueDate ? new Date(initialData.issueDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : (() => {
+      clientId: (initialData?.clientId as string | undefined) || "",
+      jobId: (initialData?.jobId as string | undefined) || "",
+      amount: (initialData?.amount as unknown as string | undefined) || "",
+      tax: (initialData?.tax as unknown as string | undefined) || "0.00",
+      total: (initialData?.total as unknown as string | undefined) || "",
+      status: (initialData?.status as string | undefined) || "draft",
+      issueDate: initialData?.issueDate ? new Date(initialData.issueDate as any).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      dueDate: initialData?.dueDate ? new Date(initialData.dueDate as any).toISOString().split('T')[0] : (() => {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 30);
         return dueDate.toISOString().split('T')[0];
       })(),
-      notes: initialData?.notes || "",
+      notes: (initialData?.notes as string | undefined) || "",
     },
   });
 
@@ -85,15 +98,18 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
     form.setValue("total", total.toFixed(2));
   }, [amount, tax, form]);
 
-  const onSubmit = (data: InsertInvoice) => {
-    const invoiceData = {
-      ...data,
-      issueDate: new Date(data.issueDate).toISOString(),
-      dueDate: new Date(data.dueDate).toISOString(),
-      amount: data.amount.toString(),
-      tax: data.tax.toString(),
-      total: data.total.toString(),
-    };
+  const onSubmit = (values: InvoiceFormValues) => {
+    const invoiceData: InsertInvoice = {
+      clientId: values.clientId,
+      jobId: values.jobId ? values.jobId : undefined,
+      amount: values.amount,
+      tax: values.tax ?? undefined,
+      total: values.total,
+      status: values.status ?? "draft",
+      issueDate: new Date(values.issueDate),
+      dueDate: new Date(values.dueDate),
+      notes: values.notes ?? undefined,
+    } as InsertInvoice;
     createInvoiceMutation.mutate(invoiceData);
   };
 
@@ -170,7 +186,8 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
                     type="number" 
                     step="0.01" 
                     placeholder="450.00" 
-                    {...field} 
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="input-invoice-amount"
                   />
                 </FormControl>
@@ -190,7 +207,8 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
                     type="number" 
                     step="0.01" 
                     placeholder="36.00" 
-                    {...field} 
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="input-invoice-tax"
                   />
                 </FormControl>
@@ -209,7 +227,7 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
                   <Input 
                     type="number" 
                     step="0.01" 
-                    {...field} 
+                    value={field.value ?? ""}
                     readOnly
                     className="bg-slate-50"
                     data-testid="input-invoice-total"
@@ -252,7 +270,8 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
                 <FormControl>
                   <Input 
                     type="date" 
-                    {...field} 
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="input-invoice-issue-date"
                   />
                 </FormControl>
@@ -270,7 +289,8 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
                 <FormControl>
                   <Input 
                     type="date" 
-                    {...field} 
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="input-invoice-due-date"
                   />
                 </FormControl>
@@ -288,7 +308,9 @@ export function InvoiceForm({ onSuccess, initialData }: InvoiceFormProps) {
                 <FormControl>
                   <Textarea 
                     placeholder="Additional notes or terms..." 
-                    {...field} 
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value)}
                     data-testid="textarea-invoice-notes"
                   />
                 </FormControl>

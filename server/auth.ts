@@ -57,9 +57,10 @@ export class AuthService {
       ];
 
       const email = loginData.email.toLowerCase().trim();
-      
-      // Check if email is in allowed list
-      if (!allowedEmails.includes(email)) {
+
+      // In non-production, skip allowlist to simplify development
+      const isProduction = process.env.NODE_ENV === 'production';
+      if (isProduction && !allowedEmails.includes(email)) {
         console.log(`Access denied for email: ${email}`);
         return null;
       }

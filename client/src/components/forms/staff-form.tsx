@@ -21,12 +21,13 @@ export function StaffForm({ onSuccess, initialData }: StaffFormProps) {
   const form = useForm<InsertStaff>({
     resolver: zodResolver(insertStaffSchema),
     defaultValues: {
-      name: initialData?.name || "",
+      firstName: (initialData?.firstName as string | undefined) || "",
+      lastName: (initialData?.lastName as string | undefined) || "",
       email: initialData?.email || "",
       phone: initialData?.phone || "",
-      role: initialData?.role || "technician",
-      hourlyRate: initialData?.hourlyRate || "",
-      status: initialData?.status || "available",
+      role: (initialData?.role as string | undefined) || "technician",
+      hourlyRate: (initialData?.hourlyRate as any) || undefined,
+      status: (initialData?.status as string | undefined) || "active",
     },
   });
 
@@ -67,12 +68,26 @@ export function StaffForm({ onSuccess, initialData }: StaffFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="name"
+            name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Martinez" {...field} data-testid="input-staff-name" />
+                  <Input placeholder="John" {...field} data-testid="input-staff-first-name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Martinez" {...field} data-testid="input-staff-last-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -141,7 +156,8 @@ export function StaffForm({ onSuccess, initialData }: StaffFormProps) {
                     type="number" 
                     step="0.01" 
                     placeholder="25.00" 
-                    {...field} 
+                    value={field.value === null || field.value === undefined ? "" : String(field.value)}
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : e.target.value)}
                     data-testid="input-staff-rate" 
                   />
                 </FormControl>
@@ -163,8 +179,8 @@ export function StaffForm({ onSuccess, initialData }: StaffFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="on_job">On Job</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="sick_leave">Sick Leave</SelectItem>
                     <SelectItem value="vacation">Vacation</SelectItem>
                   </SelectContent>

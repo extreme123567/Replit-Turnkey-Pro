@@ -228,7 +228,8 @@ export const workOrders = pgTable("work_orders", {
   rejectionReason: text("rejection_reason"),
   imageRequirement: text("image_requirement").default("none"), // none, before_only, after_only, before_and_after
   notes: text("notes"),
-  quoteRequestId: varchar("quote_request_id").references(() => quoteRequests.id), // Link back to original quote request
+  // Break circular init between workOrders and quoteRequests by removing FK on one side
+  quoteRequestId: varchar("quote_request_id"), // Link back to original quote request
   propertyManagerNotified: boolean("property_manager_notified").default(false), // Track PM notification
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -696,9 +697,7 @@ export const insertFinancialPeriodSchema = createInsertSchema(financialPeriods).
 export type FinancialPeriod = typeof financialPeriods.$inferSelect;
 export type InsertFinancialPeriod = z.infer<typeof insertFinancialPeriodSchema>;
 
-// User and Session types
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
+// Session types
 export type Session = typeof sessions.$inferSelect;
 export type InsertSession = typeof sessions.$inferInsert;
 

@@ -774,7 +774,7 @@ export default function TechnicianDashboard() {
       }
     ];
 
-    const handlePhotoSave = async (file: File, annotations: any[]) => {
+    const handlePhotoSave = async (file: File, annotations?: any[]) => {
       setIsLoading(true);
       try {
         // Create a mock URL for demo - in production this would upload to server

@@ -61,7 +61,7 @@ const CallbackPhotoUploadSection = ({ onPhotoSave }: {
     description?: string;
   }>>([]);
 
-  const handlePhotoSave = (file: File, annotations: any[]) => {
+  const handlePhotoSave = (file: File, annotations?: any[]) => {
     const newPhoto = {
       id: `callback-${Date.now()}`,
       url: URL.createObjectURL(file),
