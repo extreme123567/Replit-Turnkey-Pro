@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { databaseAuth } from "./database-storage";
 import type { User, LoginRequest, CreateUserRequest } from "@shared/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -10,6 +9,30 @@ const BCRYPT_ROUNDS = 12;
 
 export interface AuthRequest extends Request {
   user?: User;
+}
+
+type AuthProvider = {
+  getUserByEmail(email: string): Promise<any | undefined>;
+  getUserById(id: string): Promise<any | undefined>;
+  createUser(user: any): Promise<any>;
+  updateUserLastLogin(id: string): Promise<boolean>;
+};
+
+async function getAuthProvider(): Promise<AuthProvider> {
+  // Production path: use Postgres (if configured).
+  if (process.env.DATABASE_URL) {
+    const { databaseAuth } = await import("./database-storage");
+    return databaseAuth as unknown as AuthProvider;
+  }
+
+  // Demo/dev fallback: use in-memory storage with default demo users.
+  const { storage } = await import("./storage");
+  return {
+    getUserByEmail: (email: string) => storage.getUserByEmail(email),
+    getUserById: (id: string) => storage.getUserById(id),
+    createUser: (user: any) => storage.createUser(user),
+    updateUserLastLogin: (id: string) => storage.updateUserLastLogin(id),
+  };
 }
 
 // Authentication service class
@@ -51,6 +74,7 @@ export class AuthService {
   // Login user - restricted to owner only
   static async login(loginData: LoginRequest): Promise<{ user: User; token: string } | null> {
     try {
+      const authProvider = await getAuthProvider();
       const allowedEmails = [
         'admin@servicepro.com',
         'owner@turnkeypro.com'
@@ -64,7 +88,7 @@ export class AuthService {
         return null;
       }
 
-      const user = await databaseAuth.getUserByEmail(email);
+      const user = await authProvider.getUserByEmail(email);
       if (!user) {
         return null;
       }
@@ -75,7 +99,7 @@ export class AuthService {
       }
 
       // Update last login
-      await databaseAuth.updateUserLastLogin(user.id);
+      await authProvider.updateUserLastLogin(user.id);
 
       const token = this.generateToken(user);
       
@@ -112,6 +136,7 @@ export class AuthService {
 // Middleware to authenticate requests
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const authProvider = await getAuthProvider();
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "No token provided" });
@@ -125,7 +150,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     // Get fresh user data from database
-    const user = await databaseAuth.getUserById(decoded.id);
+    const user = await authProvider.getUserById(decoded.id);
     if (!user || user.status !== "active") {
       return res.status(401).json({ message: "User not found or inactive" });
     }
